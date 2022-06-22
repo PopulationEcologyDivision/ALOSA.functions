@@ -11,10 +11,10 @@
 
 
 
-format.BIODATA.onesite<-function(filename){
+format.COUNTDATA.onesite<-function(filename){
   data<-read.csv(filename,header=T,stringsAsFactors = F)
-  goodnames<-(c("year","mon","day","sample","species","sex",
-                "fork.length","weight","scale","notes")) 
+  goodnames<-(c("year","mon","day","time","strata","count.upstream",
+                "count.downstream","camera.desc","notes","minutes","seconds")) 
   missingnames=goodnames[!goodnames%in%(names(data))]
   if (length(missingnames>0)){
     cat("Missing column name(s):","\n", missingnames,"\n")
@@ -58,38 +58,35 @@ format.BIODATA.onesite<-function(filename){
     }
   }
   
-  #Fix up data type and add missing columns
-  #data<-data[!(is.na(data$count.upstream)),]
-  data<-data[,names(data)%in%goodnames]
+  # #data<-data[!(is.na(data$count.upstream)),]
+  # if("minutes"%in% names(data)){
+  #   goodnames=c(goodnames,"minutes","seconds")
+  # }
+  data<-data[,names(data)%in%goodnames] 
+  
+  
+  
+  data$COUNT_ID<-1:dim(data)[1]
   data$SITE_ID<-siteID
   
-  A.names=c("Alewife","A","a","alewife","ale","Ale","ALE")
-  B.names=c("Blueback Herring","blueback herring","Blueback",
-            "blueback","BBH","b","B","bbh","Bbh","Bb","BB","bb")
-  data$species[data$species%in%A.names]<-3501
-  data$species[data$species%in%B.names]<-3502
-  data$species<-as.numeric(data$species)
+  for(i in 1:dim(data)[1]){
+    if(is.na(data$count.upstream[i])& !is.na(data$count.downstream[i])){
+      data$count.upstream[i]=0
+    }
+    if(!is.na(data$count.upstream[i])& is.na(data$count.downstream[i])){
+      data$count.downstream[i]=0
+    }
+  }
   
-  F.names<-c("female","F","f","FEMALE","Female")
-  M.names<-c("male","m","M","MALE","Male")
-  PS.names<-c("Post Spawn", "PS", "postspawn", "ps")
-  U.names<-c("Unknown", "u","U","UNKNOWN","?","??"," ")
-  
-  data$sex[data$sex%in%F.names]<-2
-  data$sex[data$sex%in%M.names]<-1
-  data$sex[data$sex%in%PS.names]<-3
-  data$sex[data$sex%in%U.names]<-4
-  data$sex<-as.numeric(data$sex)
-  
-  data$fork.length=round(data$fork.length,digits=1)
-  
-  
-  col_order <- c("sample", "SITE_ID", "year", "mon", "day","species",
-                 "sex","fork.length","weight","scale","notes")
-  
+  col_order <- c("COUNT_ID", "SITE_ID", "year", "mon", "day","camera.desc",
+                 "strata","time","count.upstream","count.downstream","notes",
+                 "minutes","seconds")
   data <- data[, col_order]
+  names(data) <- c("COUNT_ID", "SITE_ID", "YEAR", "MON", "DAY","CAMERA_DESC",
+                   "STRATA","TIME","COUNT_UP","COUNT_DOWN","NOTES",
+                   "MINUTES","SECONDS") 
   
-  names(data) <- c("FISH_ID", "SITE_ID", "YEAR", "MON", "DAY","SPECIES_ID",
-                   "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
+  data<- data[complete.cases(data[,c("COUNT_UP","COUNT_DOWN")]),]
+  
   return(data)
 }
