@@ -44,7 +44,8 @@ ageing.selection<-function(countdata,biodata,missingdays,mergedays,seed,nsamples
   
   #sample
   set.seed(seed)
-  ladd.sample <- data.frame(sample(biodata.with.weights$FISH_ID, nsamples, replace = F, prob= biodata.with.weights$weighting))
+  ladd.sample <- data.frame(sample(biodata.with.weights$FISH_ID[biodata.with.weights$SCALE=='Y'],
+                                   nsamples, replace = F, prob= biodata.with.weights$weighting))
   colnames(ladd.sample) <- ("FISH_ID")
   ladd.sample$to.be.aged<-"Y"
   ladd.sample<-ladd.sample[with(ladd.sample, order(FISH_ID)),]
