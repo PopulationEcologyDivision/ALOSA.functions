@@ -1,0 +1,128 @@
+April 2022
+S. Fulton
+
+There are currently two Rmarkdown documents that create the summary documents for the Gaspereau River and Tusket River programs.
+I couldn't figure out how to make the white space go away on the top of the first page and it was screwing up the table 1. placement.
+My solution was to add a blank page and then delete it later using Foxit PDF.
+
+When you are updating these documents for future assessments you will need to:
+
+1. Update data in 'river summaries all years.csv- document
+	- This is the total catch and total escapement by species and river. 
+
+2. Update the 'daily_counts_all years_all rivers.csv'
+	- This is the escapement per day for each river.
+
+NOTE: both of these files are called directly in the markdown script, so don't move or rename them.
+
+3. Update header in YAML properties at the top of the document.
+
+4. Update the first table and all the figure captions.
+
+5. In Figure 3 (reference point plot) . Add the text for the new year added.
+
+text(x,y,"YEAR",pos=3,col="red",cex=0.85)
+
+6. In figure 3 Change the colour of the text of the previous year to 'gray35'. Only the most recent year should be red
+
+7. Add the daily plot for the current year.
+	
+	The daily count graphs are set to have 4 per page. 
+	If you don't need to add a new plot, just add the year to the plotyears object (up to 4)
+
+If you need to initiallize a new plot, add in the following code chunk:
+
+NOTES: 	- make sure r chunk name is unique (i.e. dailyplot3 not dailyplot2)
+	- add years you want to plotyears (first line) up to 4
+
+```{r dailyplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2022)
+#windows(8.5,11)
+par(oma=c(7,3,3,0.5),mfrow=c(4,1))
+par(mar=c(0,5,0,3))
+
+for(i in plotyears){
+  plotyear=i
+if(length(GRdata$number[GRdata$year==plotyear])>0){
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(GRdata$number[GRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+     xaxt="n",yaxt='n',cex.axis=2) 
+rect(-5, -5, 12, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(43, -5, 73, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+text(63,max(GRdata$number[GRdata$year==plotyear]/1000),plotyear,cex=2)
+text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+}else{
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,50),xlim=c(0,68),
+       xaxt="n",yaxt='n',cex.axis=2)
+  rect(-5, -5, 12, 55, border = NA,col="gray90")
+  rect(43, -5, 73, 55, border = NA,col="gray90")
+  text(63,41.5,plotyear,cex=2)
+  text(-2,41.5,"Total = NA ",cex=1.5,pos=4)
+}
+
+box()
+lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
+      lty=1,lwd=1.5)
+axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+}
+
+axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
+     labels=c("20","1","10","20","1","10","20"))
+
+mtext("April",1,at=5,cex=1.5,line=3.5)
+mtext("May",1,at=26,cex=1.5,line=3.5)
+mtext("June",1,at=55,cex=1.5,line=3.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+```
+
+8. Add the age for the current year.
+	
+	The age graphs are set to have 2 per page. 
+	If you don't need to add a new plot, just add the year to the plotyears object (up to 2)
+
+If you need to initiallize a new plot, add in the following code chunk:
+
+NOTES: 	- make sure r chunk name is unique (i.e. ageplot3 not ageplot2)
+	- add years you want to plotyears (first line) up to 2
+
+```{r ageplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c()
+
+
+#windows(8.5,11)
+par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
+par(mar=c(3,5,0,3))
+for(plotyear in plotyears){
+  plotyear=plotyear
+agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
+
+agedata=dbGetQuery(channel, agequery)
+
+age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("Age3","Age4","Age5","Age6","Age7")))
+for (i in 3:7){
+  CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
+ barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+ mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
+ 
+}
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("topright",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+```
+
+9. If you added a new plots, update all the figure numbers

@@ -1,0 +1,383 @@
+---
+title: "&nbsp;"
+header-includes:
+   - \usepackage{fancyhdr}
+   - \pagestyle{fancy}
+   - \renewcommand{\headrulewidth}{0pt}
+   - \fancyhead[L]{Tusket River 2021 Assessment Summary}
+   - \fancyfoot[R]{\thepage}
+   - \fancypagestyle{plain}{\pagestyle{fancy}}
+   - \fancyfoot[C]{}
+output: pdf_document
+---
+```{r load-packages, include=FALSE}
+library(ROracle)
+library(tinytex)
+```
+\newpage
+**Table 1.** Estimates of the number of gaspereau that ascended the fish ladder at the Lake Vaughan Dam in 2014, 2015, 2018, and 2019, and 2021.
+
+Year|	Total number of gaspereau ascending the ladder|	Number of Alewife|
+	Number of Blueback Herring| 	Exploitation rate estimate for Alewife|	Exploitation rate estimate for Blueback Herring
+------- | ----------------| ----------------| ----------------| --------|  --------
+2021|	1,956,804|	1,941,411|	15,394|	0.38^f^|	0.44^f^
+2020^d^|	NA|	NA|	NA|	NA|	NA
+2019|	397,709|	367,781|	29,928|	0.51^e^|	0.49^e^
+2018^a^|	712,509|	NA|	NA|	NA|	NA
+2015|	2,517,215|	2,325,787|	191,428|	0.52^c^|	0.35^c^
+2014^b^|	2,358,125|	1,767,745|	590,380|	0.60^c^|	0.38^c^
+
+
+
+^a^ The decision to count the 2018 video was made after the run was over and biological sampling did not occur. Species composition is not known for this reason.  
+^b^ Cameras were not running 24 hours a day in 2014 and escapement estimate is a combination of the escapement from the video plus the estimated overnight proportion (Bowlby and Gibson 2016).  
+^c^ The commercial catch for each species, used to calculate exploitation rates, accounts for a time lag between when the fish become vulnerable to the fishery and when they are counted at the Lake Vaughan fish ladder (Bowlby and Gibson 2016).  
+^d^ Program was unable to run due to COVID-19  
+^e^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (93% Alewife)  
+^f^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (99% Alewife)   
+
+
+\newpage
+
+**Table 2**. Biological reference points for the Tusket River Alewife stock consistent with DFO’s precautionary framework (from Gibson et al. 2017). Assessment results can be compared against these reference points to determine stock status. Biological reference points for Blueback Herring have not been developed.  
+
+Reference point|	Acronym|	Description|	Value
+--------------------------- | ---------| --------------------| -------------
+Upper Stock Reference Point|	USR|	Spawning stock biomass or number of spawners above which stock is healthy; if below but still above the LRP, the stock is in the cautious zone. Can be SSBMSY or similar value|	400,000 fish
+| | | 
+Lower Stock Reference Point|	LRP|	Spawning stock biomass or numbers of spawners below which the stock is in the critical zone|	235,000 fish
+| | | 
+Exploitation Rate Removal Reference Level|	URR|	Exploitation rate above which the stock is over exploited|	0.53
+| | | 
+Exploitation Rate Lower Removal Reference Level|	ULRR|	Exploitation rate above which stock is fully exploited, below which stock is under exploited|	0.35
+
+\newpage
+```{r escapeplot, echo=FALSE, fig.width = 8.5,fig.height = 10, fig.align='center'}
+multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
+                   header=T,stringsAsFactors = F)
+
+TR=multiyear[multiyear$river=="Tusket",]
+
+windows(8.5,11)
+par(mfrow=c(2,1),oma=c(3,0,0,0))
+par(mar=c(4,3,3,2))
+barplot(TR$escape[TR$species=="A"]/1000000, axes=0, names.arg=as.character(TR$year[TR$species=="A"]), 
+        las=3, cex.names=1.2, ylim=c(0,max(TR$escape[TR$species=="A"],na.rm=T)*1.5/1000000))
+
+axis(2, las=1, cex.axis=1.2)
+box()
+mtext("Escapement (millions of fish)",3,cex=1.2,adj=.15, line=0.5)
+abline(h=c(2.086,3.099),lty=5)
+mtext("Healthy zone",2,line=-5,las=1,cex=1,adj=.05, at=3.3)
+mtext("Cautious zone",2,line=-5,las=1,cex=1,adj=.05, at=2.6)
+mtext("Critical zone",2,line=-5,las=1,cex=1,adj=.05, at=1.75)
+
+barplot(TR$total[TR$species=="A"]/1000000, axes=0, names.arg=as.character(TR$year[TR$species=="A"]), 
+        las=3, cex.names=1.2, ylim=c(0,max(TR$total[TR$species=="A"],na.rm=T)*1.5/1000000))
+
+axis(2, las=1, cex.axis=1.2)
+box()
+mtext("Total abundance (millions of fish)",3,cex=1.2,adj=.15, line=0.5)
+mtext("Year",1,cex=1.2, line=5)
+```
+**Figure 1.** Spawning escapement (the number of Alewife ascending the Vaughan fish ladder) and total abundance (the reported landings + escapement) for Alewife in the Tusket River for years in which estimates of the total escapement and species ID are available. Values are provided in Table 1.  
+
+\newpage
+ 
+
+```{r reference plot,echo=FALSE, fig.width = 7.5,fig.height = 9}
+reference.point.plot<-function(ssnmsy,
+                               ssn10,
+                               Fupper,
+                               Ffully,
+                               pointsX,
+                               pointsY,
+                               label,
+                               pospoints=1,
+                               rivername,
+                               speciesname="Alewife",
+                               plotchar=19){
+  
+  pointsX=pointsX/ssnmsy
+  pointsY=pointsY/Fupper
+  
+  
+  par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,2),las=1)
+  plot(1,1,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,max(pointsX,na.rm=T)*1.1))
+  axis(1)
+  axis(2)
+  box(lwd=2)
+  crit.caus.boundary=ssn10/ssnmsy
+  fully.partial.boundary=Ffully/Fupper
+  abline(v=c(1,crit.caus.boundary),lty=5)
+  abline(h=c(1,fully.partial.boundary),lty=5)
+  
+  mtext(expression(paste("Esc/Esc"["USR"])),1,line=2.25,cex=1.25)
+  mtext(expression(paste("U/U"["RLL"])),2,line=2.25,cex=1.25,las=0)
+  
+  mtext("Spawning escapement",3,line=2.5,cex=1.5)
+  mtext("critical",3,line=.5,cex=1.15,at=((-0.2+crit.caus.boundary)/2),adj=0.5)
+  mtext("cautious",3,line=.5,cex=1.15,at=((1+crit.caus.boundary)/2),adj=0.5)
+  mtext("healthy",3,line=.5,cex=1.15,at=(1+max(pointsX,na.rm=T)*1.1)/2,adj=0.5)
+  
+  
+  mtext("Exploitation rate",4,line=4,cex=1.5,las=0)
+  mtext("over",4,line=.5,cex=1.25,adj=.75,las=0)
+  mtext("exploited",4,line=1.5,cex=1.25,adj=.8,las=0)
+  mtext("fully",4,line=.5,cex=1.25,adj=.42,las=0)
+  mtext("exploited",4,line=1.5,cex=1.25,adj=.4,las=0)
+  mtext("partially",4,line=.5,cex=1.25,adj=.14,las=0)
+  mtext("exploited",4,line=1.5,cex=1.25,adj=.13,las=0)
+  
+  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  
+  mtext(rivername,1,line=5, at=0,las=0,adj=0, cex=2)
+  mtext(speciesname,1,line=7, at=0,las=0,adj=0,cex=2)
+  
+  points(pointsX[!is.na(pointsX)& !is.na(pointsY)],pointsY[!is.na(pointsX)&!is.na(pointsY)], pch=plotchar)
+  text(pointsX,pointsY,col="red",pos=pospoints,labels=label)
+  
+}
+
+reference.point.plot(400000,234549,0.53,0.35,rivername="Gaspereau River",
+                     pointsX=GR$escape,pointsY=GR$er,
+                     label="",plotchar = "")
+
+ssnmsy=400000
+Fupper=0.53
+
+series82.84=GR[GR$year>=1982 & GR$year<=1984,]
+series97.06=GR[GR$year>=1997 & GR$year<=2006,]
+series15.19=GR[GR$year>=2015 & GR$year<=2019,]
+series21.present=GR[GR$year>=2021,]
+
+points(series82.84$escape/ssnmsy,series82.84$er/Fupper,pch=1)
+lines(series82.84$escape/ssnmsy,series82.84$er/Fupper)
+
+points(series97.06$escape/ssnmsy,series97.06$er/Fupper,pch=4)
+lines(series97.06$escape/ssnmsy,series97.06$er/Fupper)
+
+points(series15.19$escape/ssnmsy,series15.19$er/Fupper,pch=16)
+lines(series15.19$escape/ssnmsy,series15.19$er/Fupper)
+
+points(series21.present$escape/ssnmsy,series21.present$er/Fupper,pch=19)
+lines(series21.present$escape/ssnmsy,series21.present$er/Fupper)
+
+
+text(0.07,1.2,"1982-\n84",col="gray35",cex=0.85)
+text(0.23,1.63,"1997",pos=4,col="gray35",cex=0.85)
+text(0.6,0.62,"2001",pos=1,col="gray35",cex=0.85)
+text(0.8,1.47,"2013",col="gray35",cex=0.85)
+text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
+text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
+text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
+text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
+text(2.5,1.05,"2021",pos=3,col="red",cex=0.85)
+arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
+```
+
+**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021 using closed circles. The plot is updated from Gibson et al. 2017.
+
+\newpage
+```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
+data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
+              header=T,stringsAsFactors = F)
+data$doy=as.Date(paste(data$day,data$mon,data$year,sep="-"),format="%d-%m-%Y")
+data$doy=as.numeric(strftime(data$doy, format="%j"))
+data$daynum=data$doy-109 ## Day 1 = April 20
+GRdata=data[data$river=="gaspereau",]
+
+plotyears=c(2013,2015,2016,2017)
+#windows(8.5,11)
+par(oma=c(7,3,3,0.5),mfrow=c(4,1))
+par(mar=c(0,5,0,3))
+
+for(i in plotyears){
+  plotyear=i
+plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(GRdata$number[GRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+     xaxt="n",yaxt='n',cex.axis=2)
+rect(-5, -5, 12, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(43, -5, 73, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+box()
+lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
+      lty=1,lwd=1.5)
+text(63,max(GRdata$number[GRdata$year==plotyear]/1000),plotyear,cex=2)
+text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+}
+
+axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
+     labels=c("20","1","10","20","1","10","20"))
+
+mtext("April",1,at=5,cex=1.5,line=3.5)
+mtext("May",1,at=26,cex=1.5,line=3.5)
+mtext("June",1,at=55,cex=1.5,line=3.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+
+
+```
+
+**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in 2013, and 2015-2017. Note that scales differ among plots. 
+
+\newpage
+```{r dailyplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2018,2019,2020,2021)
+#windows(8.5,11)
+par(oma=c(7,3,3,0.5),mfrow=c(4,1))
+par(mar=c(0,5,0,3))
+
+for(i in plotyears){
+  plotyear=i
+if(length(GRdata$number[GRdata$year==plotyear])>0){
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(GRdata$number[GRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+     xaxt="n",yaxt='n',cex.axis=2) 
+rect(-5, -5, 12, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(43, -5, 73, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+text(63,max(GRdata$number[GRdata$year==plotyear]/1000),plotyear,cex=2)
+text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+}else{
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,50),xlim=c(0,68),
+       xaxt="n",yaxt='n',cex.axis=2)
+  rect(-5, -5, 12, 55, border = NA,col="gray90")
+  rect(43, -5, 73, 55, border = NA,col="gray90")
+  text(63,41.5,plotyear,cex=2)
+  text(-2,41.5,"Total = NA ",cex=1.5,pos=4)
+}
+
+box()
+lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
+      lty=1,lwd=1.5)
+axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+}
+
+axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
+     labels=c("20","1","10","20","1","10","20"))
+
+mtext("April",1,at=5,cex=1.5,line=3.5)
+mtext("May",1,at=26,cex=1.5,line=3.5)
+mtext("June",1,at=55,cex=1.5,line=3.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+```
+
+**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2021. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots. 
+
+\newpage
+![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure5.png)
+**Figure 6.** The relationship between juvenile (left column) and adult (right column) and fishery reference points for Gaspereau River Alewife. F^msy^, S^msy^ and C^msy^ are the equilibrium fishing mortality rate, spawner biomass and catch at MSY. F^col^ is the fishing mortality rate that will drive the population to extinction. Juvenile turbine mortality was assumed to occur after compensatory mortality. Adult turbine mortality occurs after spawning (from Gibson et al. 2017).
+
+\newpage
+```{r ageplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2016,2018)
+
+channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+                  believeNRows=FALSE) 
+sql <- "SELECT * FROM ALOSA_FISH_AGE_DATA
+                   LEFT JOIN ALOSA_FISH_BIO_DATA ON
+                      ALOSA_FISH_BIO_DATA.FISH_ID= ALOSA_FISH_AGE_DATA.FISH_ID AND
+                      ALOSA_FISH_BIO_DATA.SITE_ID= ALOSA_FISH_AGE_DATA.SITE_ID AND
+                      ALOSA_FISH_BIO_DATA.YEAR= ALOSA_FISH_AGE_DATA.YEAR
+                   
+                   WHERE ALOSA_FISH_BIO_DATA.SITE_ID=3 AND
+                         ALOSA_FISH_BIO_DATA.YEAR=?year AND
+                         ALOSA_FISH_BIO_DATA.SPECIES_ID=3501"
+
+#windows(8.5,11)
+par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
+par(mar=c(3,5,0,3))
+for(plotyear in plotyears){
+  plotyear=plotyear
+agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
+
+agedata=dbGetQuery(channel, agequery)
+
+age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("Age3","Age4","Age5","Age6","Age7")))
+for (i in 3:7){
+  CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
+ barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+ mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
+ 
+}
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("topright",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+```
+
+**Figure 7.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2016 and 2018. .
+
+\newpage
+```{r ageplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2019,2021)
+
+#windows(8.5,11)
+par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
+par(mar=c(3,5,0,3))
+for(plotyear in plotyears){
+  plotyear=plotyear
+agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
+
+agedata=dbGetQuery(channel, agequery)
+
+age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("Age3","Age4","Age5","Age6","Age7")))
+for (i in 3:7){
+  CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
+ barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+ mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
+ 
+}
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("topright",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+```
+**Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2019 and 2021. 
+\newpage
+![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure9.png) 
+
+**Figure 9.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+
+**References**  
+
+Gibson, A. J. F., H. D. Bowlby, F. M. Keyser. 2017. A Framework for the Assessment of the Status of River Herring                Populations and Fisheries in DFO’s Maritimes Region. Canadian Science Advisory Secretariat Research Document               2016/105. Fisheries and Oceans Canada, Ottawa.  
+
+McIntyre, T. M., Bradford, R. G., Davies, T. D., and Gibson, A. J. F. 2007. Gaspereau River alewife stock status report.         Canadian Science Advisory Secretariat Research Document 2007/032. Fisheries and Oceans Canada. Ottawa. 1-35. 
