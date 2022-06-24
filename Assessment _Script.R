@@ -1,6 +1,5 @@
 #...............................................................................
 #...............................................................................
-# S. Fulton - February 2022
 #
 # This script is designed to run all of the functions needed to calculate
 #
@@ -17,50 +16,45 @@ setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #
 
-source("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Functions/sourcery.R")
+source("C:/Users/FultonS/Documents/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 
 #...............................................................................
 #Set account name, password, and server
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 #...............................................................................
 #
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
 
-year=2021
-site=3
-nspp=1
+year<-year
+site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
+nspp<-nspecies # Either 1 or 2
+sppID<-sppID #Either 3501 for Alewife or 3502 for BB
+seed=seed #Seed used for scale selection. 
+nsamples=500  #Number of scale selected to be aged
 
-daily.count<-function(nspp=nspp,year,site,channel){
-  if(nspp==1){
-    x=onespecies.river.escapement(year=year,
+if(nspp==1){
+  daily.count<-onespecies.river.escapement(year=year,
                               site=site,
-                              channel=channel)
-    assign(paste("daily.summary",year,site,sep="."),x,envir = .GlobalEnv)
-  }
-  if(nspp==2){
-    x=twospecies.river.escapement(year=year,
+                              channel=channel) }
+if(nspp==2){
+  daily.count<-twospecies.river.escapement(year=year,
                                   site=site,
-                                  channel=channel)
-    assign(paste("daily.summary",year,site,sep="."),x,envir = .GlobalEnv)
-  }
-}
+                                  channel=channel)  }
 
-#Creates df with daily count
-daily.count(nspp=1,2022,3,channel)
-###---
 #Get bio data from DB
-bio.data<-get.bio.data(2022,3,3501, channel)
+bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
 
 missingdays<-missing.days(bio.data)
-
-
-
-
-ageing.selection(daily.summary.2022.3,bio.data,missingdays,mergedays=c(112,115,150,152,154,157),
-                 seed=695,nsamples=500)
+mergedays<- c() # For missing sample days, we merge the counts from two days
+                # and use that in the weighting calculation. 
+                # For example, ff day 112 is missing then decide if you want to merge the counts
+                # with day 111 or 113. Do this for all the missing dates and provide the
+                # replacement days in this vector. Length(mergedays)==Length(missingdays)
+            
+ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
 
 
 
