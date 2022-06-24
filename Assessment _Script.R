@@ -16,7 +16,7 @@ setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #
 
-source("C:/Users/FultonS/Documents/git/ALOSA.functions/functions/sourcery.R")
+source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 
 #...............................................................................
