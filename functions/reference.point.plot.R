@@ -53,8 +53,8 @@ reference.point.plot<-function(ssnmsy,
   mtext("partially",4,line=.5,cex=1.25,adj=.14,las=0)
   mtext("exploited",4,line=1.5,cex=1.25,adj=.13,las=0)
   
-  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
-  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("URR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("fully =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   
