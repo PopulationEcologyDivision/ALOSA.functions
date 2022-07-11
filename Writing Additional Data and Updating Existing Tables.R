@@ -18,16 +18,13 @@ require(ROracle)
 ##      after it!
 
 
-## Set up Environment with all the functions in it:
-#repeat until 'invalid 'name' argument error
-detach(myfunctions)
-#Attach environment
-env <- attach(NULL, name = "myfunctions")
-source("R:/Science/Population Ecology Division/DFD/Alosa/functions.R",local=env)
+
+source("C:/Users/FultonS/Documents/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
 #---
 #Set account name, password, and server
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
-                  believeNRows=FALSE) 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, 
+                  oracle.password.GASP, "PTRAN", believeNRows=FALSE) 
 
 #---///---///---///---///---///---///---///---///---///---///---///---///---///
 
@@ -90,6 +87,8 @@ dbCommit(channel)
 #
 
 #---///---///---///---///---///---///---///---///---///---///---///---///---///
+
+# Add a row to an existing table:
 
 #---///---///---///---///---///---///---///---///---///---///---///---///---///
 
