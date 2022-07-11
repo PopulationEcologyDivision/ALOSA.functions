@@ -18,8 +18,11 @@ require(ROracle)
 ##      after it!
 
 
+#Make sure the 'git' folder is in your home directory. You can find out what
+# your home directory is by running:
+# path.expand('~')
 
-source("C:/Users/FultonS/Documents/git/ALOSA.functions/functions/sourcery.R")
+source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 #---
 #Set account name, password, and server
