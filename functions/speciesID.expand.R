@@ -10,7 +10,7 @@
 # This functions uses:
 #     - 
 
-speciesID.expand<-function(data,rivername,year){
+speciesID.expand<-function(data,biofilename,rivername,year){
   data[is.na(data)]=0
   totalfish<-sum(data$all.ID,na.rm=T)
   newdata<-data.frame(river=rep(rivername,totalfish),
@@ -36,7 +36,7 @@ speciesID.expand<-function(data,rivername,year){
     sppID=c(sppID,temp)
   }
   newdata$species<-sppID
-  write.table(newdata,file="TUSKET_Vaughan_2022_biocharacteristics data.csv",
+  write.table(newdata,file=biofilename,
             na="",col.names=F, row.names=F,sep=",",
             append=TRUE)
 }

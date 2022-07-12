@@ -14,7 +14,7 @@
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"GASPEREAU_2022_bio.csv"
+filename.biodata<-"TUSKET_Vaughan_2022_biocharacteristics data.csv"
 filename.agedata<-"GASPEREAU_2022_age.csv"
 filename.countdata<-"Vaughan 2022 Count Data - Sheet1.csv"
 
@@ -26,7 +26,12 @@ source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 
 #-------------------------------------------------------------------------------
-# Look for data entry errors in BIO and AGE data files:
+# If needed, add the speciesID only fish to the bio characteristics file:
+
+speciesID.expand(data=read.csv(file.choose(),header=T,stringsAsFactors = F),
+                 filename.biodata,Tusket, 2022)
+
+# Double check for data entry errors in BIO and AGE data files:
 
 # Use checker's function on Biological Data. Fix any errors in the csv 
 # directly before moving on.

@@ -72,9 +72,13 @@ twospecies.river.escapement<-function(filename,
     cat("Warning: This data file contains multiple years")
   }
   #---
+  
+  
   # Split counts into two species counts based on daily species split estimate.
   alewife.count.data<
   blueback.count.data
+  
+  
   
   #---
   # DATA CLEAN UP/REORGANIZATION
