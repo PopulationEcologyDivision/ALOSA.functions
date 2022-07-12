@@ -41,6 +41,8 @@ blank.datasheets<-function(seed,startday,rivername,year,recordtime=T,
                            all.sampled=NA,
                            BB.ID=NA,
                            all.ID=NA,
+                           BB.tag=NA,
+                           all.tag=NA,
                            BB.prop=NA)
     write.csv(speciesprop,file=paste(rivername,year,"in season Species ID data.csv",sep="_"),
               na="",row.names = F)
