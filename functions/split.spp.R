@@ -34,6 +34,7 @@ split.spp<-function(year,siteID,channel,accessory.datafile){
   summarycounts[is.na(summarycounts)]<-0
   summarycounts$BBprop=summarycounts$BB/summarycounts$all
   summarycounts<-summarycounts[order(summarycounts$MON,summarycounts$DAY),]
+  names(summarycounts)<-c("day","mon","all","BB","BBprop")
   return(summarycounts)
 }
 
