@@ -16,18 +16,14 @@
 
 filename.biodata<-"GASPEREAU_2022_bio.csv"
 filename.agedata<-"GASPEREAU_2022_age.csv"
-filename.countdata<-"GASPEREAU_2022_count.csv"
+filename.countdata<-"Vaughan 2022 Count Data - Sheet1.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #===============================================================================
 #
-## Set up Environment with all the functions in it:
-#repeat until 'invalid 'name' argument error
-detach(myfunctions)
-#Attach environment
-env <- attach(NULL, name = "myfunctions")
-source("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/functions.R",local=env)
-
+# Load functions if not already loaded.
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
 
 #-------------------------------------------------------------------------------
 # Look for data entry errors in BIO and AGE data files:

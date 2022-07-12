@@ -29,7 +29,8 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #...............................................................................
 
 year<-year
-site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
+site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
+#                  1=Carleton and 2=Vaughan. Use 'i.forgot.the.siteIDs(channel) for other locations
 nspp<-nspecies # Either 1 or 2
 sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=seed #Seed used for scale selection. 
