@@ -2,16 +2,14 @@
 #rm(list = ls())
 #cat("\014")
 
-#repeat until 'invalid 'name' argument error
-detach(myfunctions)
-#Attach environment
-env <- attach(NULL, name = "myfunctions")
-source("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/functions.R",local=env)
+# Load functions if not already loaded.
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
 #---===---===---===---===---===---===---===---===---===---===---===---===---===
 #---===---===---===---===---===---===---===---===---===---===---===---===---===
 require(ROracle)
   #Set account name, password, and server
-  channel=dbConnect(DBI::dbDriver("Oracle"), "FULTONS", "Aqua15nice#", "PTRAN" , 
+  channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username, oracle.password, "PTRAN" , 
                     believeNRows=FALSE)
   
 ##LOAD IN DATA:

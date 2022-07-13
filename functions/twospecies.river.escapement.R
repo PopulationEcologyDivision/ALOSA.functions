@@ -323,10 +323,10 @@ twospecies.river.escapement<-function(filename,
   
   daily.summary$total<-round(daily.summary$total,digits=1)
   if(i==1){
-   assign('daily.summary.A',daily.summary) 
+   assign('daily.summary.A',daily.summary,envir = .GlobalEnv) 
   }
   if(i==2){
-    assign('daily.summary.B',daily.summary) 
+    assign('daily.summary.B',daily.summary,envir = .GlobalEnv) 
   }
   }
   ##End of function::  

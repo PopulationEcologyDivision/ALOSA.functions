@@ -38,23 +38,25 @@ nsamples=500  #Number of scale selected to be aged
 #---...---...---...---...---...---...---...---...---...---...---...---...---...
 # Species split
 
-species.split<-split.spp(2021,2,channel,"accessory_data.csv")
+species.split<-split.spp(year,site,channel,"accessory_data.csv")
 
 if(nspp==1){
   daily.count<-onespecies.river.escapement(year=year,
                               site=site,
                               channel=channel) }
 if(nspp==2){
-  twospecies.river.escapement(year=2021,
-                                  site=2,
+  twospecies.river.escapement(year=year,
+                                  site=site,
                                   channel=channel,
                                   species.split=species.split)  }
 
 #Get bio data from DB
-bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
+bio.data.A<-get.bio.data(year=year,siteID = site, sppID=3501, channel)
+bio.data.B<-get.bio.data(year=year,siteID = site, sppID=3502, channel)
 
-missingdays<-missing.days(bio.data)
-mergedays<- c() # For missing sample days, we merge the counts from two days
+missingdays<-missing.days(bio.data.A)
+
+mergedays<- c(117,120,120,123,127,130,134,137) # For missing sample days, we merge the counts from two days
                 # and use that in the weighting calculation. 
                 # For example, ff day 112 is missing then decide if you want to merge the counts
                 # with day 111 or 113. Do this for all the missing dates and provide the
