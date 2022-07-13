@@ -99,6 +99,7 @@ dbCommit(channel)
 
 #---///---///---///---///---///---///---///---///---///---///---///---///---///
 
+## GARBAGE BELOW: USE ONLY AS CRAPPY REFERENCE
 
 bio.in.oracle=dbGetQuery(channel, "SELECT 
                                    ALOSA_FISH_AGE_DATA.FISH_ID,

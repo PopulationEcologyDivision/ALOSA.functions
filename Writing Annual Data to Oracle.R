@@ -14,9 +14,9 @@
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"TUSKET_Vaughan_2022_biocharacteristics data.csv"
+filename.biodata<-"GASPEREAU_2022_bio.csv"
 filename.agedata<-"GASPEREAU_2022_age.csv"
-filename.countdata<-"Vaughan 2022 Count Data - Sheet1.csv"
+filename.countdata<-"GASPEREAU_2022_count.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #===============================================================================
@@ -50,13 +50,14 @@ require("ROracle")
 
 #-------------------------------------------------------------------------------
 #Set account name, password, and server
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, 
+                  oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 #-------------------------------------------------------------------------------
 # Format count data
 oracle.count<-format.COUNTDATA.onesite(filename.countdata)
 
-#oracle.count<-oracle.count[oracle.count$COUNT_ID<=1375,]
+#oracle.count<-oracle.count[oracle.count$COUNT_ID>1375,]
 
 # If you are happy with it, proceed to uploading it the GASPERA database
 dbWriteTable(conn = channel, schema="GASPEREA", 
@@ -108,8 +109,8 @@ dbWriteTable(conn = channel, schema="GASPEREA",
 
 # You can pull all data from the year you are uploading using the code below:
 # (Modify table name and year as needed)
-# X<-dbGetQuery(channel,"SELECT * FROM GASPEREA.ALOSA_FISH_BIO_DATA 
-#               WHERE ALOSA_FISH_BIO_DATA.YEAR = 2021")
+#X<-dbGetQuery(channel,"SELECT * FROM GASPEREA.ALOSA_VIDEO_COUNT_DATA 
+#               WHERE ALOSA_VIDEO_COUNT_DATA.YEAR = 2022")
 
 # Then compare the data that exits in the database to what you are 
 # trying to add.
