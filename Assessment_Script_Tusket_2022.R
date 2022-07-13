@@ -35,14 +35,20 @@ sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=seed #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
 
+#---...---...---...---...---...---...---...---...---...---...---...---...---...
+# Species split
+
+species.split<-split.spp(2021,2,channel,"accessory_data.csv")
+
 if(nspp==1){
   daily.count<-onespecies.river.escapement(year=year,
                               site=site,
                               channel=channel) }
 if(nspp==2){
-  daily.count<-twospecies.river.escapement(year=year,
-                                  site=site,
-                                  channel=channel)  }
+  twospecies.river.escapement(year=2021,
+                                  site=2,
+                                  channel=channel,
+                                  species.split=species.split)  }
 
 #Get bio data from DB
 bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)

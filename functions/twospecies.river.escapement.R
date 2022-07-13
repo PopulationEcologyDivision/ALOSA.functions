@@ -25,11 +25,12 @@
 
 
 twospecies.river.escapement<-function(filename,
-                                      fixtime=F,
+                                      fixtime=T,
                                       database=T,
                                       year,
                                       site,
-                                      channel)
+                                      channel,
+                                      species.split)
 {
   if(database==T){
     count.data<-get.count.data(year, site, channel)
@@ -75,65 +76,82 @@ twospecies.river.escapement<-function(filename,
   
   
   # Split counts into two species counts based on daily species split estimate.
-  alewife.count.data<
-  blueback.count.data
+  count.data<-merge(count.data,species.split,all.x=T)
+  count.data$BBprop[is.na(count.data$BBprop)]<-0
   
+  alewife.count.data<-count.data
+  alewife.count.data$count.upstream<-
+    alewife.count.data$count.upstream*(1-alewife.count.data$BBprop)
+  alewife.count.data$count.downstream<-
+    alewife.count.data$count.downstream*(1-alewife.count.data$BBprop)
+  
+  blueback.count.data<-count.data
+  blueback.count.data$count.upstream<-
+    blueback.count.data$count.upstream*(blueback.count.data$BBprop)
+  blueback.count.data$count.downstream<-
+    blueback.count.data$count.downstream*(blueback.count.data$BBprop)
   
   
   #---
   # DATA CLEAN UP/REORGANIZATION
-  count.data$total=count.data$count.upstream-count.data$count.downstream
+  for (i in 1:2){
+    if(i==1){
+      data=alewife.count.data}
+    if(i==2){
+      data=blueback.count.data}
+    
+  data$total=data$count.upstream-count.data$count.downstream
   #date conversion amalgamates month and year columns into one format
   
   if(database==F & fixtime==T){
-    count.data$total=round((count.data$total/
-                              (count.data$minutes*60+count.data$seconds))*300)
+    data$total=round((data$total/
+                              (data$minutes*60+data$seconds))*300)
   }
   
-  count.data$date=as.Date(paste(count.data$day,count.data$mon,count.data$year,sep="-"),
+  data$date=as.Date(paste(data$day,data$mon,data$year,sep="-"),
                           format="%d-%m-%Y")
   
   #dayofyear uses "strftime" to evaluate which day of the year each date aligns with
-  count.data$dayofyear=as.numeric(strftime(count.data$date, format="%j"))
+  data$dayofyear=as.numeric(strftime(data$date, format="%j"))
   
   
   #Extract DOY for first and last day that counts were conducted
-  start.end=first.last.day(count.data,
+  start.end=first.last.day(data,
                            "dayofyear",
-                           count.data$year[1],
+                           data$year[1],
                            "total")
   
   #Select only data from day of first count onwards
-  count.data=count.data[count.data$dayofyear>=start.end[1] &
-                          count.data$dayofyear<=start.end[2],]
+  data=data[data$dayofyear>=start.end[1] &
+                          data$dayofyear<=start.end[2],]
   #===
   # MEANS, STANDARD DEVIATION, VARIANCE, STANDARD ERROR 
   # AND TIME UNITS SAMPLES PER PERIOD PER DAY (two way stratified)
   
   # 1A: Mean Counts
-  strata.means<-aggregate(count.data$total,by=list(count.data$dayofyear,
-                                                   count.data$strata),
+  strata.means<-aggregate(data$total,by=list(data$dayofyear,
+                                                   data$strata),
                           FUN="mean",na.rm=T)
   colnames(strata.means)=c("dayofyear","strata","mean")
   
   # 2A: Standard Deviation
-  strata.sd=aggregate(count.data$total,by=list(count.data$dayofyear,
-                                               count.data$strata),
+  strata.sd=aggregate(data$total,by=list(data$dayofyear,
+                                               data$strata),
                       FUN="sd",na.rm=T)
   
   # 3A: Standard Error
-  strata.se=aggregate(count.data$total,by=list(count.data$dayofyear,
-                                               count.data$strata),
+  strata.se=aggregate(data$total,by=list(data$dayofyear,
+                                               data$strata),
                       FUN=user.SE)
   
   # 4A: Variance
-  strata.var=aggregate(count.data$total,by=list(count.data$dayofyear,
-                                                count.data$strata),
+  strata.var=aggregate(data$total,by=list(data$dayofyear,
+                                                data$strata),
                        FUN=function(x){var(x,na.rm=T)})
   
   # 5A: Time units sampled
-  strata.n=aggregate(count.data$total,by=list(count.data$dayofyear,
-                                              count.data$strata),
+  strata.n=aggregate(data$total,by=list(data$dayofyear,
+                                              data$strata),
                      FUN=user.count)
   
   # 6A: Compile into dataframe 
@@ -145,7 +163,7 @@ twospecies.river.escapement<-function(filename,
                     sample.var=strata.var$x,
                     n.counts=strata.n$x) 
   #add column containing total number of time units per strata per day
-  n.strata=max(count.data$strata,na.rm=T)
+  n.strata=max(data$strata,na.rm=T)
   
   if(!(n.strata==5|n.strata==6)){
     stop("Number of Strata must be 5 or 6") }
@@ -278,7 +296,7 @@ twospecies.river.escapement<-function(filename,
   
   # Daily summary table
   daily.summary<-merge(daily.summary,
-                       unique(count.data[,c("mon","day","dayofyear")]),
+                       unique(data[,c("mon","day","dayofyear")]),
                        by="dayofyear",all.x=T)
   daily.summary<-(daily.summary[,c("mon","day","dayofyear",
                                    "total","sd","clow","chigh")])
@@ -304,6 +322,12 @@ twospecies.river.escapement<-function(filename,
   
   
   daily.summary$total<-round(daily.summary$total,digits=1)
-  return(daily.summary)
+  if(i==1){
+   assign('daily.summary.A',daily.summary) 
+  }
+  if(i==2){
+    assign('daily.summary.B',daily.summary) 
+  }
+  }
   ##End of function::  
 } 

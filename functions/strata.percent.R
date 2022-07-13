@@ -11,9 +11,9 @@
 #     - no other user defined functions used.
 
 strata.percent=function(strata,data){
-  if (!strata==1){
-    stop ("More than one strata entered. Please change.")
-  }
+  # if (!strata==1){
+  #   stop ("More than one strata entered. Please change.")
+  # }
   total.s=sum(data$total[data$strata==strata])
   total.all=sum(data$total,na.rm=TRUE)
   return(paste(total.s," (",round(total.s/total.all*100,digits=3),"%)",

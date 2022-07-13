@@ -19,7 +19,7 @@ split.spp<-function(year,siteID,channel,accessory.datafile){
   biodataALL=biodataALL[,c("DAY","MON","SPECIES_ID")]
   goodnames<-c("DAY","MON","SPECIES_ID")
   if(!names(accessorydata)==goodnames){
-    stop("accessory data format does not match ""DAY","MON","SPECIES_ID"" format")
+    stop("accessory data format does not match DAY,MON,SPECIES_ID format")
   }
     allID=rbind(biodataALL,accessorydata)
   temp0=aggregate(allID$SPECIES_ID,by=list(DAY=allID$DAY,MON=allID$MON),
