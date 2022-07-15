@@ -27,18 +27,18 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
-
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets")
 year<-2022
 site<-2 # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
 nspp<-2 # Either 1 or 2
 sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=seed #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
-
+accessory.datafile="TUSKET_2022_VAUGHAN_accessory_data.csv"
 #---...---...---...---...---...---...---...---...---...---...---...---...---...
 # Species split
 
-species.split<-split.spp(year,site,channel,"accessory_data.csv")
+species.split<-split.spp(year,site,channel,accessory.datafile)
 
 if(nspp==1){
   daily.count<-onespecies.river.escapement(year=year,
