@@ -94,6 +94,8 @@ twospecies.river.escapement<-function(filename,
   
   #---
   # DATA CLEAN UP/REORGANIZATION
+  ##create output list before forloop
+  out<-list()
   for (i in 1:2){
     if(i==1){
       data=alewife.count.data}
@@ -103,7 +105,7 @@ twospecies.river.escapement<-function(filename,
   data$total=data$count.upstream-count.data$count.downstream
   #date conversion amalgamates month and year columns into one format
   
-  if(database==F & fixtime==T){
+  if(fixtime==T){
     data$total=round((data$total/
                               (data$minutes*60+data$seconds))*300)
   }
@@ -322,12 +324,19 @@ twospecies.river.escapement<-function(filename,
   
   
   daily.summary$total<-round(daily.summary$total,digits=1)
-  if(i==1){
-   assign('daily.summary.A',daily.summary,envir = .GlobalEnv) 
+  
+  # if(i==1){
+  #  assign('daily.summary.A',daily.summary,envir = .GlobalEnv) 
+  # }
+  # if(i==2){
+  #   assign('daily.summary.B',daily.summary,envir = .GlobalEnv) 
+  # }
+  # 
+  out[[i]]<-daily.summary
+  
+  
   }
-  if(i==2){
-    assign('daily.summary.B',daily.summary,envir = .GlobalEnv) 
-  }
-  }
+  
+  return(out)
   ##End of function::  
 } 
