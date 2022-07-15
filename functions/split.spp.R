@@ -22,7 +22,15 @@ split.spp<-function(year,siteID,channel,accessory.datafile){
   if(any(name.check==FALSE)){
     stop("accessory data format does not match DAY,MON,SPECIES_ID format")
   }
-    allID=rbind(biodataALL,accessorydata)
+  ##need accessory data file species names to get codes
+  alewife.names<-c("Alewife","alewife","A","a","ALEWIFE")
+  blueback.names<-c("Blueback","blueback","B","b","BB","BH","bb","bh",
+                    "Blueback Herring","Blueback herring","blueback herring")
+  shad.names<-c("Shad","S","shad","SHAD")
+  accessorydata$SPECIES_ID[accessorydata$SPECIES_ID %in% alewife.names]<-3501
+  accessorydata$SPECIES_ID[accessorydata$SPECIES_ID %in% blueback.names]<-3502
+  accessorydata$SPECIES_ID[accessorydata$SPECIES_ID %in% shad.names]<-3503
+  allID=rbind(biodataALL,accessorydata)
   temp0=aggregate(allID$SPECIES_ID,by=list(DAY=allID$DAY,MON=allID$MON),
                   FUN=user.count)
   names(temp0)[3]<-'all'
@@ -39,5 +47,3 @@ split.spp<-function(year,siteID,channel,accessory.datafile){
   return(summarycounts)
 }
 
-
-accessory.datafile="accessory_data.csv"
