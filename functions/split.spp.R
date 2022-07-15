@@ -18,7 +18,8 @@ split.spp<-function(year,siteID,channel,accessory.datafile){
   accessorydata=read.csv(accessory.datafile,header=T,stringsAsFactors = F)
   biodataALL=biodataALL[,c("DAY","MON","SPECIES_ID")]
   goodnames<-c("DAY","MON","SPECIES_ID")
-  if(!names(accessorydata)==goodnames){
+  name.check<-names(accessorydata)==goodnames
+  if(any(name.check==FALSE)){
     stop("accessory data format does not match DAY,MON,SPECIES_ID format")
   }
     allID=rbind(biodataALL,accessorydata)

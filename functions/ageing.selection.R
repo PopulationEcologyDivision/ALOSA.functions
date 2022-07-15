@@ -1,7 +1,7 @@
 #
-#Description:
+#Description: Need to better describe variables
 #
-# Inputs:
+# Inputs: countdata is actually daily.summary object from escapement script
 
 #
 # This function is used by:
