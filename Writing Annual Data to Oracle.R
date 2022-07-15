@@ -14,9 +14,9 @@
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"GASPEREAU_2022_bio.csv"
+filename.biodata<-"TUSKET_2022_VAUGHAN_bio.csv"
 filename.agedata<-"GASPEREAU_2022_age.csv"
-filename.countdata<-"GASPEREAU_2022_count.csv"
+filename.countdata<-"TUSKET_2022_VAUGHAN_count.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #===============================================================================
@@ -29,7 +29,7 @@ sourcery()
 # If needed, add the speciesID only fish to the bio characteristics file:
 
 speciesID.expand(data=read.csv(file.choose(),header=T,stringsAsFactors = F),
-                 filename.biodata,Tusket, 2022)
+                 filename.biodata, "Tusket", 2022)
 
 # Double check for data entry errors in BIO and AGE data files:
 
@@ -71,6 +71,8 @@ dbWriteTable(conn = channel, schema="GASPEREA",
 #-------------------------------------------------------------------------------
 # Format biological data
 oracle.bio<-format.BIODATA.onesite(filename.biodata)
+
+oracle.bio<-oracle.bio[oracle.bio$FISH_ID>1338,]
 
 # If you are happy with it, proceed to uploading it the GASPERA database
 dbWriteTable(conn = channel, schema="GASPEREA", 
