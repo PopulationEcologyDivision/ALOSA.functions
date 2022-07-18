@@ -14,17 +14,28 @@
 # This functions uses:
 #     - no other user defined functions used.
 
-missingstrata<-function(data,start.end){
+missingstrata<-function(data,start.end,n.strata){
+  
+  #dataframe showing day numbers and strata 
+  junk99<-data.frame(dayofyear=factor(start.end[1]:start.end[2],
+                                      levels=c(as.character(start.end[1]:start.end[2]))),
+                    strata=factor(rep(1:n.strata,each=length(start.end[1]:start.end[2])),
+                                   levels=c(as.character(1:n.strata)))
+                     
+                     ) 
+  
+  ##data from the database has rows with no counts removed. previously this script
+  ##did not fill in the missing times. merging the junk99 object with the count
+  ##object creates blank rows for any missing counts, allowing the next section
+  ##to fill in the missing times with the model results
+  data<-merge(junk99,data,by=c("strata","dayofyear"),all.x=T)
+  
   glm.result<-glm(mean ~ 
                     as.factor(dayofyear)+
                     as.factor(strata), 
                   family="poisson",
                   data=data[!data$mean<0,])
-  #dataframe showing day numbers and strata 
-  junk99<-data.frame(dayofyear=factor(start.end[1]:start.end[2],
-                                      levels=c(as.character(start.end[1]:start.end[2]))), 
-                     strata=factor(rep(1:5,each=length(start.end[1]:start.end[2])),
-                                   levels=c(as.character(1:5)))) 
+
   #GLM used to predict mean counts for strata with no counts, 
   # predicting counts for uncountable time units
   junk99.prediction<-predict(glm.result, newdata=junk99, type="response") 
