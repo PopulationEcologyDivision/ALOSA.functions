@@ -176,7 +176,8 @@ twospecies.river.escapement<-function(filename,
   if(n.strata==6){
     min5.periods<-data.frame(strata=c(1,2,3,4,5,6),
                              n.periods=c(60,69,36,36,51,36))}
-  #merge and order by strata
+
+  #merge and order by strata, after all missing counts have been filled in
   summary.data<-merge(junk2,min5.periods,by="strata") 
   
   #--- UNCOUNTABLE TIME UNITS AND EXTRAPOLATION ---
@@ -198,7 +199,12 @@ twospecies.river.escapement<-function(filename,
     print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
     # fill in missing mean count, n.counts, sample.var, and sd for
     # missing strata.
-    summary.data=missingstrata(summary.data,start.end)
+    summary.data=missingstrata(summary.data,start.end,n.strata)
+    ##need to remerge with min5.periods to fill in the n.periods vector for
+    ##any added rows. remove the n.periods column as a hacky workaround
+    ##to prevent column duplication
+    summary.data$n.periods<-NULL
+    summary.data<-merge(summary.data,min5.periods,by=c("strata")) 
   }
   # If number of strata with counts >= 1 is >0 stop and use lm to 
   # extrapolate counts of missing strata. If the entire day is missing,
@@ -263,7 +269,8 @@ twospecies.river.escapement<-function(filename,
                       by=list(summary.data$dayofyear),FUN="sum",na.rm=T)
   
   # 2C: Daily Standard Deviation
-  daily.sd=sqrt(daily.var)
+  ##was an error when the column wasn't specified for daily.var object
+  daily.sd=sqrt(daily.var$x)
   
   # DAILY ESCAPEMENT TOTALS (1WS) AND BINDING 1WS VALUES ---
   
@@ -273,7 +280,7 @@ twospecies.river.escapement<-function(filename,
   colnames(daily.total)=c("dayofyear","total")
   
   # 2D: Bind all 1WS into dataframe
-  daily.summary<-cbind(daily.total,daily.var[,2], daily.sd[,2])
+  daily.summary<-cbind(daily.total,daily.var[,2], daily.sd)
   colnames(daily.summary)=c("dayofyear","total","variance","sd")
   
   
