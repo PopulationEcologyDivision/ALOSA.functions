@@ -32,7 +32,7 @@ year<-2022
 site<-2 # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
 nspp<-2 # Either 1 or 2
 sppID<-sppID #Either 3501 for Alewife or 3502 for BB
-seed=seed #Seed used for scale selection. 
+seed=117 #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
 accessory.datafile="TUSKET_2022_VAUGHAN_accessory_data.csv"
 #---...---...---...---...---...---...---...---...---...---...---...---...---...
@@ -43,26 +43,34 @@ species.split<-split.spp(year,site,channel,accessory.datafile)
 if(nspp==1){
   daily.count<-onespecies.river.escapement(year=year,
                               site=site,
-                              channel=channel) }
+                              channel=channel) 
+  }
 if(nspp==2){
-  twospecies.river.escapement(year=year,
+  out<-twospecies.river.escapement(year=year,
                                   site=site,
                                   channel=channel,
-                                  species.split=species.split)  }
+                                  species.split=species.split)  
+}
 
+##the list outputs as 172 long because of all the print objects. if the stuff 
+##printed in the function changes, the below will not work
+daily.summary.B<-out[[170]]
+daily.summary.A<-out[[172]]
 #Get bio data from DB
 bio.data.A<-get.bio.data(year=year,siteID = site, sppID=3501, channel)
 bio.data.B<-get.bio.data(year=year,siteID = site, sppID=3502, channel)
 
 missingdays<-missing.days(bio.data.A)
 
-mergedays<- c(117,120,120,123,127,130,134,137) # For missing sample days, we merge the counts from two days
+# mergedays<- c(117,120,120,123,127,130,134,137) # For missing sample days, we merge the counts from two days
                 # and use that in the weighting calculation. 
                 # For example, ff day 112 is missing then decide if you want to merge the counts
                 # with day 111 or 113. Do this for all the missing dates and provide the
                 # replacement days in this vector. Length(mergedays)==Length(missingdays)
+mergedays<-NULL
+missingdays<-NULL
             
-ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
+ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 
 
 
