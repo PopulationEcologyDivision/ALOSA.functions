@@ -169,7 +169,7 @@ onespecies.river.escapement<-function(filename,
     print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
     # fill in missing mean count, n.counts, sample.var, and sd for
     # missing strata.
-    summary.data=missingstrata(summary.data,start.end)
+    summary.data=missingstrata(summary.data,start.end,n.strata)
   }
   # If number of strata with counts >= 1 is >0 stop and use lm to 
   # extrapolate counts of missing strata. If the entire day is missing,
