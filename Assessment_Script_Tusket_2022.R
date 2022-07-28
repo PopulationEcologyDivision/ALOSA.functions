@@ -73,6 +73,50 @@ missingdays<-NULL
 ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 
 
+##OK now gotta do the stupid messed up counts at Carleton and Powerhouse.
+##both have entire missed days. Total count is meaningless, so output
+##should be table of daily escapements
+
+##Carleton
+##The count file has counts in it that are bad - ie days where mass downstream
+##migration was occuring. Students were told not to count times when there was
+##a lot moving down, but they did count when there was a lot moving up.
+##the large numbers moving up are likely downstream migrants going back and
+##forth. those entire days should be removed from the count. we will do this
+## here, and write out a csv that can then be read into the escapement script
+filename="Carleton Count sheet 2022 - Sheet1.csv"
+count.data=read.csv(filename,header=T,stringsAsFactors = F)
+##manually delete counts based on their comments
+count.data$count.upstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
+count.data$count.downstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
+count.data$count.upstream[1060]<-NA #screen partially covered by spider 
+count.data$count.downstream[1060]<-NA #screen partially covered by spider 
+count.data$count.upstream[1075]<-NA #screen partially covered by spider 
+count.data$count.downstream[1075]<-NA #screen partially covered by spider 
+count.data$count.upstream[1181]<-NA #screen partially covered by spider 
+count.data$count.downstream[1181]<-NA #screen partially covered by spider 
+count.data$count.upstream[1254]<-NA #screen partially covered by spider 
+count.data$count.downstream[1254]<-NA #screen partially covered by spider 
+##downstream migration begins May 23 evening.
+count.data$count.upstream[1266:1268]<-NA #downstream movement
+count.data$count.downstream[1266:1268]<-NA #downstream movement
+##entire day of 24th, 25th, and 26th should be removed due to downstream migration
+count.data$count.upstream[1273:1344]<-NA #downstream movement
+count.data$count.downstream[1273:1344]<-NA #downstream movement
+##Spidertime
+count.data$count.upstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
+count.data$count.downstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
+count.data$count.upstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
+count.data$count.downstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
+count.data$count.upstream[1410:1414]<-NA #Spider and fallback
+count.data$count.downstream[1410:1414]<-NA #Spider and fallback
+##All fallback from May 31 afternoon onward
+##keep counts from all strata on May 31, NA for fallbacks
+count.data$count.upstream[1456:1464]<-NA #Spider and fallback
+count.data$count.downstream[1456:1464]<-NA #Spider and fallback
+count.data<-count.data[1:1464,]
+
+write.csv(count.data,"Carleton Count Sheet Cleaned 2022.csv",row.names=F,na="")
 
 
 
@@ -84,9 +128,7 @@ ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 
 
 
-
-
-
+stop()
 
 reference.point.plot(400000 ,232400 ,0.53,0.35,rivername="Gaspereau River",
                      pointsX=TR$escape[TR$species=="A"],pointsY=TR$er[TR$species=="A"],
