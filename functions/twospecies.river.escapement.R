@@ -96,13 +96,14 @@ twospecies.river.escapement<-function(filename,
   # DATA CLEAN UP/REORGANIZATION
   ##create output list before forloop
   out<-list()
+
   for (i in 1:2){
     if(i==1){
       data=alewife.count.data}
     if(i==2){
       data=blueback.count.data}
     
-  data$total=data$count.upstream-count.data$count.downstream
+  data$total=data$count.upstream-data$count.downstream
   #date conversion amalgamates month and year columns into one format
   
   if(fixtime==T){
@@ -340,7 +341,6 @@ twospecies.river.escapement<-function(filename,
   # }
   # 
   out[[i]]<-daily.summary
-  
   
   }
   

@@ -11,7 +11,7 @@
 #...............................................................................
 require(ROracle)
 #-------------------------------------------------------------------------------
-setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
+# setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #...............................................................................
 #
@@ -27,7 +27,7 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets")
 year<-2022
 site<-2 # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
 nspp<-2 # Either 1 or 2
@@ -55,7 +55,7 @@ if(nspp==2){
 ##the list outputs as 172 long because of all the print objects. if the stuff 
 ##printed in the function changes, the below will not work
 daily.summary.B<-out[[170]]
-daily.summary.A<-out[[172]]
+# daily.summary.A<-out[[172]] ##This still has dayofyear out of order
 #Get bio data from DB
 bio.data.A<-get.bio.data(year=year,siteID = site, sppID=3501, channel)
 bio.data.B<-get.bio.data(year=year,siteID = site, sppID=3502, channel)
@@ -69,15 +69,28 @@ missingdays<-missing.days(bio.data.A)
                 # replacement days in this vector. Length(mergedays)==Length(missingdays)
 mergedays<-NULL
 missingdays<-NULL
-            
-ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
+####Only run this once! Completed July####            
+# ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 
+##data cleanup
+daily.summary.A$dayofyear<-as.integer(levels(daily.summary.A$dayofyear))
+daily.summary.B$dayofyear<-as.integer(levels(daily.summary.B$dayofyear))
+
+daily.summary.A$total<-round(daily.summary.A$total,0)
+daily.summary.A$sd<-round(daily.summary.A$sd,0)
+daily.summary.A$clow<-round(daily.summary.A$clow,0)
+daily.summary.A$chigh<-round(daily.summary.A$chigh,0)
+
+daily.summary.B$total<-round(daily.summary.B$total,0)
+daily.summary.B$sd<-round(daily.summary.B$sd,0)
+daily.summary.B$clow<-round(daily.summary.B$clow,0)
+daily.summary.B$chigh<-round(daily.summary.B$chigh,0)
 
 ##OK now gotta do the stupid messed up counts at Carleton and Powerhouse.
 ##both have entire missed days. Total count is meaningless, so output
 ##should be table of daily escapements
 
-##Carleton
+#### Carleton ####
 ##The count file has counts in it that are bad - ie days where mass downstream
 ##migration was occuring. Students were told not to count times when there was
 ##a lot moving down, but they did count when there was a lot moving up.
@@ -85,51 +98,64 @@ ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 ##forth. those entire days should be removed from the count. we will do this
 ## here, and write out a csv that can then be read into the escapement script
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
-filename="Carleton Count sheet 2022 - Sheet1.csv"
-count.data=read.csv(filename,header=T,stringsAsFactors = F)
-##manually delete counts based on their comments
-count.data$count.upstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
-count.data$count.downstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
-count.data$count.upstream[1060]<-NA #screen partially covered by spider 
-count.data$count.downstream[1060]<-NA #screen partially covered by spider 
-count.data$count.upstream[1075]<-NA #screen partially covered by spider 
-count.data$count.downstream[1075]<-NA #screen partially covered by spider 
-count.data$count.upstream[1181]<-NA #screen partially covered by spider 
-count.data$count.downstream[1181]<-NA #screen partially covered by spider 
-count.data$count.upstream[1254]<-NA #screen partially covered by spider 
-count.data$count.downstream[1254]<-NA #screen partially covered by spider 
-##downstream migration begins May 23 evening.
-count.data$count.upstream[1266:1268]<-NA #downstream movement
-count.data$count.downstream[1266:1268]<-NA #downstream movement
-##entire day of 24th, 25th, and 26th should be removed due to downstream migration
-count.data$count.upstream[1273:1344]<-NA #downstream movement
-count.data$count.downstream[1273:1344]<-NA #downstream movement
-##Spidertime
-count.data$count.upstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
-count.data$count.downstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
-count.data$count.upstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
-count.data$count.downstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
-count.data$count.upstream[1410:1414]<-NA #Spider and fallback
-count.data$count.downstream[1410:1414]<-NA #Spider and fallback
-##All fallback from May 31 afternoon onward
-##keep counts from all strata on May 31, NA for fallbacks
-count.data$count.upstream[1456:1464]<-NA #Spider and fallback
-count.data$count.downstream[1456:1464]<-NA #Spider and fallback
-count.data<-count.data[1:1464,]
-
-write.csv(count.data,"Carleton Count Sheet Cleaned 2022.csv",row.names=F,na="")
-
+#### Run to get orignal count file cleaned - Completed July 27 2022 ####
+# filename="Carleton Count sheet 2022 - Sheet1.csv"
+# count.data=read.csv(filename,header=T,stringsAsFactors = F)
+# ##manually delete counts based on their comments
+# count.data$count.upstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
+# count.data$count.downstream[470:491]<-NA ##SH video partially obstructed by grate, count could be inaccurate
+# count.data$count.upstream[1060]<-NA #screen partially covered by spider 
+# count.data$count.downstream[1060]<-NA #screen partially covered by spider 
+# count.data$count.upstream[1075]<-NA #screen partially covered by spider 
+# count.data$count.downstream[1075]<-NA #screen partially covered by spider 
+# count.data$count.upstream[1181]<-NA #screen partially covered by spider 
+# count.data$count.downstream[1181]<-NA #screen partially covered by spider 
+# count.data$count.upstream[1254]<-NA #screen partially covered by spider 
+# count.data$count.downstream[1254]<-NA #screen partially covered by spider 
+# ##downstream migration begins May 23 evening.
+# count.data$count.upstream[1266:1268]<-NA #downstream movement
+# count.data$count.downstream[1266:1268]<-NA #downstream movement
+# ##entire day of 24th, 25th, and 26th should be removed due to downstream migration
+# count.data$count.upstream[1273:1344]<-NA #downstream movement
+# count.data$count.downstream[1273:1344]<-NA #downstream movement
+# ##Spidertime
+# count.data$count.upstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
+# count.data$count.downstream[1376:1381]<-NA #SH left side of camera obstructed (spider)
+# count.data$count.upstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
+# count.data$count.downstream[1393:1394]<-NA #SH left side of camera obstructed (spider)
+# count.data$count.upstream[1410:1414]<-NA #Spider and fallback
+# count.data$count.downstream[1410:1414]<-NA #Spider and fallback
+# ##All fallback from May 31 afternoon onward
+# ##keep counts from all strata on May 31, NA for fallbacks
+# count.data$count.upstream[1456:1464]<-NA #Spider and fallback
+# count.data$count.downstream[1456:1464]<-NA #Spider and fallback
+# count.data<-count.data[1:1464,]
+# 
+# write.csv(count.data,"Carleton Count Sheet Cleaned 2022.csv",row.names=F,na="")
+#### Get Carleton Count summary from file ####
 carleton.summary<-onespecies.partial.river.escapement(filename="Carleton Count Sheet Cleaned 2022.csv",
                                                       fixtime=T,
                                                       database=F)
-
+##Re dd gaps for days with no counts
 carleton.summary$dayofyear<-as.integer(levels(carleton.summary$dayofyear))
 carleton.dayofyear.key<-as.data.frame(c(min(carleton.summary$dayofyear):max(carleton.summary$dayofyear)))
 names(carleton.dayofyear.key)<-"dayofyear"
 carleton.summary<-merge(carleton.summary,carleton.dayofyear.key,by="dayofyear",all.y=T)
 
+##Clean up data
+carleton.summary$total<-round(carleton.summary$total,0)
+carleton.summary$sd<-round(carleton.summary$sd,0)
+carleton.summary$clow<-round(carleton.summary$clow,0)
+carleton.summary$chigh<-round(carleton.summary$chigh,0)
 
-plot(carleton.summary$dayofyear,carleton.summary$total,type="l")
+
+
+plot(carleton.summary$dayofyear,carleton.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish")
+axis(1,at=c(105,121,135,152),labels=c("April 15","May 01","May 15","June 01"))
+axis(2,at=c(0,5000,10000,15000,20000,25000,30000),labels=c(0,5,10,15,20,25,30))
+
+
+
 
 
 ##Powerhouse Ladder

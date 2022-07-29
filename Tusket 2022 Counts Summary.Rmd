@@ -9,8 +9,35 @@ date: '2022-07-28'
 ```{r echo=FALSE}
 ##Make sure you have run the below script to get the output objects needed for this document
 source("~/git/ALOSA.functions/Assessment_Script_Tusket_2022.R")
+library(knitr)
 
+```
 
+Lake Vaughan Fishway Counts
+
+Counts were conducted from April 1 2022 to June 21 2022 at the Lake Vaughan Fishway. No counts were done prior to April 1 as the Ladder was dewatered and impassable. Counts ceased when the daily total was below 1000 for three days in a row
+ A total of XXX +/- XXX Alewife, and XXX +/- XXX Blueback Herring were estimated to have ascended the Ladder. 
+```{r}
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
+axis(1,at=c(90,105,121,135,152,167),labels=c("April 1","April 15","May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000),labels=c(0,10,20,30,40,50,60,70,80,90))
+lines(daily.summary.B$dayofyear,daily.summary.B$total,col="blue")
+```
+
+Carleton Fishway Counts
+
+```{r}
+plot(carleton.summary$dayofyear,carleton.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish")
+axis(1,at=c(105,121,135,152),labels=c("April 15","May 01","May 15","June 01"))
+axis(2,at=c(0,5000,10000,15000,20000,25000,30000),labels=c(0,5,10,15,20,25,30))
+
+kable(carleton.summary[,1:5],caption="Carleton 2022 Ladder Escapement Counts")
+
+```
+
+Powerhouse Ladder Counts
+
+```{r}
 
 ```
 
