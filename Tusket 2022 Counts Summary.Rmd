@@ -1,0 +1,16 @@
+---
+title: "Tusket 2022 Counts Summary"
+output: pdf_document
+date: '2022-07-28'
+---
+
+
+
+```{r echo=FALSE}
+##Make sure you have run the below script to get the output objects needed for this document
+source("~/git/ALOSA.functions/Assessment_Script_Tusket_2022.R")
+
+
+
+```
+

@@ -5,7 +5,7 @@
 #
 # Escapement, run timing, and biological characteristics.
 # 
-# Each site and will have to be assessed separately:
+# Each site will have to be assessed separately:
 #
 #...............................................................................
 #...............................................................................
@@ -27,7 +27,7 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets")
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
 year<-2022
 site<-2 # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
 nspp<-2 # Either 1 or 2
@@ -84,6 +84,7 @@ ageing.selection(daily.summary.A,bio.data.A,missingdays,mergedays,seed,nsamples)
 ##the large numbers moving up are likely downstream migrants going back and
 ##forth. those entire days should be removed from the count. we will do this
 ## here, and write out a csv that can then be read into the escapement script
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
 filename="Carleton Count sheet 2022 - Sheet1.csv"
 count.data=read.csv(filename,header=T,stringsAsFactors = F)
 ##manually delete counts based on their comments
@@ -118,10 +119,24 @@ count.data<-count.data[1:1464,]
 
 write.csv(count.data,"Carleton Count Sheet Cleaned 2022.csv",row.names=F,na="")
 
+carleton.summary<-onespecies.partial.river.escapement(filename="Carleton Count Sheet Cleaned 2022.csv",
+                                                      fixtime=T,
+                                                      database=F)
+
+carleton.summary$dayofyear<-as.integer(levels(carleton.summary$dayofyear))
+carleton.dayofyear.key<-as.data.frame(c(min(carleton.summary$dayofyear):max(carleton.summary$dayofyear)))
+names(carleton.dayofyear.key)<-"dayofyear"
+carleton.summary<-merge(carleton.summary,carleton.dayofyear.key,by="dayofyear",all.y=T)
 
 
+plot(carleton.summary$dayofyear,carleton.summary$total,type="l")
 
 
+##Powerhouse Ladder
+filename="Secret Ladder 2022 - Sheet1.csv"
+count.data=read.csv(filename,header=T,stringsAsFactors = F)
+
+596
 
 
 
@@ -183,130 +198,130 @@ arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
 ### NOT CHECKED BELOW THIS POINT
 
 
-onespecies.river.escapement("TUSKET_test.csv",database=F)
-
-
-
-
-
-"UPDATE ALOSA_VIDEO_COUNT_DATA
-    SET ALOSA_VIDEO_COUNT_DATA.COUNT_DOWN=0
-    WHERE ALOSA_VIDEO_COUNT_DATA.COUNT_ID=747 AND
-          ALOSA_VIDEO_COUNT_DATA.SITE_ID=3 AND
-          ALOSA_VIDEO_COUNT_DATA.YEAR=2021 AND
-          ALOSA_VIDEO_COUNT_DATA.TIME=2020"
-
-x=onespecies.river.escapement(year=2021,
-                              site=3,
-                              channel=channel)
-
-x=onespecies.river.escapement(filename="gasp_count_2021.csv",
-                              year=2021,
-                              site=3,
-                              channel=channel,
-                              database=F)
-
-
-
-agedata=dbGetQuery(channel, "SELECT * FROM ALOSA_FISH_AGE_DATA
-                   LEFT JOIN ALOSA_FISH_BIO_DATA ON
-                      ALOSA_FISH_BIO_DATA.FISH_ID= ALOSA_FISH_AGE_DATA.FISH_ID AND
-                      ALOSA_FISH_BIO_DATA.SITE_ID= ALOSA_FISH_AGE_DATA.SITE_ID AND
-                      ALOSA_FISH_BIO_DATA.YEAR= ALOSA_FISH_AGE_DATA.YEAR
-                   
-                   WHERE ALOSA_FISH_BIO_DATA.SITE_ID=2 AND
-                         ALOSA_FISH_BIO_DATA.YEAR=2021 AND
-                         ALOSA_FISH_BIO_DATA.SPECIES_ID=3502")
-
-agedata=agedata.B
-
-mean.age.all=mean(agedata$CURRENT_AGE)
-mean.age.r=mean(agedata$CURRENT_AGE[agedata$CURRENT_AGE>agedata$AGE_AT_FIRST_SPAWN])
-
-
-mean.firstspawnage.all=mean(agedata$AGE_AT_FIRST_SPAWN)
-mean.firstspawnage.r=mean(agedata$AGE_AT_FIRST_SPAWN[agedata$CURRENT_AGE>agedata$AGE_AT_FIRST_SPAWN])
-
-
-
-
-  
-  age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
-                         dimnames=list(c("First","Second","Third","Fourth"),
-                                       c("Age3","Age4","Age5","Age6","Age7")))
-  for (i in 3:7){
-    CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
-    for (j in i:3){
-      spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
-      proportion=dim(spawngroup)[1]/(dim(agedata)[1])
-      #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
-      if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
-      #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
-    }
-  }
-  age.num.matrix=15394*age.prop.matrix/1000
- 
-   1941411
-  15394
-  
-  # Plot 1a: Proportion of popualtion by age and spawning history:
-  jpeg(width=7,height=5, file=paste("age.plot.prop.text.2021 for", spp,".jpeg", sep="")
-       ,units='in',res=200)
-  #x11(width=7,height=5)
-  barplot(age.prop.matrix[1:4,],ylim=c(0,(max(age.prop.matrix)+0.05)),
-          xlab="Age (Years)",ylab="Proportion",cex.lab=1.5,
-          col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
-  legend(4.75,0.5,legend=c("First","Second","Third","Fourth"),
-         fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
-         title="Number of\nSpawnings",title.adj=1)
-  dev.off()
-  # Plot 1b: Number of fish by age and spawning history:
-  jpeg(width=7,height=5, file=paste("age.plot.number.text.2021 for", spp,".jpeg", sep="")
-       ,units='in',res=200)
-  #x11(width=7,height=5)
-  barplot(age.num.matrix[1:4,],ylim=c(0,(8)),
-          xlab="Age (Years)",ylab="Thousands of Fish",cex.lab=1.5,
-          col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
-  legend(4.75,7,legend=c("First","Second","Third","Fourth"),
-         fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
-         title="Number of\nSpawnings",title.adj=1)
-  dev.off()
-  # # Plot 1c: Proportion of popualtion by age and spawning history (weighted):
-  # jpeg(width=7,height=5, file="age.plot.age.text.w.2018.jpeg",units='in',res=200)
-  # #x11(width=7,height=5)
-  # barplot(age.prop.matrix.weighted[1:4,],ylim=c(0,0.6),
-  # 								xlab="Age (Years)",ylab="Proportion",cex.lab=1.5,
-  # 								col=c("grey15","grey35","grey55","grey75"))
-  # legend(4.75,0.5,legend=c("First","Second","Third","Fourth"),
-  # 							fill=c("grey15","grey35","grey55","grey75"),bty='n',
-  # 							title="Number of\nSpawnings",title.adj=1)
-  # dev.off()
-  # # Plot 1d: Number of fish by age and spawning history:
-  jpeg(width=7,height=5, file="age.plot.num.text.2018.w.jpeg",units='in',res=200)
-  #x11(width=7,height=5)
-  barplot(age.num.matrix[1:4,],ylim=c(0,1600),
-  								xlab="Age (Years)",ylab="Thousands of Fish",cex.lab=1.5,
-  								col=c("grey15","grey35","grey55","grey75"))
-  legend(4.75,1500,legend=c("First","Second","Third","Fourth"),
-  							fill=c("grey15","grey35","grey55","grey75"),bty='n',
-  							title="Number of\nSpawnings",title.adj=1)
-  dev.off()
-  #----------------------------------------------------------------------
-  # Plot 2: Proportion of repeat spawners
-  jpeg(width=7,height=5, file=paste("Repeat spawners 2019 for", spp,".jpeg", sep="")
-       ,units='in',res=200)
-  barplot(c(sum(age.prop.matrix[1,]),
-            sum(age.prop.matrix[2,]),
-            sum(age.prop.matrix[3,]),
-            sum(age.prop.matrix[4,])),ylim=c(0,1),ylab="Proportion",
-          xlab="Spawning Event",cex.lab=1.5,
-          width=0.1,names.arg=c("First","Second","Third","Fourth"))
-  dev.off()
-  
-  boxplot(weight~current.age,data=speciesdata)
-  boxplot(fork.length~current.age,data=speciesdata)
-  with(speciesdata,plot(weight,fork.length))
-}
+# onespecies.river.escapement("TUSKET_test.csv",database=F)
+# 
+# 
+# 
+# 
+# 
+# "UPDATE ALOSA_VIDEO_COUNT_DATA
+#     SET ALOSA_VIDEO_COUNT_DATA.COUNT_DOWN=0
+#     WHERE ALOSA_VIDEO_COUNT_DATA.COUNT_ID=747 AND
+#           ALOSA_VIDEO_COUNT_DATA.SITE_ID=3 AND
+#           ALOSA_VIDEO_COUNT_DATA.YEAR=2021 AND
+#           ALOSA_VIDEO_COUNT_DATA.TIME=2020"
+# 
+# x=onespecies.river.escapement(year=2021,
+#                               site=3,
+#                               channel=channel)
+# 
+# x=onespecies.river.escapement(filename="gasp_count_2021.csv",
+#                               year=2021,
+#                               site=3,
+#                               channel=channel,
+#                               database=F)
+# 
+# 
+# 
+# agedata=dbGetQuery(channel, "SELECT * FROM ALOSA_FISH_AGE_DATA
+#                    LEFT JOIN ALOSA_FISH_BIO_DATA ON
+#                       ALOSA_FISH_BIO_DATA.FISH_ID= ALOSA_FISH_AGE_DATA.FISH_ID AND
+#                       ALOSA_FISH_BIO_DATA.SITE_ID= ALOSA_FISH_AGE_DATA.SITE_ID AND
+#                       ALOSA_FISH_BIO_DATA.YEAR= ALOSA_FISH_AGE_DATA.YEAR
+#                    
+#                    WHERE ALOSA_FISH_BIO_DATA.SITE_ID=2 AND
+#                          ALOSA_FISH_BIO_DATA.YEAR=2021 AND
+#                          ALOSA_FISH_BIO_DATA.SPECIES_ID=3502")
+# 
+# agedata=agedata.B
+# 
+# mean.age.all=mean(agedata$CURRENT_AGE)
+# mean.age.r=mean(agedata$CURRENT_AGE[agedata$CURRENT_AGE>agedata$AGE_AT_FIRST_SPAWN])
+# 
+# 
+# mean.firstspawnage.all=mean(agedata$AGE_AT_FIRST_SPAWN)
+# mean.firstspawnage.r=mean(agedata$AGE_AT_FIRST_SPAWN[agedata$CURRENT_AGE>agedata$AGE_AT_FIRST_SPAWN])
+# 
+# 
+# 
+# 
+#   
+#   age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+#                          dimnames=list(c("First","Second","Third","Fourth"),
+#                                        c("Age3","Age4","Age5","Age6","Age7")))
+#   for (i in 3:7){
+#     CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+#     for (j in i:3){
+#       spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+#       proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+#       #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+#       if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+#       #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+#     }
+#   }
+#   age.num.matrix=15394*age.prop.matrix/1000
+#  
+#    1941411
+#   15394
+#   
+#   # Plot 1a: Proportion of popualtion by age and spawning history:
+#   jpeg(width=7,height=5, file=paste("age.plot.prop.text.2021 for", spp,".jpeg", sep="")
+#        ,units='in',res=200)
+#   #x11(width=7,height=5)
+#   barplot(age.prop.matrix[1:4,],ylim=c(0,(max(age.prop.matrix)+0.05)),
+#           xlab="Age (Years)",ylab="Proportion",cex.lab=1.5,
+#           col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
+#   legend(4.75,0.5,legend=c("First","Second","Third","Fourth"),
+#          fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+#          title="Number of\nSpawnings",title.adj=1)
+#   dev.off()
+#   # Plot 1b: Number of fish by age and spawning history:
+#   jpeg(width=7,height=5, file=paste("age.plot.number.text.2021 for", spp,".jpeg", sep="")
+#        ,units='in',res=200)
+#   #x11(width=7,height=5)
+#   barplot(age.num.matrix[1:4,],ylim=c(0,(8)),
+#           xlab="Age (Years)",ylab="Thousands of Fish",cex.lab=1.5,
+#           col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
+#   legend(4.75,7,legend=c("First","Second","Third","Fourth"),
+#          fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+#          title="Number of\nSpawnings",title.adj=1)
+#   dev.off()
+#   # # Plot 1c: Proportion of popualtion by age and spawning history (weighted):
+#   # jpeg(width=7,height=5, file="age.plot.age.text.w.2018.jpeg",units='in',res=200)
+#   # #x11(width=7,height=5)
+#   # barplot(age.prop.matrix.weighted[1:4,],ylim=c(0,0.6),
+#   # 								xlab="Age (Years)",ylab="Proportion",cex.lab=1.5,
+#   # 								col=c("grey15","grey35","grey55","grey75"))
+#   # legend(4.75,0.5,legend=c("First","Second","Third","Fourth"),
+#   # 							fill=c("grey15","grey35","grey55","grey75"),bty='n',
+#   # 							title="Number of\nSpawnings",title.adj=1)
+#   # dev.off()
+#   # # Plot 1d: Number of fish by age and spawning history:
+#   jpeg(width=7,height=5, file="age.plot.num.text.2018.w.jpeg",units='in',res=200)
+#   #x11(width=7,height=5)
+#   barplot(age.num.matrix[1:4,],ylim=c(0,1600),
+#   								xlab="Age (Years)",ylab="Thousands of Fish",cex.lab=1.5,
+#   								col=c("grey15","grey35","grey55","grey75"))
+#   legend(4.75,1500,legend=c("First","Second","Third","Fourth"),
+#   							fill=c("grey15","grey35","grey55","grey75"),bty='n',
+#   							title="Number of\nSpawnings",title.adj=1)
+#   dev.off()
+#   #----------------------------------------------------------------------
+#   # Plot 2: Proportion of repeat spawners
+#   jpeg(width=7,height=5, file=paste("Repeat spawners 2019 for", spp,".jpeg", sep="")
+#        ,units='in',res=200)
+#   barplot(c(sum(age.prop.matrix[1,]),
+#             sum(age.prop.matrix[2,]),
+#             sum(age.prop.matrix[3,]),
+#             sum(age.prop.matrix[4,])),ylim=c(0,1),ylab="Proportion",
+#           xlab="Spawning Event",cex.lab=1.5,
+#           width=0.1,names.arg=c("First","Second","Third","Fourth"))
+#   dev.off()
+#   
+#   boxplot(weight~current.age,data=speciesdata)
+#   boxplot(fork.length~current.age,data=speciesdata)
+#   with(speciesdata,plot(weight,fork.length))
+# }
 
 
 

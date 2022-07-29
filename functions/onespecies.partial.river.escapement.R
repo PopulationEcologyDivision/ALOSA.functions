@@ -267,7 +267,7 @@ onespecies.partial.river.escapement<-function(filename,
                       by=list(summary.data$dayofyear),FUN="sum",na.rm=T)
   
   # 2C: Daily Standard Deviation
-  daily.sd=sqrt(daily.var)
+  daily.sd=sqrt(daily.var$x)
   
   # DAILY ESCAPEMENT TOTALS (1WS) AND BINDING 1WS VALUES ---
   
@@ -277,7 +277,7 @@ onespecies.partial.river.escapement<-function(filename,
   colnames(daily.total)=c("dayofyear","total")
   
   # 2D: Bind all 1WS into dataframe
-  daily.summary<-cbind(daily.total,daily.var[,2], daily.sd[,2])
+  daily.summary<-cbind(daily.total,daily.var[,2], daily.sd)
   colnames(daily.summary)=c("dayofyear","total","variance","sd")
   
   
