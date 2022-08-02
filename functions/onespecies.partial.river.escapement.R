@@ -283,6 +283,10 @@ onespecies.partial.river.escapement<-function(filename,
   
   # DAILY DEGREES OF FREEDOM AND CONFIDENCE INTERVALS (1WS) ---
   
+  ##Need tp redo start and end days, they got overwritten when butchering the data
+  ##this onyl applies to the partial escapement function
+  start.end<-c(min(levels(daily.summary$dayofyear)),max(levels(daily.summary$dayofyear)))
+  
   for(i in start.end[1]:start.end[2]){
     daily.summary$df1[daily.summary$dayofyear==i]<-
       satterthwaite.approx.df(summary.data[summary.data$dayofyear==i,])

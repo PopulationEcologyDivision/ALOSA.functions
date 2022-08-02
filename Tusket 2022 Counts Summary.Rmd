@@ -15,29 +15,67 @@ library(knitr)
 
 Lake Vaughan Fishway Counts
 
-Counts were conducted from April 1 2022 to June 21 2022 at the Lake Vaughan Fishway. No counts were done prior to April 1 as the Ladder was dewatered and impassable. Counts ceased when the daily total was below 1000 for three days in a row
- A total of XXX +/- XXX Alewife, and XXX +/- XXX Blueback Herring were estimated to have ascended the Ladder. 
+Counts were conducted from April 1 2022 to June 21 2022 at the Lake Vaughan fish ladder. No counts were done prior to April 1 as the Ladder was dewatered and impassable. Counts ceased when the daily total was below 1000 for three days in a row
+ A total of 1,662,007 +/- 51,040 Alewife, and 8,463 +/- 1,196 Blueback Herring were estimated to have ascended the ladder. 
 ```{r}
 plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
 axis(1,at=c(90,105,121,135,152,167),labels=c("April 1","April 15","May 01","May 15","June 01","June 15"))
 axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000),labels=c(0,10,20,30,40,50,60,70,80,90))
 lines(daily.summary.B$dayofyear,daily.summary.B$total,col="blue")
+
+names(daily.summary.A)<-c("Day of Year", "Month", "Day", "Total", "Standard Deviation", "clow", "chigh")
+names(daily.summary.B)<-c("Day of Year", "Month", "Day", "Total", "Standard Deviation", "clow", "chigh")
+kable(daily.summary.A[,1:5],caption="Vaughan 2022 Ladder Escapement Counts - Alewife")
+kable(daily.summary.B[,1:5],caption="Vaughan 2022 Ladder Escapement Counts - Blueback Herring")
 ```
 
 Carleton Fishway Counts
+
+Counts were conducted from April 14 2022 to June 8 2022 at the Carelton/Raynardton Fishway. A number of factors described below prevented the entire migration from being enumerated.
+
+A camera outage resulted in no counts completed for May 7th. Some of May 6th and May 8th were also lost, but enough was counted that the missing strata were estimated with a linear model to fill in missing counts.
+
+Counts could not be completed from May 24th to May 26th. Large numbers of fish were counted moving down through the ladder, and schools of fish were observed milling at the top of the ladder, in Raynardton Lake. It was concluded that these fish were post spawning, downstream migrants. Since these fish would have been counted migrating upstream and would contribute to the total escapement of the ladder, counting them as a "negative" moving downstream would be inappropriate, and inaccurately represent the total migration. 
+
+The same down stream migration behaviour occurred on June 1st, and persisted following that day. While the camera was running and some counts were completed up until June 8th, none of those counts are representative of upstream migration. Only counts completed where no downstream migration occurred are presented here.
 
 ```{r}
 plot(carleton.summary$dayofyear,carleton.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish")
 axis(1,at=c(105,121,135,152),labels=c("April 15","May 01","May 15","June 01"))
 axis(2,at=c(0,5000,10000,15000,20000,25000,30000),labels=c(0,5,10,15,20,25,30))
 
+names(carleton.summary)<-c("Day of Year", "Month", "Day", "Total", "Standard Deviation", "clow", "chigh")
 kable(carleton.summary[,1:5],caption="Carleton 2022 Ladder Escapement Counts")
 
 ```
 
 Powerhouse Ladder Counts
 
-```{r}
+Counts on June 6th reflected downstream migration behaviour, and were removed.
+Counts the morning until noon of June 7th were removed for the same reason
+Camera was removed due to ladder construction midday June 7th
+Camera was re installed midday June 10th
+Counts continued until midday June 20th, but were nearly 0
 
+```{r}
+plot(powerhouse.summary$dayofyear,powerhouse.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Number of Fish")
+axis(1,at=c(121,135,152,167),labels=c("May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,500,1000,1500),labels=c(0,500,1000,1500))
+# lines(powerhouse.summary$dayofyear,powerhouse.summary$clow,col="red",lty=3)
+# lines(powerhouse.summary$dayofyear,powerhouse.summary$chigh,col="red",lty=3)
+
+names(powerhouse.summary)<-c("Day of Year", "Month", "Day", "Total", "Standard Deviation", "clow", "chigh")
+kable(powerhouse.summary[,1:5],caption="Tusket Powerhouse 2022 Ladder Escapement Counts")
+```
+
+
+All Ladder Counts overlaid.
+```{r}
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
+axis(1,at=c(90,105,121,135,152,167),labels=c("April 1","April 15","May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000),labels=c(0,10,20,30,40,50,60,70,80,90))
+lines(daily.summary.B$dayofyear,daily.summary.B$total,col="blue")
+lines(carleton.summary$dayofyear,carleton.summary$total)
+lines(powerhouse.summary$dayofyear,powerhouse.summary$total,col="green")
 ```
 

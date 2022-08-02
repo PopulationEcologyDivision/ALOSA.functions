@@ -55,7 +55,7 @@ if(nspp==2){
 ##the list outputs as 172 long because of all the print objects. if the stuff 
 ##printed in the function changes, the below will not work
 daily.summary.B<-out[[170]]
-# daily.summary.A<-out[[172]] ##This still has dayofyear out of order
+daily.summary.A<-out[[172]] ##This still has dayofyear out of order
 #Get bio data from DB
 bio.data.A<-get.bio.data(year=year,siteID = site, sppID=3501, channel)
 bio.data.B<-get.bio.data(year=year,siteID = site, sppID=3502, channel)
@@ -149,21 +149,36 @@ carleton.summary$clow<-round(carleton.summary$clow,0)
 carleton.summary$chigh<-round(carleton.summary$chigh,0)
 
 
+#### Powerhouse Ladder ####
+# filename="Secret Ladder 2022 - Sheet1.csv"
+# count.data=read.csv(filename,header=T,stringsAsFactors = F)
+# count.data$count.upstream[596]<-NA #JB - a lot are comming down hard to see
+# count.data$count.downstream[596]<-NA #JB - a lot are comming down hard to see
+# count.data$count.upstream[726]<-NA #BR - Video obstructed 
+# count.data$count.downstream[726]<-NA #BR - Video obstructed 
+# ##Strata 5 of June 6th is likely downstream migration
+# ##Could be due to changes in flow? flow appears same to June 5th though
+# ##Entire day of june 6th has relatively large number of downstream counts
+# ##Remove entire day after analysis?
+# count.data$count.upstream[913:946]<-NA #BR - Video obstructed 
+# count.data$count.downstream[913:946]<-NA #BR - Video obstructed
+# write.csv(count.data,"Powerhouse Count Sheet Cleaned 2022.csv",row.names=F,na="")
 
-plot(carleton.summary$dayofyear,carleton.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish")
-axis(1,at=c(105,121,135,152),labels=c("April 15","May 01","May 15","June 01"))
-axis(2,at=c(0,5000,10000,15000,20000,25000,30000),labels=c(0,5,10,15,20,25,30))
+powerhouse.summary<-onespecies.partial.river.escapement(filename="Powerhouse Count Sheet Cleaned 2022.csv",
+                                                        fixtime=F,
+                                                        database=F)
 
+##Re dd gaps for days with no counts
+powerhouse.summary$dayofyear<-as.integer(levels(powerhouse.summary$dayofyear))
+powerhouse.dayofyear.key<-as.data.frame(c(min(powerhouse.summary$dayofyear):max(powerhouse.summary$dayofyear)))
+names(powerhouse.dayofyear.key)<-"dayofyear"
+powerhouse.summary<-merge(powerhouse.summary,powerhouse.dayofyear.key,by="dayofyear",all.y=T)
 
-
-
-
-##Powerhouse Ladder
-filename="Secret Ladder 2022 - Sheet1.csv"
-count.data=read.csv(filename,header=T,stringsAsFactors = F)
-
-596
-
+##Clean up data
+powerhouse.summary$total<-round(powerhouse.summary$total,0)
+powerhouse.summary$sd<-round(powerhouse.summary$sd,0)
+powerhouse.summary$clow<-round(powerhouse.summary$clow,0)
+powerhouse.summary$chigh<-round(powerhouse.summary$chigh,0)
 
 
 
