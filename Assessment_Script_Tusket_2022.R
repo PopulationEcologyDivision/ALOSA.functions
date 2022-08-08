@@ -31,7 +31,7 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/T
 year<-2022
 site<-2 # Main ones are 3=Gaspereau River at White Rock, 1=Carleton and 2=Vaughan
 nspp<-2 # Either 1 or 2
-sppID<-sppID #Either 3501 for Alewife or 3502 for BB
+# sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=117 #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
 accessory.datafile="TUSKET_2022_VAUGHAN_accessory_data.csv"
@@ -184,44 +184,44 @@ powerhouse.summary$chigh<-round(powerhouse.summary$chigh,0)
 
 
 
-stop()
-
-reference.point.plot(400000 ,232400 ,0.53,0.35,rivername="Gaspereau River",
-                     pointsX=TR$escape[TR$species=="A"],pointsY=TR$er[TR$species=="A"],
-                     label="",plotchar = "")
-
-ssnmsy=3098547
-Fupper=0.53
-
-series82.84=GR[GR$year>=1982 & GR$year<=1984,]
-series97.06=GR[GR$year>=1997 & GR$year<=2006,]
-series15.19=GR[GR$year>=2015 & GR$year<=2019,]
-series21.present=GR[GR$year>=2021,]
-
-points(series82.84$escape/ssnmsy,series82.84$er/Fupper,pch=1)
-lines(series82.84$escape/ssnmsy,series82.84$er/Fupper)
-
-points(series97.06$escape/ssnmsy,series97.06$er/Fupper,pch=4)
-lines(series97.06$escape/ssnmsy,series97.06$er/Fupper)
-
-points(series15.19$escape/ssnmsy,series15.19$er/Fupper,pch=16)
-lines(series15.19$escape/ssnmsy,series15.19$er/Fupper)
-
-points(series21.present$escape/ssnmsy,series21.present$er/Fupper,pch=19)
-lines(series21.present$escape/ssnmsy,series21.present$er/Fupper)
-
-
-text(0.07,1.2,"1982-\n84",col="gray35",cex=0.85)
-text(0.23,1.63,"1997",pos=4,col="gray35",cex=0.85)
-text(0.6,0.62,"2001",pos=1,col="gray35",cex=0.85)
-text(0.8,1.47,"2013",col="gray35",cex=0.85)
-text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
-text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
-text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
-text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
-text(2.5,1.05,"2021",pos=3,col="red",cex=0.85)
-arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
-
+# stop()
+# 
+# reference.point.plot(400000 ,232400 ,0.53,0.35,rivername="Gaspereau River",
+#                      pointsX=TR$escape[TR$species=="A"],pointsY=TR$er[TR$species=="A"],
+#                      label="",plotchar = "")
+# 
+# ssnmsy=3098547
+# Fupper=0.53
+# 
+# series82.84=GR[GR$year>=1982 & GR$year<=1984,]
+# series97.06=GR[GR$year>=1997 & GR$year<=2006,]
+# series15.19=GR[GR$year>=2015 & GR$year<=2019,]
+# series21.present=GR[GR$year>=2021,]
+# 
+# points(series82.84$escape/ssnmsy,series82.84$er/Fupper,pch=1)
+# lines(series82.84$escape/ssnmsy,series82.84$er/Fupper)
+# 
+# points(series97.06$escape/ssnmsy,series97.06$er/Fupper,pch=4)
+# lines(series97.06$escape/ssnmsy,series97.06$er/Fupper)
+# 
+# points(series15.19$escape/ssnmsy,series15.19$er/Fupper,pch=16)
+# lines(series15.19$escape/ssnmsy,series15.19$er/Fupper)
+# 
+# points(series21.present$escape/ssnmsy,series21.present$er/Fupper,pch=19)
+# lines(series21.present$escape/ssnmsy,series21.present$er/Fupper)
+# 
+# 
+# text(0.07,1.2,"1982-\n84",col="gray35",cex=0.85)
+# text(0.23,1.63,"1997",pos=4,col="gray35",cex=0.85)
+# text(0.6,0.62,"2001",pos=1,col="gray35",cex=0.85)
+# text(0.8,1.47,"2013",col="gray35",cex=0.85)
+# text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
+# text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
+# text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
+# text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
+# text(2.5,1.05,"2021",pos=3,col="red",cex=0.85)
+# arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
+# 
 
 
 
