@@ -22,6 +22,7 @@
 #     - user.count
 #     - satterthwaite.approx.df
 #     - runVAR.term
+#     - dplyr package
 
 
 twospecies.river.escapement<-function(filename,
@@ -32,6 +33,8 @@ twospecies.river.escapement<-function(filename,
                                       channel,
                                       species.split)
 {
+  library(dplyr)
+  
   if(database==T){
     count.data<-get.count.data(year, site, channel)
     names(count.data)[1]<-"year"
@@ -310,7 +313,7 @@ twospecies.river.escapement<-function(filename,
                        by="dayofyear",all.x=T)
   daily.summary<-(daily.summary[,c("mon","day","dayofyear",
                                    "total","sd","clow","chigh")])
-  
+  daily.summary<-arrange(daily.summary,by.group=dayofyear) ###DPLYR FUNCTION
   
   print(paste("First Fish on:",paste(daily.summary$mon
                                      [which(daily.summary$total > 0)[1]],
