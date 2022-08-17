@@ -9,8 +9,7 @@ library(dplyr)
 catch.sj<-catch[catch$RIVERNAME_CLEANED=="SAINT JOHN",]
 catch.sj<-catch.sj[complete.cases(catch.sj[,'LICENCE_ID']),]
 
-##Data fix before conversion
-catch.sj$MEASUREMENT_UNIT[catch.sj$LICENCE_ID==120285 | catch.sj$YEAR==2017]<-"POUNDS"
+
 
 catch.sj<-convert.KGS(catch.sj)
 
@@ -71,11 +70,18 @@ sub<-df[df$Year==2019 & df$Gear=="gill",]
 gill.sub<-gill[gill$YEAR==2017 | gill$YEAR==2018 | gill$YEAR==2019,]
 gill.sub<-gill.sub[complete.cases(gill.sub[,'LICENCE_ID']),]
 
-# gill.sub$KGS[gill.sub$LICENCE_ID==120121]<-gill.sub$KGS[gill.sub$LICENCE_ID==120121]/2.2
+gill.sub$KGS[gill.sub$LICENCE_ID==120121]<-gill.sub$KGS[gill.sub$LICENCE_ID==120121]/2.2
 
 gill.sub.sum<-aggregate(gill.sub$KGS,by=list(gill.sub$LICENCE_ID,gill.sub$YEAR),FUN="sum")
 
+##add in some missing data manually
+gill.sub.sum[nrow(gill.sub.sum)+1,]<-c("120274","2017",9420+8723+2664)
+gill.sub.sum[nrow(gill.sub.sum)+1,]<-c("120274","2018",11352+2264)
+gill.sub.sum$x<-as.numeric(gill.sub.sum$x)
 ##potential metrics for "typical" catch
+
+plot(gill.sub.sum$x)
+boxplot(gill.sub.sum$x)
 mean(gill.sub.sum$x)
 median(gill.sub.sum$x)
 
@@ -84,10 +90,24 @@ median(gill.sub.sum$x[gill.sub.sum$x>500])
 
 x<-tail(sort(gill.sub.sum$x),5)
 mean(x)
+median(x)
+
+x<-tail(sort(gill.sub.sum$x),10)
+mean(x)
+median(x)
+
+gill.sub.sum$x<-round(gill.sub.sum$x,0)
+names(gill.sub.sum)<-c("Licence ID", "Year", "Catch (kg)")
+write.csv(gill.sub.sum,file="SJR gillnet catch 2017_2019.csv",row.names = F)
 
 ###indv licences
-##2017 120121 - Number vs weight in kg issues corrected? Looks fixed
+##2017 120121 - Number vs weight in kg issues
 ##2017 120288 - catch high, logbook listed as kg but in MARFIS as pounds (if this is an error, catch would be even higher!)
 ##2019 120274 - set 180 fa of gear code 41 AND 42 - double a typical licence????
 ##2017 120052 - no apparent errors, 150 fathoms of net
 ##2017 120285 - Wrong unit for most entries, log book indicates pounds. CORRECTED ABOVE
+
+
+catch.sub<-catch[catch$LICENCE_ID==120088,]
+
+catch.gasp<-catch[catch$RIVERNAME_CLEANED=="GASPEREAU",]
