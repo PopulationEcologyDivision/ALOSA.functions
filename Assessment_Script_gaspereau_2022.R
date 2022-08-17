@@ -16,7 +16,7 @@ setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #
 
-source("C:/Users/FultonS/Documents/git/ALOSA.functions/functions/sourcery.R")
+source("functions/sourcery.R")
 sourcery()
 
 #...............................................................................
@@ -28,7 +28,7 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
 
-year=2021
+year=2022
 site=3
 nspp=1
 
@@ -58,8 +58,8 @@ missingdays<-missing.days(bio.data)
 
 
 
-ageing.selection(daily.summary.2022.3,bio.data,missingdays,mergedays=c(112,115,150,152,154,157),
-                 seed=695,nsamples=500)
+#ageing.selection(daily.summary.2022.3,bio.data,missingdays,mergedays=c(112,115,150,152,154,157),
+                 #seed=695,nsamples=500)
 
 
 
@@ -253,7 +253,7 @@ mean.firstspawnage.r=mean(agedata$AGE_AT_FIRST_SPAWN[agedata$CURRENT_AGE>agedata
   boxplot(weight~current.age,data=speciesdata)
   boxplot(fork.length~current.age,data=speciesdata)
   with(speciesdata,plot(weight,fork.length))
-}
+#}
 
 
 
