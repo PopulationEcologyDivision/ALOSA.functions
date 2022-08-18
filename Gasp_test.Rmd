@@ -1,0 +1,47 @@
+---
+title: "Gaspereau 2022 Counts Summary"
+author: "Mark Billard, DFO-Science"
+date: "8/18/2022"
+output: pdf_document
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(knitr)
+```
+
+```{r message=FALSE, results=FALSE, warning=FALSE}
+##Make sure you have run the below script to get the output objects needed for this document
+source("~/git/ALOSA.functions/Assessment_Script_gaspereau_2022.R")
+```
+
+This document summarizes the daily counts of Alewife at the White Rock ladder in the Gaspereau River, Nova Scotia in the spring of 2022. All Alewife spawning habitat is located upstream of the White Rock ladder, and the escapement estimate at this ladder can be used to quantify total spawner escapement for the Gaspereau River Alewife stock.
+
+The counts from the White Rock fish ladder are used to assess the Alewife population relative to reference points. Counts were completed following a two-way stratified random sampling design. Each day, a total of 24 five minute video blocks were counted. To ensure that different parts of the day were represented, each day was broken into six sections, or strata, and four five minute video counts were sampled from each strata. Dividing the day into sections, or strata, is important for providing an accurate estimate of the number of fish migrating upstream through the fish ladders, as there are times of the day when more fish migrate than during other times of the day. 
+
+The four video counts from each stratum (section) were averaged, and that average was multiplied by the number of five minute blocks within each stratum of the day. For example, Strata 2 is from 0500 to 1030, so contains 69 five minute blocks. If the average count in Strata 2 for a given day was 20, we multiply 20 by 69 to give us a total of 1380 fish for Strata 2. We repeat this for each stratum in a day, and sum all strata totals to get the daily totals.
+
+A more in depth description of this assessment method is described by Bowlby and Gibson in the CSAS document "River Herring Assessment for the Tusket River, Nova Scotia" under the "Escapement" section.
+
+\newpage
+White Rock Fish Ladder Counts
+
+Counts were conducted from April 21 2022 to June 22 2022 at the White Rock fish ladder (Fig. 1). Counts stopped when the daily total was below 1000 for three days in a row. A total of 874,862 +/- 36,935 Alewife were estimated to have ascended the ladder, with a peak daily escapement of 100,594 +/- 7,234 Alewife on May 15. 
+```{r}
+plot(as.numeric(daily.summary.2022.3$dayofyear),daily.summary.2022.3$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
+axis(1,at=c(105,121,135,152,167),labels=c("April 15","May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000, 100000),labels=c(0,10,20,30,40,50,60,70,80,90,100))
+```
+
+Figure 1.White Rock Fish Ladder Counts for the Gaspereau River, 2022. The red line is for daily counts of Alewife.
+
+
+\newpage
+Appendix
+
+```{r table}
+daily.summary.A.out<-daily.summary.2022.3
+names(daily.summary.A.out)<-c("Month", "Day", "Day of Year", "Total", "Standard Deviation", "clow", "chigh")
+kable(daily.summary.A.out[,1:5],caption="Daily count estimates of Alewife leaving the White Rock Fish Ladder. Counts are presented for April (Month = 4), May (Month = 5), and June (Month = 6). Total is the total number of Alewife estimated to have exited the ladder that day, and Standard Deviation is the standard deviation for that daily total estimate.")
+
+```
