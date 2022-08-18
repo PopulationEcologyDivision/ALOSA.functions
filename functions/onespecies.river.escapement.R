@@ -31,6 +31,7 @@ onespecies.river.escapement<-function(filename,
                                       site,
                                       channel)
 {
+  require(dplyr)
   if(database==T){
     count.data<-get.count.data(year, site, channel)
     names(count.data)[1]<-"year"
@@ -128,34 +129,22 @@ onespecies.river.escapement<-function(filename,
                      FUN=user.count)
   
   # 6A: Compile into dataframe 
-  junk2<-data.frame(strata=strata.means$strata,
+  n.strata=max(count.data$strata,na.rm=T)
+  
+ summary.data<-data.frame(strata=strata.means$strata,
                     dayofyear=strata.means$dayofyear,
                     mean=strata.means$mean,
                     sd=strata.sd$x,
                     se=strata.se$x,
                     sample.var=strata.var$x,
                     n.counts=strata.n$x) 
-  #add column containing total number of time units per strata per day
-  n.strata=max(count.data$strata,na.rm=T)
-  
-  if(!(n.strata==5|n.strata==6)){
-    stop("Number of Strata must be 5 or 6") }
-  
-  if(n.strata==5){
-    min5.periods<-data.frame(strata=c(1,2,3,4,5),
-                             n.periods=c(72,72,48,48,48)) }
-  if(n.strata==6){
-    min5.periods<-data.frame(strata=c(1,2,3,4,5,6),
-                             n.periods=c(60,69,36,36,51,36))}
-  #merge and order by strata
-  summary.data<-merge(junk2,min5.periods,by="strata") 
   
   #--- UNCOUNTABLE TIME UNITS AND EXTRAPOLATION ---
   
   # Check for missing strata
   #Initialize df with all days/strata:
-  alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=5),
-                     Group.2=rep(1:5,times=length(start.end[1]:start.end[2])))
+  alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=n.strata),
+                     Group.2=rep(1:n.strata,times=length(start.end[1]:start.end[2])))
   
   #merge with n.counts dataframe from previous section.
   alldays=merge(alldays,strata.n,all.x = T)
@@ -169,8 +158,26 @@ onespecies.river.escapement<-function(filename,
     print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
     # fill in missing mean count, n.counts, sample.var, and sd for
     # missing strata.
+    summary.data <- left_join(alldays, summary.data, by = c("strata", "dayofyear"))
+    summary.data <- select(summary.data, dayofyear, strata, mean, sd, se, sample.var, n.counts=n.counts.x)
     summary.data=missingstrata(summary.data,start.end,n.strata)
   }
+  
+  #add column containing total number of time units per strata per day
+ 
+  
+  if(!(n.strata==5|n.strata==6)){
+    stop("Number of Strata must be 5 or 6") }
+  
+  if(n.strata==5){
+    min5.periods<-data.frame(strata=c(1,2,3,4,5),
+                             n.periods=c(72,72,48,48,48)) }
+  if(n.strata==6){
+    min5.periods<-data.frame(strata=c(1,2,3,4,5,6),
+                             n.periods=c(60,69,36,36,51,36))}
+  #merge and order by strata
+  summary.data<-merge(summary.data,min5.periods,by="strata") 
+  
   # If number of strata with counts >= 1 is >0 stop and use lm to 
   # extrapolate counts of missing strata. If the entire day is missing,
   # there is no way to fill in missing counts. 
