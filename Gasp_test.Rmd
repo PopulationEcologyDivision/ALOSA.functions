@@ -21,8 +21,6 @@ The counts from the White Rock fish ladder are used to assess the Alewife popula
 
 The four video counts from each stratum (section) were averaged, and that average was multiplied by the number of five minute blocks within each stratum of the day. For example, Strata 2 is from 0500 to 1030, so contains 69 five minute blocks. If the average count in Strata 2 for a given day was 20, we multiply 20 by 69 to give us a total of 1380 fish for Strata 2. We repeat this for each stratum in a day, and sum all strata totals to get the daily totals.
 
-A more in depth description of this assessment method is described by Bowlby and Gibson in the CSAS document "River Herring Assessment for the Tusket River, Nova Scotia" under the "Escapement" section.
-
 \newpage
 White Rock Fish Ladder Counts
 
