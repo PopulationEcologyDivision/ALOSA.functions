@@ -2,7 +2,7 @@
 require (dplyr)
 require (lubridate)
 mytags <- read.csv('R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2021/Acoustic Tracking/Tusket_2021_acoustic_tag_fish_metadata.csv')
-otntemp <- read.csv('C:/Users/naug/Documents/Acoustic/OTN_template.csv')
+# otntemp <- read.csv('C:/Users/naug/Documents/Acoustic/OTN_template.csv')
 
 #rename some of the common columns
 mytags <- mytags %>%
