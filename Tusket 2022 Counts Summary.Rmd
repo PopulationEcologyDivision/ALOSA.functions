@@ -1,7 +1,7 @@
 ---
 title: "Tusket 2022 Counts Summary"
 output: pdf_document
-date: '2022-08-05'
+date: ''
 author: Mark Billard, DFO-Science
 ---
 ```{r setup, echo=FALSE, warning=FALSE}

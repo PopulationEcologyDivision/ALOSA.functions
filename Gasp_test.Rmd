@@ -1,7 +1,7 @@
 ---
 title: "Gaspereau 2022 Counts Summary"
 author: "Mark Billard, DFO-Science"
-date: "8/18/2022"
+date: ""
 output: pdf_document
 ---
 
@@ -24,7 +24,8 @@ The four video counts from each stratum (section) were averaged, and that averag
 \newpage
 White Rock Fish Ladder Counts
 
-Counts were conducted from April 21 2022 to June 22 2022 at the White Rock fish ladder (Fig. 1). Counts stopped when the daily total was below 1000 for three days in a row. A total of 874,862 +/- 36,935 Alewife were estimated to have ascended the ladder, with a peak daily escapement of 100,594 +/- 7,234 Alewife on May 15. 
+Counts were conducted from April 21 2022 to June 22 2022 at the White Rock fish ladder (Fig. 1). Counts stopped when the daily total was below 1000 for three days in a row. A total of 874,862 +/- 36,935 Alewife were estimated to have ascended the ladder, with a peak daily escapement of 100,594 +/- 7,234 Alewife on May 15.
+
 ```{r}
 plot(as.numeric(daily.summary.2022.3$dayofyear),daily.summary.2022.3$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
 axis(1,at=c(105,121,135,152,167),labels=c("April 15","May 01","May 15","June 01","June 15"))
