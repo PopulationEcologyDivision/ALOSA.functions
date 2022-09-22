@@ -18,7 +18,8 @@ MARFIS_queries=function(local.csv=F,catch,didnotfish,licencerenewals){
   # Input: .csv files for catch, licence info, fisher info, area info, and did not fish list.
   
   
-  WD = choose.dir(caption = "Navigate to Desired WORKING DIRECTORY") 
+  # WD = choose.dir(caption = "Navigate to Desired WORKING DIRECTORY")
+  WD = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI" ##tired of doing the point an click so this is hardcoded now
   setwd(WD)
   today = date()
   today = strsplit(today, " ")
