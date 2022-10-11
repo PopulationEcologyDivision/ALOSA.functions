@@ -53,7 +53,8 @@ loaddata<-function(datasource){
 # query code if you do a new SQL pull
 
   if (datasource ==3){
-  load("FEB 24 2022_MARFIS PULL.Rdata")
+    setwd("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/")
+    load("SEP24_SQL PULL.Rdata")
     assign("catch", catch, envir = .GlobalEnv)
     assign("didnotfish",didnotfish, envir = .GlobalEnv)
     assign("licencerenewals",licencerenewals, envir = .GlobalEnv)
@@ -130,6 +131,20 @@ RIVER.summary("GASPEREAU",
 #
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##Pull yearly summary or X years and a given river
+catch$YEAR<-as.numeric(catch$YEAR)
+catch.t<-catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR>2018,]
+##NAs get introduced during subsetting for some reason
+catch.t<-catch.t[complete.cases(catch.t[,'LICENCE_ID']),] 
+catch.t<-convert.KGS(catch.t)
+
+x1=aggregate(catch.t$KGS[is.na(catch.t$GEAR_DESCRIPTION)],
+             by=list(LICENCE_ID=catch.t$LICENCE_ID[is.na(catch.t$GEAR_DESCRIPTION)]),
+             FUN=sum)
+
+x1=aggregate(catch.t$KGS, by=list(YEAR=catch.t$YEAR),FUN=sum)
+
+
 
 TUSKET.2021=function(){
 
