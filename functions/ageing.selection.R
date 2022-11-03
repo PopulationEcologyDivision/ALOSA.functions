@@ -53,11 +53,12 @@ ageing.selection<-function(countdata,biodata,missingdays,mergedays,seed,nsamples
   
   
   out<-merge(biodata.with.weights,ladd.sample,by="FISH_ID",all.y=T)
+  out$species=NA
   out$current.age=NA
   out$age.at.first.spawn=NA
   out$age.structure.sample="T"
-  out<-out[,c("YEAR","FISH_ID","current.age","age.at.first.spawn","NOTES","age.structure.sample")]
-  names(out)<-c("year","sample","current.age","age.at.first.spawn","notes","age.structure.sample")
+  out<-out[,c("YEAR","FISH_ID","species","current.age","age.at.first.spawn","NOTES","age.structure.sample")]
+  names(out)<-c("year","sample","species","current.age","age.at.first.spawn","notes","age.structure.sample")
   out$replacementfor.which.sample=NA
   write.csv(out,"to be aged_rename this file.csv",row.names = F,na="")
 }
