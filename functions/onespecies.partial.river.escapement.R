@@ -22,8 +22,8 @@
 #     - user.count
 #     - satterthwaite.approx.df
 #     - runVAR.term
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
-filename="Carleton Count Sheet Cleaned 2022.csv"
+# setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
+# filename="Carleton Count Sheet Cleaned 2022.csv"
   
 onespecies.partial.river.escapement<-function(filename,
                                       fixtime=F,
