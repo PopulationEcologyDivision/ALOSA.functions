@@ -4,7 +4,7 @@ header-includes:
    - \usepackage{fancyhdr}
    - \pagestyle{fancy}
    - \renewcommand{\headrulewidth}{0pt}
-   - \fancyhead[L]{Gaspereau River 2021 Assessment Summary}
+   - \fancyhead[L]{Gaspereau River 2022 Assessment Summary}
    - \fancyfoot[R]{\thepage}
    - \fancypagestyle{plain}{\pagestyle{fancy}}
    - \fancyfoot[C]{}
@@ -19,6 +19,7 @@ library(tinytex)
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
+2022| ???????| 874,862+/-36,935| ????????| ????????
 2021| 1,231,005| 984,094+/-36,504| 2,215,099|55.6
 2020| 1,202,604| NA| NA| NA
 2019|	784,152|	1,021,186+/-41,881	|1,805,338	|43.4
@@ -209,11 +210,12 @@ text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
 text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
 text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
 text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
-text(2.5,1.05,"2021",pos=3,col="red",cex=0.85)
+text(2.5,1.05,"2021",pos=3,col="gray35",cex=0.85)
+text(2.5,.105,"2022 placeholder",pos=3,col="red",cex=0.85)
 arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
 ```
 
-**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021 using closed circles. The plot is updated from Gibson et al. 2017.
+**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021-2022 using closed circles. The plot is updated from Gibson et al. 2017.
 
 \newpage
 ```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
@@ -258,7 +260,7 @@ mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 
 \newpage
 ```{r dailyplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
-plotyears=c(2018,2019,2020,2021)
+plotyears=c(2018,2019,2021,2022)
 #windows(8.5,11)
 par(oma=c(7,3,3,0.5),mfrow=c(4,1))
 par(mar=c(0,5,0,3))
@@ -296,7 +298,7 @@ mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 ```
 
-**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2021. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots. 
+**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2019 and 2021-2022. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic, so 2020 was excluded. Note that scales differ among plots. 
 
 \newpage
 ![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure5.png)
@@ -399,9 +401,50 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
 ```
 **Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2019 and 2021. 
 \newpage
+```{r ageplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2022)
+
+#windows(8.5,11)
+#par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
+#par(mar=c(3,5,0,3))
+for(plotyear in plotyears){
+  plotyear=plotyear
+agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
+
+agedata=dbGetQuery(channel, agequery)
+
+age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("Age3","Age4","Age5","Age6","Age7")))
+for (i in 3:7){
+  CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
+ barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+ mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
+ 
+}
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("topright",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+```
+**Figure 9.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2022.
+\newpage
 ![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure9.png) 
 
-**Figure 9.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
+**Figure 10.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
 
 &nbsp;
 
