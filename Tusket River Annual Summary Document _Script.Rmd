@@ -35,15 +35,15 @@ Year\| Total number of gaspereau ascending the ladder\| Number of Alewife\| Numb
 
 **Table 2**. Biological reference points for the Tusket River Alewife stock consistent with DFO's precautionary framework (from Gibson et al. 2017). Assessment results can be compared against these reference points to determine stock status. Biological reference points for Blueback Herring have not been developed.
 
-| Reference point                                 | Acronym | Description                                                                                                                                                                    | Value        |
-|-------------------------|---------------|------------------|---------------|
+| Reference point                                 | Acronym | Description                                                                                                                                                                    | Value          |
+|-----------------------|-----------------|-----------------|-----------------|
 | Upper Stock Reference Point                     | USR     | Spawning stock biomass or number of spawners above which stock is healthy; if below but still above the LRP, the stock is in the cautious zone. Can be SSBMSY or similar value | 3,098,547 fish |
-|                                                 |         |                                                                                                                                                                                |              |
+|                                                 |         |                                                                                                                                                                                |                |
 | Lower Stock Reference Point                     | LRP     | Spawning stock biomass or numbers of spawners below which the stock is in the critical zone                                                                                    | 2,086,068 fish |
-|                                                 |         |                                                                                                                                                                                |              |
-| Exploitation Rate Removal Reference Level       | URR     | Exploitation rate above which the stock is over exploited                                                                                                                      | 0.53         |
-|                                                 |         |                                                                                                                                                                                |              |
-| Exploitation Rate Lower Removal Reference Level | ULRR    | Exploitation rate above which stock is fully exploited, below which stock is under exploited                                                                                   | 0.35         |
+|                                                 |         |                                                                                                                                                                                |                |
+| Exploitation Rate Removal Reference Level       | URR     | Exploitation rate above which the stock is over exploited                                                                                                                      | 0.53           |
+|                                                 |         |                                                                                                                                                                                |                |
+| Exploitation Rate Lower Removal Reference Level | ULRR    | Exploitation rate above which stock is fully exploited, below which stock is under exploited                                                                                   | 0.35           |
 
 \newpage
 
@@ -170,7 +170,7 @@ text(0.65,0.7,"2021",pos=4,col="gray35",cex=0.85)
 text(0.53,0.82,"2022",pos=2,col="gray35",cex=0.85)
 ```
 
-**Figure 3.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 2014 to 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
+**Figure 3.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status for 2014, 2015, 2019, and 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
 
 \newpage
 
@@ -180,24 +180,24 @@ data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DF
 data$doy=as.Date(paste(data$day,data$mon,data$year,sep="-"),format="%d-%m-%Y")
 data$doy=as.numeric(strftime(data$doy, format="%j"))
 data$daynum=data$doy-109 ## Day 1 = April 20
-GRdata=data[data$river=="gaspereau",]
+TRdata=data[data$river=="tusket",]
 
-plotyears=c(2013,2015,2016,2017)
+plotyears=c(2014,2015,2018,2019)
 #windows(8.5,11)
 par(oma=c(7,3,3,0.5),mfrow=c(4,1))
 par(mar=c(0,5,0,3))
 
 for(i in plotyears){
   plotyear=i
-plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(GRdata$number[GRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
      xaxt="n",yaxt='n',cex.axis=2)
-rect(-5, -5, 12, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-rect(43, -5, 73, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(-5, -5, 12, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(43, -5, 73, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
 box()
-lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
+lines(TRdata$daynum[TRdata$year==plotyear],TRdata$number[TRdata$year==plotyear]/1000,
       lty=1,lwd=1.5)
-text(63,max(GRdata$number[GRdata$year==plotyear]/1000),plotyear,cex=2)
-text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+text(63,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
+text(-2,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
 axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
@@ -212,25 +212,25 @@ mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 
 ```
 
-**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in 2013, and 2015-2017. Note that scales differ among plots.
+**Figure 4.** Estimated number of Alewife and Blueback Herring ascending the Lake Vaughan fish ladder in 2014, 2015, 2018, and 2019. In 2018 no species identification was done as the decision to count video was made after the spawning run was over, so counts are not split by the two species. Note that scales differ among plots.
 
 \newpage
 
 ```{r dailyplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
-plotyears=c(2018,2019,2020,2021)
+plotyears=c(2021,2022)
 #windows(8.5,11)
 par(oma=c(7,3,3,0.5),mfrow=c(4,1))
 par(mar=c(0,5,0,3))
 
 for(i in plotyears){
   plotyear=i
-if(length(GRdata$number[GRdata$year==plotyear])>0){
- plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(GRdata$number[GRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+if(length(TRdata$number[TRdata$year==plotyear])>0){
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
      xaxt="n",yaxt='n',cex.axis=2) 
-rect(-5, -5, 12, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-rect(43, -5, 73, (max(GRdata$number[GRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-text(63,max(GRdata$number[GRdata$year==plotyear]/1000),plotyear,cex=2)
-text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+rect(-5, -5, 12, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(43, -5, 73, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+text(63,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
+text(-2,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
 }else{
  plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,50),xlim=c(0,68),
        xaxt="n",yaxt='n',cex.axis=2)
@@ -241,7 +241,7 @@ text(-2,max(GRdata$number[GRdata$year==plotyear]/1000),paste("Total =", GR$total
 }
 
 box()
-lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
+lines(TRdata$daynum[TRdata$year==plotyear],TRdata$number[TRdata$year==plotyear]/1000,
       lty=1,lwd=1.5)
 axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
@@ -255,7 +255,7 @@ mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 ```
 
-**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2021. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots.
+**Figure 5** Estimated number of Alewife and Blueback Herring ascending the Lake Vaughan fish ladder in 2021-2022. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots.
 
 \newpage
 
