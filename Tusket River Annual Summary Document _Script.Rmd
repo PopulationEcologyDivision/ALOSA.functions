@@ -9,56 +9,52 @@ header-includes:
    - \fancypagestyle{plain}{\pagestyle{fancy}}
    - \fancyfoot[C]{}
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
+
 ```{r load-packages, include=FALSE}
 library(ROracle)
 library(tinytex)
 ```
+
 \newpage
+
 **Table 1.** Estimates of the number of gaspereau that ascended the fish ladder at the Lake Vaughan Dam in 2014, 2015, 2018, and 2019, and 2021.
 
-Year|	Total number of gaspereau ascending the ladder|	Number of Alewife|
-	Number of Blueback Herring| 	Exploitation rate estimate for Alewife|	Exploitation rate estimate for Blueback Herring
-------- | ----------------| ----------------| ----------------| --------|  --------
-2021|	1,956,804|	1,941,411|	15,394|	0.38^f^|	0.44^f^
-2020^d^|	NA|	NA|	NA|	NA|	NA
-2019|	397,709|	367,781|	29,928|	0.51^e^|	0.49^e^
-2018^a^|	712,509|	NA|	NA|	NA|	NA
-2015|	2,517,215|	2,325,787|	191,428|	0.52^c^|	0.35^c^
-2014^b^|	2,358,125|	1,767,745|	590,380|	0.60^c^|	0.38^c^
+Year\| Total number of gaspereau ascending the ladder\| Number of Alewife\| Number of Blueback Herring\| Exploitation rate estimate for Alewife\| Exploitation rate estimate for Blueback Herring ------- \| ----------------\| ----------------\| ----------------\| --------\| -------- 2021\| 1,956,804\| 1,941,411\| 15,394\| 0.38^f^\| 0.44^f^ 2020^d^\| NA\| NA\| NA\| NA\| NA 2019\| 397,709\| 367,781\| 29,928\| 0.51^e^\| 0.49^e^ 2018^a^\| 712,509\| NA\| NA\| NA\| NA 2015\| 2,517,215\| 2,325,787\| 191,428\| 0.52^c^\| 0.35^c^ 2014^b^\| 2,358,125\| 1,767,745\| 590,380\| 0.60^c^\| 0.38^c^
 
-
-
-^a^ The decision to count the 2018 video was made after the run was over and biological sampling did not occur. Species composition is not known for this reason.  
-^b^ Cameras were not running 24 hours a day in 2014 and escapement estimate is a combination of the escapement from the video plus the estimated overnight proportion (Bowlby and Gibson 2016).  
-^c^ The commercial catch for each species, used to calculate exploitation rates, accounts for a time lag between when the fish become vulnerable to the fishery and when they are counted at the Lake Vaughan fish ladder (Bowlby and Gibson 2016).  
-^d^ Program was unable to run due to COVID-19  
-^e^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (93% Alewife)  
-^f^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (99% Alewife)   
-
+^a^ The decision to count the 2018 video was made after the run was over and biological sampling did not occur. Species composition is not known for this reason.\
+^b^ Cameras were not running 24 hours a day in 2014 and escapement estimate is a combination of the escapement from the video plus the estimated overnight proportion (Bowlby and Gibson 2016).\
+^c^ The commercial catch for each species, used to calculate exploitation rates, accounts for a time lag between when the fish become vulnerable to the fishery and when they are counted at the Lake Vaughan fish ladder (Bowlby and Gibson 2016).\
+^d^ Program was unable to run due to COVID-19\
+^e^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (93% Alewife)\
+^f^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (99% Alewife)
 
 \newpage
 
-**Table 2**. Biological reference points for the Tusket River Alewife stock consistent with DFO’s precautionary framework (from Gibson et al. 2017). Assessment results can be compared against these reference points to determine stock status. Biological reference points for Blueback Herring have not been developed.  
+**Table 2**. Biological reference points for the Tusket River Alewife stock consistent with DFO's precautionary framework (from Gibson et al. 2017). Assessment results can be compared against these reference points to determine stock status. Biological reference points for Blueback Herring have not been developed.
 
-Reference point|	Acronym|	Description|	Value
---------------------------- | ---------| --------------------| -------------
-Upper Stock Reference Point|	USR|	Spawning stock biomass or number of spawners above which stock is healthy; if below but still above the LRP, the stock is in the cautious zone. Can be SSBMSY or similar value|	400,000 fish
-| | | 
-Lower Stock Reference Point|	LRP|	Spawning stock biomass or numbers of spawners below which the stock is in the critical zone|	235,000 fish
-| | | 
-Exploitation Rate Removal Reference Level|	URR|	Exploitation rate above which the stock is over exploited|	0.53
-| | | 
-Exploitation Rate Lower Removal Reference Level|	ULRR|	Exploitation rate above which stock is fully exploited, below which stock is under exploited|	0.35
+| Reference point                                 | Acronym | Description                                                                                                                                                                    | Value        |
+|-------------------------|---------------|------------------|---------------|
+| Upper Stock Reference Point                     | USR     | Spawning stock biomass or number of spawners above which stock is healthy; if below but still above the LRP, the stock is in the cautious zone. Can be SSBMSY or similar value | 3,098,547 fish |
+|                                                 |         |                                                                                                                                                                                |              |
+| Lower Stock Reference Point                     | LRP     | Spawning stock biomass or numbers of spawners below which the stock is in the critical zone                                                                                    | 2,086,068 fish |
+|                                                 |         |                                                                                                                                                                                |              |
+| Exploitation Rate Removal Reference Level       | URR     | Exploitation rate above which the stock is over exploited                                                                                                                      | 0.53         |
+|                                                 |         |                                                                                                                                                                                |              |
+| Exploitation Rate Lower Removal Reference Level | ULRR    | Exploitation rate above which stock is fully exploited, below which stock is under exploited                                                                                   | 0.35         |
 
 \newpage
+
 ```{r escapeplot, echo=FALSE, fig.width = 8.5,fig.height = 10, fig.align='center'}
-multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
+multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years tusket update.csv",
                    header=T,stringsAsFactors = F)
 
-TR=multiyear[multiyear$river=="Tusket",]
+TR=multiyear[multiyear$river=="Tusket" & multiyear$species=="A",1:9] ##only bring in rows 1:9 to avoid NAs
+TR<-TR[complete.cases(TR),] ##remove NA rows
 
-windows(8.5,11)
+# windows(8.5,11)
 par(mfrow=c(2,1),oma=c(3,0,0,0))
 par(mar=c(4,3,3,2))
 barplot(TR$escape[TR$species=="A"]/1000000, axes=0, names.arg=as.character(TR$year[TR$species=="A"]), 
@@ -80,10 +76,10 @@ box()
 mtext("Total abundance (millions of fish)",3,cex=1.2,adj=.15, line=0.5)
 mtext("Year",1,cex=1.2, line=5)
 ```
-**Figure 1.** Spawning escapement (the number of Alewife ascending the Vaughan fish ladder) and total abundance (the reported landings + escapement) for Alewife in the Tusket River for years in which estimates of the total escapement and species ID are available. Values are provided in Table 1.  
+
+**Figure 1.** Spawning escapement (the number of Alewife ascending the Vaughan fish ladder) and total abundance (the reported landings + escapement) for Alewife in the Tusket River for years in which estimates of the total escapement and species ID are available. Values are provided in Table 1.
 
 \newpage
- 
 
 ```{r reference plot,echo=FALSE, fig.width = 7.5,fig.height = 9}
 reference.point.plot<-function(ssnmsy,
@@ -103,7 +99,7 @@ reference.point.plot<-function(ssnmsy,
   
   
   par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,2),las=1)
-  plot(1,1,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,max(pointsX,na.rm=T)*1.1))
+  plot(1,1,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,1.5))
   axis(1)
   axis(2)
   box(lwd=2)
@@ -118,7 +114,7 @@ reference.point.plot<-function(ssnmsy,
   mtext("Spawning escapement",3,line=2.5,cex=1.5)
   mtext("critical",3,line=.5,cex=1.15,at=((-0.2+crit.caus.boundary)/2),adj=0.5)
   mtext("cautious",3,line=.5,cex=1.15,at=((1+crit.caus.boundary)/2),adj=0.5)
-  mtext("healthy",3,line=.5,cex=1.15,at=(1+max(pointsX,na.rm=T)*1.1)/2,adj=0.5)
+  mtext("healthy",3,line=.5,cex=1.15,at=1.25,adj=0.5)
   
   
   mtext("Exploitation rate",4,line=4,cex=1.5,las=0)
@@ -129,10 +125,10 @@ reference.point.plot<-function(ssnmsy,
   mtext("partially",4,line=.5,cex=1.25,adj=.14,las=0)
   mtext("exploited",4,line=1.5,cex=1.25,adj=.13,las=0)
   
-  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
-  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
-  mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
-  mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=1.5,las=0,adj=1)
+  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=1.5,las=0,adj=1)
+  mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=1.5,las=0,adj=1)
+  mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=1.5,las=0,adj=1)
   
   mtext(rivername,1,line=5, at=0,las=0,adj=0, cex=2)
   mtext(speciesname,1,line=7, at=0,las=0,adj=0,cex=2)
@@ -142,46 +138,42 @@ reference.point.plot<-function(ssnmsy,
   
 }
 
-reference.point.plot(400000,234549,0.53,0.35,rivername="Gaspereau River",
-                     pointsX=GR$escape,pointsY=GR$er,
+reference.point.plot(3098547,2086068,0.53,0.35,rivername="Tusket River",
+                     pointsX=TR$escape,pointsY=TR$er,
                      label="",plotchar = "")
 
-ssnmsy=400000
+ssnmsy=3098547
 Fupper=0.53
 
-series82.84=GR[GR$year>=1982 & GR$year<=1984,]
-series97.06=GR[GR$year>=1997 & GR$year<=2006,]
-series15.19=GR[GR$year>=2015 & GR$year<=2019,]
-series21.present=GR[GR$year>=2021,]
 
-points(series82.84$escape/ssnmsy,series82.84$er/Fupper,pch=1)
-lines(series82.84$escape/ssnmsy,series82.84$er/Fupper)
+series14.15=TR[TR$year>=2014 & TR$year<=2015,]
+series19=TR[TR$year==2019,]
+series21.22=TR[TR$year>=2021 & TR$year<=2022,]
+series22.present=TR[TR$year==2022,]
 
-points(series97.06$escape/ssnmsy,series97.06$er/Fupper,pch=4)
-lines(series97.06$escape/ssnmsy,series97.06$er/Fupper)
+points(series14.15$escape/ssnmsy,series14.15$er/Fupper,pch=1)
+lines(series14.15$escape/ssnmsy,series14.15$er/Fupper)
 
-points(series15.19$escape/ssnmsy,series15.19$er/Fupper,pch=16)
-lines(series15.19$escape/ssnmsy,series15.19$er/Fupper)
+points(series19$escape/ssnmsy,series19$er/Fupper,pch=1)
+lines(series19$escape/ssnmsy,series19$er/Fupper)
 
-points(series21.present$escape/ssnmsy,series21.present$er/Fupper,pch=19)
-lines(series21.present$escape/ssnmsy,series21.present$er/Fupper)
+points(series21.22$escape/ssnmsy,series21.22$er/Fupper,pch=1)
+lines(series21.22$escape/ssnmsy,series21.22$er/Fupper)
 
+points(series22.present$escape/ssnmsy,series22.present$er/Fupper,pch=19)
+lines(series22.present$escape/ssnmsy,series22.present$er/Fupper)
 
-text(0.07,1.2,"1982-\n84",col="gray35",cex=0.85)
-text(0.23,1.63,"1997",pos=4,col="gray35",cex=0.85)
-text(0.6,0.62,"2001",pos=1,col="gray35",cex=0.85)
-text(0.8,1.47,"2013",col="gray35",cex=0.85)
-text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
-text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
-text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
-text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
-text(2.5,1.05,"2021",pos=3,col="red",cex=0.85)
-arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
+text(0.57,1.13,"2014",pos=2,col="gray35",cex=0.85)
+text(0.75,0.92,"2015",pos=4,col="gray35",cex=0.85)
+text(0.12,0.9,"2019",pos=2,col="gray35",cex=0.85)
+text(0.65,0.7,"2021",pos=4,col="gray35",cex=0.85)
+text(0.53,0.82,"2022",pos=2,col="gray35",cex=0.85)
 ```
 
-**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021 using closed circles. The plot is updated from Gibson et al. 2017.
+**Figure 3.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 2014 to 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
 
 \newpage
+
 ```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
 data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
               header=T,stringsAsFactors = F)
@@ -220,9 +212,10 @@ mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 
 ```
 
-**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in 2013, and 2015-2017. Note that scales differ among plots. 
+**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in 2013, and 2015-2017. Note that scales differ among plots.
 
 \newpage
+
 ```{r dailyplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyears=c(2018,2019,2020,2021)
 #windows(8.5,11)
@@ -262,13 +255,14 @@ mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 ```
 
-**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2021. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots. 
+**Figure 5** Estimated number of Alewife ascending the White Rock fish ladder in 2018-2021. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots.
 
 \newpage
-![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure5.png)
-**Figure 6.** The relationship between juvenile (left column) and adult (right column) and fishery reference points for Gaspereau River Alewife. F^msy^, S^msy^ and C^msy^ are the equilibrium fishing mortality rate, spawner biomass and catch at MSY. F^col^ is the fishing mortality rate that will drive the population to extinction. Juvenile turbine mortality was assumed to occur after compensatory mortality. Adult turbine mortality occurs after spawning (from Gibson et al. 2017).
+
+![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure5.png) **Figure 6.** The relationship between juvenile (left column) and adult (right column) and fishery reference points for Gaspereau River Alewife. F^msy^, S^msy^ and C^msy^ are the equilibrium fishing mortality rate, spawner biomass and catch at MSY. F^col^ is the fishing mortality rate that will drive the population to extinction. Juvenile turbine mortality was assumed to occur after compensatory mortality. Adult turbine mortality occurs after spawning (from Gibson et al. 2017).
 
 \newpage
+
 ```{r ageplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyears=c(2016,2018)
 
@@ -324,6 +318,7 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
 **Figure 7.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2016 and 2018. .
 
 \newpage
+
 ```{r ageplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyears=c(2019,2021)
 
@@ -363,21 +358,19 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
-**Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2019 and 2021. 
-\newpage
-![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure9.png) 
+
+**Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2019 and 2021. \newpage ![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure9.png)
 
 **Figure 9.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
 
-&nbsp;
+ 
 
-&nbsp;
+ 
 
-&nbsp;
+ 
 
+**References**
 
-**References**  
+Gibson, A. J. F., H. D. Bowlby, F. M. Keyser. 2017. A Framework for the Assessment of the Status of River Herring Populations and Fisheries in DFO's Maritimes Region. Canadian Science Advisory Secretariat Research Document 2016/105. Fisheries and Oceans Canada, Ottawa.
 
-Gibson, A. J. F., H. D. Bowlby, F. M. Keyser. 2017. A Framework for the Assessment of the Status of River Herring                Populations and Fisheries in DFO’s Maritimes Region. Canadian Science Advisory Secretariat Research Document               2016/105. Fisheries and Oceans Canada, Ottawa.  
-
-McIntyre, T. M., Bradford, R. G., Davies, T. D., and Gibson, A. J. F. 2007. Gaspereau River alewife stock status report.         Canadian Science Advisory Secretariat Research Document 2007/032. Fisheries and Oceans Canada. Ottawa. 1-35. 
+McIntyre, T. M., Bradford, R. G., Davies, T. D., and Gibson, A. J. F. 2007. Gaspereau River alewife stock status report. Canadian Science Advisory Secretariat Research Document 2007/032. Fisheries and Oceans Canada. Ottawa. 1-35.
