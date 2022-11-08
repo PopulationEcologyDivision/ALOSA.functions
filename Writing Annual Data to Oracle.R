@@ -11,19 +11,20 @@
 #
 #===============================================================================
 #
-# First, define the filenames for each of the three csv and set the WD to 
-# where they are all stored.
-
-filename.biodata<-"TUSKET_2022_VAUGHAN_bio.csv"
-filename.agedata<-"GASPEREAU_2022_age.csv"
-filename.countdata<-"TUSKET_2022_POWERHOUSE_count.csv"
-
-setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
-#===============================================================================
-#
 # Load functions if not already loaded.
 source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
+
+#===============================================================================
+#
+# First, define the filenames for each of the three csv and set the WD to 
+# where they are all stored.
+
+filename.biodata<-"TUSKET_2019_VAUGHAN_bio.csv"
+filename.agedata<-"TUSKET_2019_VAUGHAN_age.csv"
+filename.countdata<-"TUSKET_2019_VAUGHAN_count.csv"
+
+setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 
 #-------------------------------------------------------------------------------
 # If needed, add the speciesID only fish to the bio characteristics file:

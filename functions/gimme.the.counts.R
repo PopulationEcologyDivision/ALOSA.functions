@@ -17,4 +17,4 @@ gimme.the.counts <- function(years,
   return(all.counts)
 }
   
-out <- gimme.the.counts(years = c(2015:2019), site = 3) #
+# out <- gimme.the.counts(years = c(2015:2019), site = 3) #
