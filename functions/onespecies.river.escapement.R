@@ -160,7 +160,7 @@ onespecies.river.escapement<-function(filename,
     # missing strata.
     summary.data <- left_join(alldays, summary.data, by = c("strata", "dayofyear"))
     summary.data <- select(summary.data, dayofyear, strata, mean, sd, se, sample.var, n.counts=n.counts.x)
-    summary.data=missingstrata(summary.data,start.end,n.strata)
+    summary.data=missingstrata(summary.data,start.end) #removed n.strata
   }
   
   #add column containing total number of time units per strata per day

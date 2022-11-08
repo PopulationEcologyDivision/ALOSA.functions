@@ -14,13 +14,15 @@
 # This functions uses:
 #     - no other user defined functions used.
 
-missingstrata<-function(data,start.end,n.strata){
+missingstrata<-function(data,start.end){
   
   #dataframe showing day numbers and strata 
+  stratavec <- unique(data$strata)
+  
   junk99<-data.frame(dayofyear=factor(start.end[1]:start.end[2],
                                       levels=c(as.character(start.end[1]:start.end[2]))),
-                    strata=factor(rep(1:n.strata,each=length(start.end[1]:start.end[2])),
-                                   levels=c(as.character(1:n.strata)))
+                    strata=factor(rep(stratavec,each=length(start.end[1]:start.end[2])),
+                                   levels=c(as.character(stratavec)))
                      
                      ) 
   
