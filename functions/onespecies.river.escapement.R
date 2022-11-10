@@ -129,8 +129,8 @@ onespecies.river.escapement<-function(filename,
                      FUN=user.count)
   
   # 6A: Compile into dataframe 
-  n.strata=max(count.data$strata,na.rm=T)
-  
+  #n.strata=max(count.data$strata,na.rm=T)
+  n.strata = unique(count.data$strata)
  summary.data<-data.frame(strata=strata.means$strata,
                     dayofyear=strata.means$dayofyear,
                     mean=strata.means$mean,
@@ -143,8 +143,8 @@ onespecies.river.escapement<-function(filename,
   
   # Check for missing strata
   #Initialize df with all days/strata:
-  alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=n.strata),
-                     Group.2=rep(1:n.strata,times=length(start.end[1]:start.end[2])))
+  alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=length(n.strata)),
+                     Group.2=rep(n.strata,times=length(start.end[1]:start.end[2])))
   
   #merge with n.counts dataframe from previous section.
   alldays=merge(alldays,strata.n,all.x = T)
@@ -166,15 +166,18 @@ onespecies.river.escapement<-function(filename,
   #add column containing total number of time units per strata per day
  
   
-  if(!(n.strata==5|n.strata==6)){
+  if(!(length(n.strata)==5|length(n.strata==6))){
     stop("Number of Strata must be 5 or 6") }
   
-  if(n.strata==5){
+  if(length(n.strata)==5){
     min5.periods<-data.frame(strata=c(1,2,3,4,5),
                              n.periods=c(72,72,48,48,48)) }
-  if(n.strata==6){
+  if(length(n.strata)==6){
     min5.periods<-data.frame(strata=c(1,2,3,4,5,6),
                              n.periods=c(60,69,36,36,51,36))}
+  if(length(n.strata)<5){
+    min5.periods <- data.frame(strata = n.strata, 
+                               n.periods=c(72,48,48))}
   #merge and order by strata
   summary.data<-merge(summary.data,min5.periods,by="strata") 
   
