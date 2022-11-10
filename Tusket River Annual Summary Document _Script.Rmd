@@ -179,35 +179,43 @@ data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DF
               header=T,stringsAsFactors = F)
 data$doy=as.Date(paste(data$day,data$mon,data$year,sep="-"),format="%d-%m-%Y")
 data$doy=as.numeric(strftime(data$doy, format="%j"))
-data$daynum=data$doy-109 ## Day 1 = April 20
 TRdata=data[data$river=="tusket",]
+
+###gotta reassign this to get blueback numbers in
+TR=multiyear[multiyear$river=="Tusket",1:9]
 
 plotyears=c(2014,2015,2018,2019)
 #windows(8.5,11)
 par(oma=c(7,3,3,0.5),mfrow=c(4,1))
 par(mar=c(0,5,0,3))
 
-for(i in plotyears){
-  plotyear=i
-plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+for(plotyear in plotyears){
+plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(96,179),
      xaxt="n",yaxt='n',cex.axis=2)
-rect(-5, -5, 12, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-rect(43, -5, 73, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(91, -5, 120, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(152, -5, 181, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
 box()
-lines(TRdata$daynum[TRdata$year==plotyear],TRdata$number[TRdata$year==plotyear]/1000,
-      lty=1,lwd=1.5)
-text(63,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
-text(-2,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="All"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="All"]/1000,lty=1,lwd=1.5)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="A"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="A"]/1000,lty=3,lwd=1.5)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="B"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="B"]/1000,lty=2,lwd=1.5)
+text(171,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
+text(94,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total     =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="All"],sep=" "),cex=1.5,pos=4)
+text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.8,paste("Total A =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="A"],sep=" "),cex=1.5,pos=4)
+text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.6,paste("Total B =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="B"],sep=" "),cex=1.5,pos=4)
 axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
-axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
-     labels=c("20","1","10","20","1","10","20"))
+axis(1,cex.axis=1.5, at=c(91,100,110,121,130,140,152,161,171), 
+     labels=c("1","10","20","1","10","20","1","10","20"))
 
-mtext("April",1,at=5,cex=1.5,line=3.5)
-mtext("May",1,at=26,cex=1.5,line=3.5)
-mtext("June",1,at=55,cex=1.5,line=3.5)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+mtext("April",1,at=105,cex=1.5,line=3)
+mtext("May",1,at=135,cex=1.5,line=3)
+mtext("June",1,at=166,cex=1.5,line=3)
+mtext("Date",1,at=135,cex=1.5,line=5.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5,las=3)
 
 
 ```
@@ -225,12 +233,14 @@ par(mar=c(0,5,0,3))
 for(i in plotyears){
   plotyear=i
 if(length(TRdata$number[TRdata$year==plotyear])>0){
- plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(0,68),
+ plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(91,179),
      xaxt="n",yaxt='n',cex.axis=2) 
-rect(-5, -5, 12, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-rect(43, -5, 73, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-text(63,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
-text(-2,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total =", GR$total[!is.na(GR$year==plotyear)& GR$year==plotyear],sep=" "),cex=1.5,pos=4)
+rect(91, -5, 120, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+rect(152, -5, 181, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
+text(171,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
+text(89,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total     =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="All"],sep=" "),cex=1.5,pos=4)
+text(89,max(TRdata$number[TRdata$year==plotyear]/1000)*0.8,paste("Total A =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="A"],sep=" "),cex=1.5,pos=4)
+text(89,max(TRdata$number[TRdata$year==plotyear]/1000)*0.6,paste("Total B =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="B"],sep=" "),cex=1.5,pos=4)
 }else{
  plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,50),xlim=c(0,68),
        xaxt="n",yaxt='n',cex.axis=2)
@@ -241,18 +251,22 @@ text(-2,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total =", GR$total
 }
 
 box()
-lines(TRdata$daynum[TRdata$year==plotyear],TRdata$number[TRdata$year==plotyear]/1000,
-      lty=1,lwd=1.5)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="All"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="All"]/1000,lty=1,lwd=1.5)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="A"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="A"]/1000,lty=3,lwd=1.5)
+lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="B"],
+      TRdata$number[TRdata$year==plotyear & TRdata$species=="B"]/1000,lty=2,lwd=1.5)
 axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
-axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
-     labels=c("20","1","10","20","1","10","20"))
+axis(1,cex.axis=1.5, at=c(91,100,110,121,130,140,152,161,171), 
+     labels=c("1","10","20","1","10","20","1","10","20"))
 
 mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5,las=3)
 ```
 
 **Figure 5** Estimated number of Alewife and Blueback Herring ascending the Lake Vaughan fish ladder in 2021-2022. No escapement estimates were obtained in 2020 due to the COVID-19 pandemic. Note that scales differ among plots.
