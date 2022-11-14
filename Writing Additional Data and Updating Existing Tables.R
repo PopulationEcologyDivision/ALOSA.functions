@@ -55,10 +55,10 @@ query="UPDATE  ALOSA_FISH_AGE_DATA
        WHERE ALOSA_FISH_AGE_DATA.YEAR=2021"
 
 query="UPDATE  ALOSA_FISH_BIO_DATA
-       SET   ALOSA_FISH_BIO_DATA.FISH_ID=281001
+       SET   ALOSA_FISH_BIO_DATA.FISH_ID=282001
        WHERE ALOSA_FISH_BIO_DATA.SITE_ID=2 AND
        ALOSA_FISH_BIO_DATA.YEAR=2019 AND
-       ALOSA_FISH_BIO_DATA.FISH_ID=281"
+       ALOSA_FISH_BIO_DATA.FISH_ID=282"
 # Execute query
 dbExecute(channel,query)
 # If all is good, commit the changes to the database to save them
