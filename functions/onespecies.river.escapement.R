@@ -166,8 +166,8 @@ onespecies.river.escapement<-function(filename,
   #add column containing total number of time units per strata per day
  
   
-  if(!(length(n.strata)==5|length(n.strata==6))){
-    stop("Number of Strata must be 5 or 6") }
+  #if(!(length(n.strata)==5|length(n.strata==6))){
+   # stop("Number of Strata must be 5 or 6") }
   
   if(length(n.strata)==5){
     min5.periods<-data.frame(strata=c(1,2,3,4,5),
@@ -196,9 +196,9 @@ onespecies.river.escapement<-function(filename,
   print(paste("Strata 4 total:",strata.percent(4,summary.data)))
   print(paste("Strata 5 total:",strata.percent(5,summary.data)))
   
-  if(n.strata==6){
-    print(paste("Strata 6 total:",strata.percent(6,summary.data)))
-  }
+  #if(n.strata==6){
+   # print(paste("Strata 6 total:",strata.percent(6,summary.data)))
+  #}
   
   #---
   # TOTAL ESCAPEMENT, VARIANCE AND CONFIDENCE INTERVAL(2 way stratified)

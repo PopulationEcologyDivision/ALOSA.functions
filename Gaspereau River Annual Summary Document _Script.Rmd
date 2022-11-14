@@ -56,7 +56,7 @@ NA = not available
 **Table 2**. Biological reference points for the Gaspereau River Alewife stock consistent with DFO’s precautionary framework (from Gibson et al. 2017). Assessment results can be compared against these reference points to determine stock status.  
 
 Reference point|	Acronym|	Description|	Value
---------------------------- | ---------| --------------------| -------------
+-----------------------|-----------|-----------------------|-----------------|
 Upper Stock Reference Point|	USR|	Spawning stock biomass or number of spawners above which stock is healthy; if below but still above the LRP, the stock is in the cautious zone. Can be SSBMSY or similar value|	400,000 fish
 | | | 
 Lower Stock Reference Point|	LRP|	Spawning stock biomass or numbers of spawners below which the stock is in the critical zone|	235,000 fish
@@ -73,7 +73,8 @@ multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Divisi
 GR=multiyear[multiyear$river=="Gaspereau" & multiyear$species=="A",]
 
 
-par(mfrow=c(2,1))
+par(mfrow=c(2,1),oma=c(3,0,0,0))
+par(mar=c(4,4,3,2))
 barplot(GR$escape/1000000, axes=0, names.arg=as.character(GR$year), 
         las=3, cex.names=1.2, ylim=c(0,max(GR$escape,na.rm=T)*1.2/1000000))
 
@@ -97,7 +98,8 @@ mtext("Year",1,cex=1.2, line=5)
 
 \newpage
 ```{r landingsplot,echo=FALSE, fig.width = 8.5,fig.height = 10}
-par(mfrow=c(2,1),oma=c(0,0,0,5))
+par(mfrow=c(2,1),oma=c(3,0,0,0))
+par(mar=c(4,4,3,2))
 barplot(GR$catch/1000000, axes=0, names.arg=as.character(GR$year), 
         las=3, cex.names=1.2, ylim=c(0,max(GR$catch,na.rm=T)*1.2/1000000))
 
@@ -186,6 +188,7 @@ Fupper=0.53
 
 series82.84=GR[GR$year>=1982 & GR$year<=1984,]
 series97.06=GR[GR$year>=1997 & GR$year<=2006,]
+series07.15=GR[GR$year>=2007 & GR$year<=2014,]
 series15.19=GR[GR$year>=2015 & GR$year<=2019,]
 series21.present=GR[GR$year>=2021,]
 
@@ -194,6 +197,9 @@ lines(series82.84$escape/ssnmsy,series82.84$er/Fupper)
 
 points(series97.06$escape/ssnmsy,series97.06$er/Fupper,pch=4)
 lines(series97.06$escape/ssnmsy,series97.06$er/Fupper)
+
+points(series07.15$escape/ssnmsy,series07.15$er/Fupper,pch=16)
+lines(series07.15$escape/ssnmsy,series07.15$er/Fupper)
 
 points(series15.19$escape/ssnmsy,series15.19$er/Fupper,pch=16)
 lines(series15.19$escape/ssnmsy,series15.19$er/Fupper)
@@ -295,6 +301,7 @@ axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62),
 mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
+mtext("Date", 1, at=36, cex=1.5, line=4.5)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 ```
 
@@ -357,7 +364,7 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 7.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2016 and 2018. .
+**Figure 7.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2016 and 2018.
 
 \newpage
 ```{r ageplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
