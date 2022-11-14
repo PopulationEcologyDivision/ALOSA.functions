@@ -203,7 +203,7 @@ twospecies.river.escapement<-function(filename,
     print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
     # fill in missing mean count, n.counts, sample.var, and sd for
     # missing strata.
-    summary.data=missingstrata(summary.data,start.end,n.strata)
+    summary.data=missingstrata(summary.data,start.end)
     ##need to remerge with min5.periods to fill in the n.periods vector for
     ##any added rows. remove the n.periods column as a hacky workaround
     ##to prevent column duplication
