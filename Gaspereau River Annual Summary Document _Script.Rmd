@@ -80,7 +80,7 @@ barplot(GR$escape/1000000, axes=0, names.arg=as.character(GR$year),
 
 axis(2, las=1, cex.axis=1.2)
 box()
-mtext("Escapement (millions of fish)",3,cex=1.2,adj=.15, line=-3)
+mtext("Escapement (millions of fish)",2,cex=1.2, line=3, las =3)
 abline(h=c(0.235,0.400),lty=5)
 mtext("Healthy zone",2,line=-2,las=1,cex=1,adj=.05, at=0.5)
 mtext("Cautious zone",2,line=-2,las=1,cex=1,adj=.05, at=0.32)
@@ -91,7 +91,7 @@ barplot(GR$total/1000000, axes=0, names.arg=as.character(GR$year),
 
 axis(2, las=1, cex.axis=1.2)
 box()
-mtext("Total abundance (millions of fish)",3,cex=1.2,adj=.15, line=-3)
+mtext("Total abundance (millions of fish)",2,cex=1.2, line=3, las=3)
 mtext("Year",1,cex=1.2, line=5)
 ```
 **Figure 1.** Spawning escapement (the number of fish ascending the White Rock fish ladder) and total abundance (the catch + escapement) for Alewife in the Gaspereau River for years in which estimates of the total escapement are available. Values are provided in Table 1. 
@@ -105,7 +105,7 @@ barplot(GR$catch/1000000, axes=0, names.arg=as.character(GR$year),
 
 axis(2, las=1, cex.axis=1.2)
 box()
-mtext("Landings (millions of fish)",3,cex=1.2,adj=.15, line=-3)
+mtext("Landings (millions of fish)",2,cex=1.2, line=3, las =3)
 
 barplot(GR$er*100, axes=0,names.arg=as.character(GR$year), las=3, cex.names=1.2, 
         ylim=c(0,100))
@@ -114,13 +114,13 @@ box()
 mtext("Exploitation rate (%)",2,cex=1.2,line=3,las=3)
 mtext("Year",1,cex=1.2, line=5)
 abline(h=c(35,53),lty=5)
-mtext("Over exploited ",4,cex=1,las=1, at=68,line=0.5)
-mtext("Fully exploited",4,cex=1,las=1, at=44,line=0.5)
-mtext("Under exploited",4,cex=1,las=1, at=20,line=0.5)
+mtext("OE",4,cex=1,las=1, at=68,line=0.5)
+mtext("FE",4,cex=1,las=1, at=44,line=0.5)
+mtext("UE",4,cex=.8,las=1, at=20,line=0.5)
 
 ```
 
-**Figure 2.** Landings in the commercial fishery and exploitation rates for Gaspereau River Alewife fishery for years in which estimates of the total escapement are available. Landings for 2012 and 2014 are also included, although counts are not available for those years. Values are provided in Table 1. 
+**Figure 2.** Landings in the commercial fishery and exploitation rates for Gaspereau River Alewife fishery for years in which estimates of the total escapement are available. Landings for 2012 and 2014 are also included, although counts are not available for those years. Values are provided in Table 1. Exploitation rates that fall within the areas labeled "OE", "FE" and "UE" refer to over exploited, fully exploited and under exploited, respectively.
 
 ```{r reference plot,echo=FALSE, fig.width = 7.5,fig.height = 9}
 reference.point.plot<-function(ssnmsy,
@@ -257,6 +257,7 @@ axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62),
 mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
+mtext("Date", 1, at=32, cex=1.5, line=5.2)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 
 
@@ -301,7 +302,7 @@ axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62),
 mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
-mtext("Date", 1, at=36, cex=1.5, line=4.5)
+mtext("Date", 1, at=32, cex=1.5, line=5.2)
 mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 ```
 
