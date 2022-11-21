@@ -30,7 +30,7 @@ get.age.data<-function(year, siteID, sppID, AgeStructure, channel){
   
   if(AgeStructure==T)
   {
-    agedata=agedata[agedata$AGE_STRUCTURE_SAMPLE=="Y",]
+    agedata=agedata[agedata$AGE_STRUCTURE_SAMPLE=="Y" |agedata$AGE_STRUCTURE_SAMPLE==1,]
   }
 
   return(agedata)
