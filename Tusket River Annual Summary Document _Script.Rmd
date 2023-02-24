@@ -10,7 +10,7 @@ header-includes:
    - \fancyfoot[C]{}
 output: pdf_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r load-packages, include=FALSE}
@@ -25,7 +25,7 @@ Alewife and Blueback Herring on the Tusket River, NS.
 
 Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring escapement estimate| Alewife exploitation rate estimate| Blueback Herring exploitation rate estimate
 -----|------------|-----------|-----------|-----------|-----------
-2022| 1,670,471| 1,662,008| 8,463| 0.4345^g^| 0.1^h^ 
+2022| 1,670,471| 1,662,008| 8,463| 0.4404^g^| 0.25^h^ 
 2021| 1,956,804| 1,941,411| 15,394| 0.38^f^| 0.44^f^ 
 2020^d^| NA| NA| NA| NA| NA 
 2019| 397,709| 367,781| 29,928| 0.51^e^| 0.49^e^ 
@@ -38,7 +38,7 @@ Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring e
 ^c^ The commercial catch for each species, used to calculate exploitation rates, accounts for a time lag between when the fish become vulnerable to the fishery and when they are counted at the Lake Vaughan fish ladder (Bowlby and Gibson 2016).\
 ^d^ Program was unable to run due to COVID-19\
 ^e^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (93% Alewife)\
-^f^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (99% Alewife)
+^f^ Catch proportion assumed to be the same as the proportion observed at the Lake Vaughan fish ladder (99% Alewife)\
 ^g^ Calculated from partially reported landings\
 ^h^ Calculated from checking a sample of the landings for proportions of Alewife and Blueback Herring\
 
