@@ -1,14 +1,17 @@
 ---
-title: "&nbsp;"
+title: '&nbsp;'
 header-includes:
-   - \usepackage{fancyhdr}
-   - \pagestyle{fancy}
-   - \renewcommand{\headrulewidth}{0pt}
-   - \fancyhead[L]{Gaspereau River 2022 Assessment Summary}
-   - \fancyfoot[R]{\thepage}
-   - \fancypagestyle{plain}{\pagestyle{fancy}}
-   - \fancyfoot[C]{}
-output: pdf_document
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \renewcommand{\headrulewidth}{0pt}
+- \fancyhead[L]{Gaspereau River 2022 Assessment Summary}
+- \fancyfoot[R]{\thepage}
+- \fancypagestyle{plain}{\pagestyle{fancy}}
+- \fancyfoot[C]{}
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 ```{r load-packages, include=FALSE}
 library(ROracle)
@@ -19,8 +22,8 @@ library(tinytex)
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
-2022| ???????| 874,862+/-36,935| ????????| ????????
-2021| 1,231,005| 984,094+/-36,504| 2,215,099|55.6
+2022| 1,562,900| 874,862+/-36,935| 2,437,762 |64.1
+2021| 1,231,005| 984,094+/-36,504| 2,215,099 |55.6
 2020| 1,202,604| NA| NA| NA
 2019|	784,152|	1,021,186+/-41,881	|1,805,338	|43.4
 2018|	903,655|	1,061,688+/-43,546	|1,965,343	|46.0
@@ -29,10 +32,10 @@ Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rat
 2015*|	705,500|	438,874+/-24,070	|1,144,374	|61.7
 2014|	439,000|	NA	|NA	|NA
 2013|	387,333|	149,682	|537,015	|72.1
-2012|	394,803|	NA	|NA	|NA
-2006|	282,589|	209,064+/-35,540	|491,653	|57.5
-2005|	219,173|	265,705+/-39,855	|484,878	|45.2
-2004|	268,820|	175,046+/-17,504 	|443,866	|60.6
+2012|	394,803|	158,387+/-31,677 	|553,190	|71.4
+2006|	282,589|	242,078+/-36,312 	|524,667	|53.9
+2005|	219,173|	299,910+/-59,982 	|519,083	|42.2
+2004|	268,820|	222,662+/-22,266 	|491,442	|54.7
 2003|	416,335|	435,832	|852,167	|48.9
 2002|	391,278|	310,746	|702,024	|55.7
 2001|	119,348|	238,842	|358,190	|33.3
