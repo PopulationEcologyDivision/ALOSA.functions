@@ -11,10 +11,12 @@
 
 
 
-random.sample.2way.5min<-function(seed,startday,filename,year,recordtime=F,strata,samplesperstrata)
+random.sample.2way.5min<-function(seed,startmonth,endmonth,startday,filename,
+                                  year,recordtime=F,strata,samplesperstrata)
 {
   path = getwd()
   set.seed(seed)
+  ##2023 Tusket (Vaughan) seed is 112 and start date is March 1st
   ##2022 Gaspereau for WR seed is 741 and start date April. 15th
   ##2022 Gaspereau for LM seed is 789 and start date April. 15th
   ##2022 Tusket (Vaughan) seed is  987 and Start date April.1st
@@ -41,15 +43,23 @@ random.sample.2way.5min<-function(seed,startday,filename,year,recordtime=F,strat
   #number of samples per strata
   num<-samplesperstrata
   
+  ##check date inputs are ok
+  if(startday<1 | startday>31){stop("startday must be from 1 to 31")}
+  if(startmonth<1 | startmonth>12){stop("startmonth must be from 1 to 12")}
+  if(endmonth<1 | endmonth>12){stop("endmonth must be from 1 to 12")}
+  if(startmonth>=endmonth){stop("startmonth must be less than end month")}
+  ##coerce inputs to integers
+  startday<-as.integer(startday)
+  startmonth<-as.integer(startmonth)
+  endmonth<-as.integer(endmonth)
+  
   #Time dimensions:
-  mm<-c(4,5,6)
+  mm<-startmonth:endmonth
   dd<-1:31
   hh<-0:23
   min5<-seq(0,55,by=5)
   
-  
   #Make vectors for data.frame:
-  
   t1<-rep(min5,length(hh))
   t2<-sort(rep(hh,length(min5)))
   t3<-t2*100+t1
@@ -57,12 +67,7 @@ random.sample.2way.5min<-function(seed,startday,filename,year,recordtime=F,strat
   time<-rep(t3,length(dd)*length(mm))
   day<-rep(sort(rep(dd,length(t3))),length(mm))
   mon<-sort(rep(mm,length(dd)*length(t3)))
-  
-  #print(length(time))
-  #print(length(day))
-  #print(length(mon))
-  
-  
+
   #Make data frame and select dates:
   junk<-data.frame(mon,
                    day,

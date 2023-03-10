@@ -2,6 +2,45 @@
 ##pulling together a brief summary of gill vs trap net catches in SJR for RM
 ##Needs a MARFIS pull in the environment to work, specifically the catch obj
 
+catch<-convert.KGS(catch)
+
+catch.nb<-catch[catch$PROVINCE=="NB",]
+catch.nb.recent<-catch.nb[catch.nb$YEAR>=2019,]
+catch.nb.sum<-aggregate(catch.nb$KGS,by=list(catch.nb$YEAR),FUN="sum")
+for(i in 1:nrow(catch.nb.sum)) ## how many licences reported here?
+{
+catch.nb.sum$count[i]<-length(unique(catch.nb$LICENCE_ID[catch.nb$YEAR==catch.nb.sum$Group.1[i]]))
+}
+catch.nb.county.sum<-aggregate(catch.nb$KGS,by=list(catch.nb$COUNTY,catch.nb$YEAR),FUN="sum")
+catch.nb.lic<-aggregate(catch.nb$LICENCE_ID,by=list(catch.nb$COUNTY,catch.nb$YEAR),FUN="unique")
+for(i in 1:nrow(catch.nb.lic))
+{
+  catch.nb.lic$count[i]<-length(catch.nb.lic$x[[i]])
+}
+
+catch.sj<-catch[catch$COUNTY=="SAINT JOHN COUNTY",]
+catch.sj.sum<-aggregate(catch.sj$KGS,by=list(catch.sj$YEAR),FUN="sum")
+for(i in 1:nrow(catch.nb.sum)) ## how many licences reported here?
+{
+  catch.sj.sum$count[i]<-length(unique(catch.sj$LICENCE_ID[catch.sj$YEAR==catch.sj.sum$Group.1[i]]))
+}
+##rename cols
+colnames(catch.sj.sum)<-c("Year","Catch (Kgs)","Licence Count")
+
+catch.other<-catch.nb[catch.nb$COUNTY!="SAINT JOHN COUNTY",]
+catch.other.sum<-aggregate(catch.other$KGS,by=list(catch.other$YEAR),FUN="sum")
+for(i in 1:nrow(catch.nb.sum)) ## how many licences reported here?
+{
+  catch.other.sum$count[i]<-length(unique(catch.other$LICENCE_ID[catch.other$YEAR==catch.other.sum$Group.1[i]]))
+}
+##rename cols
+colnames(catch.other.sum)<-c("Year","Catch (Kgs)","Licence Count")
+
+##investigate high sunbury lic catches
+catch.ind<-catch[catch$LICENCE_ID=="120545",]
+x1<-aggregate(catch.ind$KGS,by=list(catch.ind$YEAR),FUN="sum")
+catch.ind<-catch[catch$LICENCE_ID=="120317",]
+x2<-aggregate(catch.ind$KGS,by=list(catch.ind$YEAR),FUN="sum")
 
 library(dplyr)
 

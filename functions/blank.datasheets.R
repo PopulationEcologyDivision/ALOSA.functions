@@ -10,11 +10,13 @@
 # This functions uses:
 
 
-blank.datasheets<-function(seed,startday,rivername,year,recordtime=T,
-                           speciesID=F,strata,samplesperstrata){
+blank.datasheets<-function(seed,startmonth,endmonth,startday,rivername,year,
+                           recordtime=T,speciesID=F,strata,samplesperstrata){
   random.sample.2way.5min(seed,
+                          startmonth,
+                          endmonth,
                           startday,
-                          filename=paste(rivername,year,"count data.csv",sep="_"),
+                          filename=paste(rivername,year,"count data.csv",sep=" "),
                           year,
                           recordtime=recordtime,
                           strata,
@@ -30,7 +32,7 @@ blank.datasheets<-function(seed,startday,rivername,year,recordtime=T,
                      weight=NA,
                      scale=NA,
                      notes=NA)
-  write.csv(biodata,file=paste(rivername,year,"biocharacteristics data.csv",sep="_"),
+  write.csv(biodata,file=paste(rivername,year,"biocharacteristics data.csv",sep=" "),
             na="",row.names = F)
   
   cat("\n","Biological characteristics data sheet saved to WD")
@@ -44,7 +46,7 @@ blank.datasheets<-function(seed,startday,rivername,year,recordtime=T,
                            BB.tag=NA,
                            all.tag=NA,
                            BB.prop=NA)
-    write.csv(speciesprop,file=paste(rivername,year,"in season Species ID data.csv",sep="_"),
+    write.csv(speciesprop,file=paste(rivername,year,"in season Species ID data.csv",sep=" "),
               na="",row.names = F)
     cat("\n","Species ID data sheet saved to WD")
   }
