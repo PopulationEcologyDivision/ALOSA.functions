@@ -128,9 +128,13 @@ random.sample.2way.5min<-function(seed,startmonth,endmonth,startday,filename,
   
   junk1 <- do.call(rbind, samples)
   
-  # adjust start time here-------------v
-  junk<-junk1[!(junk1$mon==4&junk1$day<startday)&!(junk1$mon==6&junk1$day>30)
-              &!(junk1$mon==4&junk1$day==31),]
+  # remove days that don't exist (31 for even months)
+  short.months<-c(4,6,9,11)
+  junk2<-junk1[!(junk1$mon==2 & junk1$day>28),]
+  junk3<-junk2[!(junk2$mon%in%short.months & junk2$day>30),]
+  
+  # adjust start time here-------------
+  junk<-junk3[!(junk3$mon==startmonth & junk3$day<startday),]
   
   out<-junk[order(junk$mon,junk$day,junk$time),]
   

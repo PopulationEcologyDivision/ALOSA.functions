@@ -29,9 +29,10 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #...............................................................................
 #Season setup
 #Only run at beginning of season!
-blank.datasheets(seed=112,startmonth=3,endmonth=6,startday=1,rivername="Vaughan",
+# blank.datasheets(seed=112,startmonth=3,endmonth=6,startday=1,rivername="Vaughan",
+#                  year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
+blank.datasheets(seed=113,startmonth=3,endmonth=6,startday=15,rivername="Powerhouse",
                  year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
-
 
 year<-year
 site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
