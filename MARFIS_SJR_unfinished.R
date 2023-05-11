@@ -11,6 +11,8 @@ for(i in 1:nrow(catch.nb.sum)) ## how many licences reported here?
 {
 catch.nb.sum$count[i]<-length(unique(catch.nb$LICENCE_ID[catch.nb$YEAR==catch.nb.sum$Group.1[i]]))
 }
+colnames(catch.nb.sum)<-c("Year","Catch (Kgs)","Licence Count")
+
 catch.nb.county.sum<-aggregate(catch.nb$KGS,by=list(catch.nb$COUNTY,catch.nb$YEAR),FUN="sum")
 catch.nb.lic<-aggregate(catch.nb$LICENCE_ID,by=list(catch.nb$COUNTY,catch.nb$YEAR),FUN="unique")
 for(i in 1:nrow(catch.nb.lic))
@@ -35,6 +37,21 @@ for(i in 1:nrow(catch.nb.sum)) ## how many licences reported here?
 }
 ##rename cols
 colnames(catch.other.sum)<-c("Year","Catch (Kgs)","Licence Count")
+
+
+
+plot(catch.nb.sum$Group.1,catch.nb.sum$x/1000,type="l",xlab="Year",ylab="Reported Landings (mt)",main="SWNB")
+plot(catch.sj.sum$Year,catch.sj.sum$`Catch (Kgs)`/1000,type="l",xlab="Year",ylab="Reported Landings (mt)",main="Saint John County")
+plot(catch.other.sum$Year,catch.other.sum$`Catch (Kgs)`/1000,type="l",xlab="Year",ylab="Reported Landings (mt)",main="Other Counties")
+
+plot(catch.nb.sum$Group.1,catch.nb.sum$x/1000,type="l",xlab="Year",ylab="Reported Landings (mt)",main="SWNB")
+lines(catch.sj.sum$Year,catch.sj.sum$`Catch (Kgs)`/1000,lty=2)
+lines(catch.other.sum$Year,catch.other.sum$`Catch (Kgs)`/1000,lty=3)
+legend("topleft",legend=c("All","Saint John","Other"),
+       lty=c(1,2,3),bty='n',
+       title="SWNB Counties",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+
+
 
 ##investigate high sunbury lic catches
 catch.ind<-catch[catch$LICENCE_ID=="120545",]

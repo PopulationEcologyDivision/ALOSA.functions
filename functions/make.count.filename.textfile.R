@@ -64,7 +64,7 @@ for(i in 1:nrow(out))
   
 }
 
-write.table(file.list, file=paste(y,year,"Count filenames.txt",sep=" "),
+write.table(file.list, file=paste(site.name,year,"Count filenames.txt",sep=" "),
             quote=F,row.names=F,col.names=F)
 
 }

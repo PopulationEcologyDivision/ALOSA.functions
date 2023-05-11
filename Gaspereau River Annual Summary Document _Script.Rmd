@@ -50,7 +50,7 @@ Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rat
 1970|	480,000|	60,527	|540,527	|88.8
 
 
-**Notes:** Data from 1970 through 2006 are from McIntyre et al. (2007). Other data are unpublished. Escapement estimates from 2003 to 2019 obtained by sub-sampling video. In 2013, the escapement estimate is number of fish estimated between 0600h and 2000h adjusted by the proportion of fish that moved between 0000h and 0600h and between 2000h and 2400h from 2015-2019. Total counts were used in other years. The catch estimates for 2012 to 2021 were provided by the buyer initially as the number of pounds purchased. These are converted to the number of fish by dividing the number of pounds purchased by the weight per pail (30 lbs), and multiplying by the estimated number of fish per pail (83 fish/pail). The 2012 to 2017 values are not adjusted for landings that were sold as bait or for local consumption. The 2018, 2019, and 2021 catch estimates are adjusted for fish sold as bait. The count in 1995 is a partial count but is considered mostly complete. Values may change as further information about the fishery is obtained. No escapement estimates were calculated in 2020 due to the COVID-19 pandemic.  
+**Notes:** Data from 1970 through 2006 are from McIntyre et al. (2007). Other data are unpublished. Escapement estimates from 2003 to 2019 obtained by sub-sampling video. In 2013, the escapement estimate is number of fish estimated between 0600h and 2000h adjusted by the proportion of fish that moved between 0000h and 0600h and between 2000h and 2400h from 2015-2019. Total counts were used in other years. The catch estimates for 2012 to 2022 were provided by the buyer initially as the number of pounds purchased. These are converted to the number of fish by dividing the number of pounds purchased by the weight per pail (30 lbs), and multiplying by the estimated number of fish per pail (83 fish/pail). The 2012 to 2017 values are not adjusted for landings that were sold as bait or for local consumption. The 2018, 2019, and 2021 catch estimates are adjusted for fish sold as bait. The count in 1995 is a partial count but is considered mostly complete. Values may change as further information about the fishery is obtained. No escapement estimates were calculated in 2020 due to the COVID-19 pandemic.  
 NA = not available  
 * Minor adjustments (<0.2%) were made to escapement estimate since the 2017 version.
 
@@ -219,8 +219,8 @@ text(1.1,1.23,"2015-16",pos=4,col="gray35",cex=0.85)
 text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
 text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
 text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
-text(2.5,1.05,"2021",pos=3,col="gray35",cex=0.85)
-text(2.5,.105,"2022 placeholder",pos=3,col="red",cex=0.85)
+text(2.61,1.02,"2021",pos=3,col="gray35",cex=0.85)
+text(2.35,1.2,"2022",pos=3,col="red",cex=0.85)
 arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
 ```
 

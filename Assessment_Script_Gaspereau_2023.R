@@ -29,26 +29,24 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #...............................................................................
 #### Season setup ####
 #Only run at beginning of season!
-# blank.datasheets(seed=112,startmonth=3,endmonth=6,startday=1,rivername="Vaughan",
-#                  year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
-blank.datasheets(seed=113,startmonth=3,endmonth=6,startday=15,rivername="Powerhouse",
-                 year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
-make.count.filename.textfile("Powerhouse 2023 count data.csv","Powerhouse",2023)
+blank.datasheets(seed=114,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
+                 year=2023,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+make.count.filename.textfile("White Rock 2023 count data.csv","WRock",2023)
 #...............................................................................
 #### In Season Count ####
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets")
-# x<-onespecies.partial.river.escapement("Vaughan 2023 count data.csv",fixtime=F,database=F,2023,2,channel)
-# filename="Vaughan 2023 count data.csv"
-# fixtime=F
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023")
+
+# filename="White Rock Counts - Sheet1.csv"
+# fixtime=T
 # database=F
 # year=2023
-# site=2
+# site=3
 # channel=channel
-x<-onespecies.river.escapement("Vaughan 2023 count data.csv",fixtime=F,database=F,2023,2,channel)
+
+x<-onespecies.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
 
 x<-round(x)
-n<-dim(x)[1]-1
-x<-x[1:n,]
+n<-dim(x)[1]
 x$dayofyear<-as.numeric(as.character(x$dayofyear))
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
@@ -62,8 +60,7 @@ old.data$date=as.Date(paste(old.data$day,old.data$mon,2023,sep="-"),
 #dayofyear uses "strftime" to evaluate which day of the year each date aligns with
 old.data$dayofyear=as.numeric(strftime(old.data$date, format="%j"))
 
-plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear),min(x$dayofyear)+80), ylim=c(0,120000),lwd=2,
-     ylab="Number of Fish",xlab="Day of Year")
+plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear),min(x$dayofyear)+80), ylim=c(0,120000),lwd=2)
 lines(old.data$dayofyear,old.data$Total2014,type="l",col="red")
 lines(old.data$dayofyear,old.data$Total2015,type="l",col="orange")
 lines(old.data$dayofyear,old.data$Total2018,type="l",col="yellow")
