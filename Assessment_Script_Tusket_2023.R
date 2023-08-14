@@ -11,7 +11,6 @@
 #...............................................................................
 require(ROracle)
 #-------------------------------------------------------------------------------
-setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #...............................................................................
 #
@@ -44,15 +43,33 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/T
 # year=2023
 # site=2
 # channel=channel
-x<-onespecies.river.escapement("Vaughan 2023 count data.csv",fixtime=F,database=F,2023,2,channel)
+# x<-onespecies.river.escapement("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
+x<-onespecies.river.escapement.downstream("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
 
+# x<-onespecies.partial.river.escapement("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
 x<-round(x)
-n<-dim(x)[1]-1
-x<-x[1:n,]
-x$dayofyear<-as.numeric(as.character(x$dayofyear))
+n<-dim(x)[1]
+x<-x[1:n-1,]
+# x$dayofyear<-as.numeric(as.character(x$dayofyear))
+
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
 write.csv(x,file="inseasonsummary.csv",row.names=F)
+
+#powerhouse
+y<-onespecies.partial.river.escapement("Powerhouse 2023 count data1.csv",fixtime=T,database=F,2023,14,channel)
+y<-onespecies.river.escapement.downstream("Powerhouse 2023 count data1.csv",fixtime=T,database=F,2023,14,channel)
+j<-data.frame(total.IS=c(2337,3204,2317,4586,6388,5952,4653,6641,4196,2585,3933,5153,3808,4942),
+              dayofyear=122:135)
+
+plot(y$dayofyear,y$total,type="l",lwd=2)
+lines(y$dayofyear,y$clow,lty=3)
+lines(y$dayofyear,y$chigh,lty=3)
+lines(j$dayofyear,j$total.IS,col="red",lwd=2)
+
+y1<-merge(y,j,by="dayofyear",all.x=T)
+y1$diff<-y1$total-y1$total.IS
+y1$per.diff<-(y1$total.IS-y1$total)/y1$total
 #plot
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/data for multi year tusket plot.csv")
 
@@ -74,6 +91,7 @@ segments(119,0,119,120000)
 segments(133,0,133,120000)
 legend(100, 100000, legend=c("2014", "2015", "2018", "2019", "2021", "2022", "2023"),
        col=c("red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
+
 #...............................................................................
 #### Post season ####
 year<-year

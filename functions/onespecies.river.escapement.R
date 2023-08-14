@@ -256,6 +256,7 @@ onespecies.river.escapement<-function(filename,
   # 2D: Bind all 1WS into dataframe
   daily.summary<-cbind(daily.total,daily.var[,2], daily.sd)
   colnames(daily.summary)=c("dayofyear","total","variance","sd")
+  daily.summary$dayofyear<-as.integer(as.character(daily.summary$dayofyear))
   
   
   # DAILY DEGREES OF FREEDOM AND CONFIDENCE INTERVALS (1WS) ---

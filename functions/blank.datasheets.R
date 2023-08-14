@@ -23,6 +23,7 @@ blank.datasheets<-function(seed,startmonth,endmonth,startday,rivername,year,
                           samplesperstrata)
   
   biodata=data.frame(river=NA,
+                     year=NA,
                      day=NA,
                      mon=NA,
                      sample=NA,

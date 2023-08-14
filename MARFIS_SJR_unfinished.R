@@ -1,5 +1,5 @@
 ###IN PRogress
-##pulling together a brief summary of gill vs trap net catches in SJR for RM
+#### pulling together a brief summary of gill vs trap net catches in SJR for RM ####
 ##Needs a MARFIS pull in the environment to work, specifically the catch obj
 
 catch<-convert.KGS(catch)
@@ -173,4 +173,22 @@ write.csv(gill.sub.sum,file="SJR gillnet catch 2017_2019.csv",row.names = F)
 ##2019 120274 - set 180 fa of gear code 41 AND 42 - double a typical licence????
 ##2017 120052 - no apparent errors, 150 fathoms of net
 ##2017 120285 - Wrong unit for most entries, log book indicates pounds. CORRECTED ABOVE
+
+
+#### NB holistic assessment ####
+catch.NB<-catch[catch$PROVINCE=="NB",]
+unique(catch.NB$RIVERNAME_CLEANED)
+sj.tribs<-c("SAINT JOHN","WASHADEMOAK LAKE","BELYEAS POINT","BELLEISLE BAY",
+            "DARLING'S ISLAND","DARLING'S LAKE","MORRELL RD","GRAND LAKE",
+            "KINGSTON CREEK","MILKISH CREEK","OROMOCTO","DOUGLAS HARBOUR",
+            "FRENCH LAKE","THE KEYHOLE","KEYHOLE LAKE","KENNEBECASIS",
+            "MAQUAPIT LAKE","INDIAN","GREY ROCK","CAP-PELE")
+            
+problems<-c("UNKNOWN")
+
+non.sj.tribs<-c("MAGAGUADAVIC","TANTRAMAR","SAINT CROIX","AULAC","MISSAQUASH",
+                "SWAN LAKE","PETITCODIAC")
+
+catch.problems<-catch.NB[catch.NB$RIVERNAME_CLEANED %in% problems,]
+
 
