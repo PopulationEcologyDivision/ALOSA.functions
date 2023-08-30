@@ -1,4 +1,4 @@
-# A Data cleaner function to catch issues with landsings data from MARFIS
+# A Data cleaner function to catch issues with landings data from MARFIS
 # Requires input of:
 # Catch dataframe from MARFIS_all in one.R
 #
@@ -34,6 +34,8 @@ single.year<-as.data.frame(table(single.year))
 single.year<-single.year[single.year$Freq==1,]
 
 ##Should we check for gear code missing? hours fished missing?
+
+##TO DO logs with two units in one year##
 
 ##output section
 assign("double.units", double.units, envir = .GlobalEnv)

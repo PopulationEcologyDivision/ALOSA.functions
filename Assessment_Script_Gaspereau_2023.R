@@ -78,18 +78,73 @@ legend(110, 100000, legend=c("2015", "2016", "2017", "2018", "2019", "2021", "20
        col=c("red", "orange", "yellow", "green", "blue", "purple", "brown", "black"), lty=1, cex=0.8)
 
 #### FFHPP plot ####
+flow.gate<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023/White Rock flows April 1 to June 30 2023_DFO.csv")
+##clean it up##
+flow.gate$Time.of.change[9]<-"16:30" # these are all gueses
+flow.gate$Time.of.change[10]<-"17:30"
+flow.gate$Time.of.change[11]<-"18:30"
+flow.gate$Time.of.change[12]<-"19:30"
+flow.gate$Time.of.change[28]<-"16:00"
+flow.gate$Time.of.change[31]<-"16:58"
+flow.gate$Time.of.change[32]<-"16:58"
+flow.gate$Date[4]<-"29-May-23"
+flow.gate$Date<-ifelse(flow.gate$Date=="",NA,flow.gate$Date)
+for(i in 1:nrow(flow.gate)) ##fill in blanks with the last date
+{
+  if(is.na(flow.gate$Date[i])==F){next()}
+  flow.gate$Date[i]<-flow.gate$Date[i-1]
+}
+flow.gate$Date<-sub("May","05",flow.gate$Date)
+flow.gate$Date<-sub("Jun","06",flow.gate$Date)
+flow.gate$Date<-sub("-23","-2023",flow.gate$Date)
+flow.gate$datetime<-paste(flow.gate$Date,flow.gate$Time.of.change, sep=" ")
+flow.gate$datetime<-as.POSIXct(flow.gate$datetime,tryFormats="%d-%m-%Y %H:%M")
+
+
+test<-flow.gate
+test$datetime<-test$datetime-1
+test$Flow..cfs.[2:nrow(test)]<-test$Flow..cfs.[1:nrow(test)-1]
+flow.gate<-merge(flow.gate,test,all=T)
+flow.gate<-flow.gate[order(flow.gate$datetime),]
+
+flow.gen<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023/White Rock flows April 1 to June 30 2023_DFO_Generator.csv",nrows=91)
+names(flow.gen)[1]<-"Date"
+flow.gen<-flow.gen[,1:5]
+flow.gen$Date<-sub("Apr","04",flow.gen$Date)
+flow.gen$Date<-sub("May","05",flow.gen$Date)
+flow.gen$Date<-sub("Jun","06",flow.gen$Date)
+flow.gen$Date<-sub("-23","-2023",flow.gen$Date)
+flow.gen$Date<-ifelse(nchar(flow.gen$Date)==9,paste("0",flow.gen$Date,sep=""),flow.gen$Date)
+flow.gen$datetime<-paste(flow.gen$Date,flow.gen$Time.of.change, sep=" ")
+flow.gen$datetime<-as.POSIXct(flow.gen$datetime,tryFormats="%d-%m-%Y")
+flow.gen$conversion.to.cfs[flow.gen$conversion.to.cfs<0]<-0
+
+##get date object for counts
+x$Date<-as.Date(paste(2023,x$mon,x$day,sep="-"))
+x$Date<-as.POSIXlt(x$Date)
+x$Date<-as.POSIXct(x$Date)
+
+#actually plot
 par(mar=c(5,4,4,4))
-flow.data<-data.frame(dayofyear=130:152,
-                      cfs=c(30,rep(279.5,6),rep(200,16)))
-flow.data$plot.cfs<-flow.data$cfs*100
-plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,90000),lwd=1,
-     ylab="Number of Fish",xlab="May",xaxt="n")
-lines(x$dayofyear,x$chigh,lty=3)
-lines(x$dayofyear,x$clow,lty=3)
-lines(flow.data$dayofyear,flow.data$plot.cfs,col="red")
-axis(1,at=c(121,130,140,151),labels=c("1","10","20","31"))
-axis(4,at=c(30,200,279.5)*100,labels=c(30,200,279.5),las=2)
+plot(x$Date[1:51],x$total[1:51],type="l", xlim=c(min(as.integer(x$Date)),max(as.integer(x$Date))), ylim=c(0,90000),lwd=1,
+     ylab="Number of Fish",xlab="Date",xaxt="n")
+lines(x$Date[52:55],x$total[52:55],lwd=1)
+lines(x$Date[56:63],x$total[56:63],lwd=1)
+lines(x$Date[1:51],x$chigh[1:51],lty=3)
+lines(x$Date[52:55],x$chigh[52:55],lty=3)
+lines(x$Date[56:63],x$chigh[56:63],lty=3)
+lines(x$Date[1:51],x$clow[1:51],lty=3)
+lines(x$Date[52:55],x$clow[52:55],lty=3)
+lines(x$Date[56:63],x$clow[56:63],lty=3)
+lines(flow.gate$datetime,flow.gate$Flow..cfs.*50,col="blue")
+lines(flow.gen$datetime,flow.gen$conversion.to.cfs*50,col="red")
+date.key<-c(as.integer(x$Date[8]),as.integer(x$Date[17]),as.integer(x$Date[27]),as.integer(x$Date[39]),as.integer(x$Date[48]),as.integer(x$Date[55])+86400)
+axis(1,at=date.key,labels=c("1","10","20","1","10","20"))
+axis(4,at=c(0,200,400,600)*50,labels=c(0,200,400,600),las=2)
 mtext("Flow (cfs)",4,1)
+mtext("May",1,2,adj=0.25)
+mtext("June",1,2,adj=0.72)
+
 
 ##post season meeting plot
 plot(x$dayofyear[1:51],x$total[1:51],type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,90000),lwd=1,
