@@ -109,6 +109,13 @@ RIVER.summary("GASPEREAU",
               DNFdata=didnotfish,
               RENEWdata=licencerenewals)
 
+# sub<-present.MARFIS.data(licence = 120423,
+#                          year = 2019,
+#                          catch = catch)
+# 
+# sub<-sub[order(sub$MONTH,sub$DAY),]
+# sub$weight<-sub$FV_WEIGHT/0.24
+
 # Save the output if you want:
 #write.csv(annualcatch.GAS,file="Gaspereau Catch in KGS.csv",na="",row.names=F)
 #write.csv(reportcounts.GAS,file="Gaspereau reporting summary.csv",na="",row.names=F)

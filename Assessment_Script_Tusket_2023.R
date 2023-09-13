@@ -94,6 +94,7 @@ legend(100, 100000, legend=c("2014", "2015", "2018", "2019", "2021", "2022", "20
 
 #...............................................................................
 #### Post season ####
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets")
 year<-year
 site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
 #                  1=Carleton and 2=Vaughan. Use 'i.forgot.the.siteIDs(channel) for other locations
@@ -103,9 +104,54 @@ seed=seed #Seed used for scale selection.
 nsamples=500  #Number of scale selected to be aged
 
 # If needed:
-species.split<-split.spp(year,site,channel,"accessory_data.csv")
+# species.split<-split.spp(year,site,channel,"accessory_data.csv")
+##since no biodata exists, just manually create the output of the spp.split function
+species.split<-read.csv("Tusket 2023 Vaughan accessory data.csv")
+extra.days<-data.frame(day=23:25,
+                       mon=c(6,6,6),
+                       all=c(NA,NA,NA),
+                       BB=c(NA,NA,NA),
+                       BB.prop=c(NA,NA,NA))
+species.split<-rbind(species.split,extra.days)
+
+species.split1<-species.split
+species.split1$BB.prop[is.na(species.split1$BB.prop)]<-0
+
+species.split2<-species.split
+species.split1$BB.prop[is.na(species.split1$BB.prop)]<-1
+
+species.split3<-species.split
+species.split3$day.int<-1:nrow(species.split3)
+species.split3$BB.prop[29]<-NA#get rid of last day of sampling with only 2 fish
+
+dat<-data.frame(x=species.split3$day.int,y=species.split3$BB.prop)
+dat<-dat[complete.cases(dat),]
+
+blah<-data.frame(time=dat$x,intensity=dat$y)
+blah1<-normalizeData(blah)
+fit<-sigmoidalFitFunction(data=blah1,tryCounter=5)
+
+ah<-sigmoidalFitFormula(1:32,maximum = fit$maximum_Estimate,slopeParam = fit$slopeParam_Estimate,midPoint = fit$midPoint_Estimate)
+for(i in 1:nrow(species.split3))
+{
+  if(is.na(species.split3$BB.prop[i]))
+  {
+    species.split3$BB.prop[i]<-ah[i]
+  }
+}    
 
 
+glmfit<-glm(BB~day.int,data=species.split3,offset=all)
+
+out<-data.frame(day.int=1:30,
+                all=rep(100,30))
+
+out.pred<-predict(glmfit,newdata=out,type="response") 
+
+glmfit1<-glm(BB~day.int,data=species.split3,offset=all,family="poisson")
+glmfit2<-glm(BB~day.int,data=species.split3,offset=all,family="quasibinomial")
+
+out.pred1<-predict(glmfit1,newdata=out,type="response") 
 if(nspp==1){
   daily.count<-onespecies.river.escapement(year=year,
                               site=site,
