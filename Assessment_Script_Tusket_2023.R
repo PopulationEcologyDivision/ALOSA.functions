@@ -30,23 +30,15 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #Only run at beginning of season!
 # blank.datasheets(seed=112,startmonth=3,endmonth=6,startday=1,rivername="Vaughan",
 #                  year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
-blank.datasheets(seed=113,startmonth=3,endmonth=6,startday=15,rivername="Powerhouse",
-                 year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
-make.count.filename.textfile("Powerhouse 2023 count data.csv","Powerhouse",2023)
+# blank.datasheets(seed=113,startmonth=3,endmonth=6,startday=15,rivername="Powerhouse",
+#                  year=2023,recordtime=T,speciesID=T,strata=6,samplesperstrata=4)
+# make.count.filename.textfile("Powerhouse 2023 count data.csv","Powerhouse",2023)
 #...............................................................................
 #### In Season Count ####
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets")
-# x<-onespecies.partial.river.escapement("Vaughan 2023 count data.csv",fixtime=F,database=F,2023,2,channel)
-# filename="Vaughan 2023 count data.csv"
-# fixtime=F
-# database=F
-# year=2023
-# site=2
-# channel=channel
-# x<-onespecies.river.escapement("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
-x<-onespecies.river.escapement.downstream("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
 
-# x<-onespecies.partial.river.escapement("Vaughan 2023 count data.csv",fixtime=T,database=F,2023,2,channel)
+x<-onespecies.river.escapement("Vaughan 2023 count data.csv",fixtime=T,downstream.migration=T,database=F,2023,2,channel)
+
 x<-round(x)
 n<-dim(x)[1]
 x<-x[1:n-1,]
@@ -56,21 +48,51 @@ print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total)
 
 write.csv(x,file="inseasonsummary.csv",row.names=F)
 
-#powerhouse
+#### powerhouse ####
 y<-onespecies.partial.river.escapement("Powerhouse 2023 count data1.csv",fixtime=T,database=F,2023,14,channel)
 y<-onespecies.river.escapement.downstream("Powerhouse 2023 count data1.csv",fixtime=T,database=F,2023,14,channel)
-j<-data.frame(total.IS=c(2337,3204,2317,4586,6388,5952,4653,6641,4196,2585,3933,5153,3808,4942),
-              dayofyear=122:135)
+
+##innovasea counts
+# j<-data.frame(total.IS=c(2337,3204,2317,4586,6388,5952,4653,6641,4196,2585,3933,5153,3808,4942),
+#               dayofyear=122:135)
+is<-read.csv("Tusket Powerhouse Fishladder_Daily Counts_April1-June15.csv")
+is<-is[1:76,] #get rid of totals at bottom of sheet
+is$Date<-as.Date(is$Date)
+is$dayofyear=as.numeric(strftime(is$Date, format="%j"))
+is$count<-as.numeric(gsub("\\*","",is$Daily.Count.NSP.camera)) #remove asterisks from values and convert to numeric
 
 plot(y$dayofyear,y$total,type="l",lwd=2)
 lines(y$dayofyear,y$clow,lty=3)
 lines(y$dayofyear,y$chigh,lty=3)
-lines(j$dayofyear,j$total.IS,col="red",lwd=2)
+lines(is$dayofyear,is$count,col="red",lwd=2)
 
-y1<-merge(y,j,by="dayofyear",all.x=T)
-y1$diff<-y1$total-y1$total.IS
-y1$per.diff<-(y1$total.IS-y1$total)/y1$total
-#plot
+y1<-merge(y,is,by="dayofyear",all.x=T)
+y1$diff<-y1$total-y1$count
+y1$per.diff<-(y1$count-y1$total)/y1$total
+
+test.df<-y1[y1$total>250 & !is.na(y1$count),]
+
+t.test(test.df$total,test.df$count,paired = TRUE)
+
+
+#why the discrepancy?
+#half of it due to May 6 - may 10 (14.4k)
+#look at time of counts
+ph<-read.csv("Powerhouse 2023 count data1.csv")
+#date conversion amalgamates month and year columns into one format
+ph$date=as.Date(paste(ph$day,ph$mon,ph$year,sep="-"),
+                        format="%d-%m-%Y")
+#dayofyear uses "strftime" to evaluate which day of the year each date aligns with
+ph$dayofyear=as.numeric(strftime(ph$date, format="%j"))
+
+ph<-ph[ph$dayofyear<172,]
+
+# plot(ph$time,ph$dayofyear)
+ggplot(ph,aes(time,dayofyear,size=count.upstream)) +
+  geom_point() +
+  geom_vline(xintercept=c(500,1045,1345,1645,2100))
+
+#### plot ####
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/data for multi year tusket plot.csv")
 
 old.data$date=as.Date(paste(old.data$day,old.data$mon,2023,sep="-"),
@@ -98,7 +120,6 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/T
 year<-year
 site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
 #                  1=Carleton and 2=Vaughan. Use 'i.forgot.the.siteIDs(channel) for other locations
-nspp<-nspecies # Either 1 or 2
 sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=seed #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
@@ -111,67 +132,119 @@ extra.days<-data.frame(day=23:25,
                        mon=c(6,6,6),
                        all=c(NA,NA,NA),
                        BB=c(NA,NA,NA),
-                       BB.prop=c(NA,NA,NA))
+                       BBprop=c(NA,NA,NA))
 species.split<-rbind(species.split,extra.days)
 
-species.split1<-species.split
-species.split1$BB.prop[is.na(species.split1$BB.prop)]<-0
+species.split$day.int<-1:nrow(species.split)
+species.split$BBprop[29]<-NA#get rid of last day of sampling with only 2 fish
 
-species.split2<-species.split
-species.split1$BB.prop[is.na(species.split1$BB.prop)]<-1
-
-species.split3<-species.split
-species.split3$day.int<-1:nrow(species.split3)
-species.split3$BB.prop[29]<-NA#get rid of last day of sampling with only 2 fish
-
-dat<-data.frame(x=species.split3$day.int,y=species.split3$BB.prop)
+dat<-data.frame(x=species.split$day.int,y=species.split$BBprop)
 dat<-dat[complete.cases(dat),]
 
-blah<-data.frame(time=dat$x,intensity=dat$y)
-blah1<-normalizeData(blah)
-fit<-sigmoidalFitFunction(data=blah1,tryCounter=5)
 
-ah<-sigmoidalFitFormula(1:32,maximum = fit$maximum_Estimate,slopeParam = fit$slopeParam_Estimate,midPoint = fit$midPoint_Estimate)
-for(i in 1:nrow(species.split3))
+glmfit1<-glm(BB~day.int,data=species.split3,offset=log(all),family="poisson")
+
+out<-data.frame(day.int=1:32,
+                all=rep(1,32)) ##all is set to 1 to give proportions
+
+out.pred<-predict(glmfit,newdata=out,type="response") #outputs fitted values for day/int in out
+##gets overwritten by below. learned below from https://stackoverflow.com/questions/40985366/prediction-of-poisson-regression
+out.predci<-predict(glmfit1,newdata=out,type="link",se.fit=T) #list of 3
+ginv <- glmfit1$family$linkinv
+out.pred<-ginv(out.predci[[1]])
+out.predlo<-ginv(out.predci[[1]]-1.96*out.predci[[2]])
+out.predhi<-ginv(out.predci[[1]]+1.96*out.predci[[2]])
+
+##fill species split back in with fitted values
+##use predict values and lo/hi CI for the three scenarios
+species.split1<-species.split
+species.split2<-species.split
+species.split3<-species.split
+
+for(i in 1:nrow(species.split))
 {
-  if(is.na(species.split3$BB.prop[i]))
+  if(is.na(species.split$BBprop[i])==T)
   {
-    species.split3$BB.prop[i]<-ah[i]
+    species.split1$BBprop[i]<-out.pred[i]
+    species.split2$BBprop[i]<-out.predlo[i]
+    species.split3$BBprop[i]<-out.predhi[i]
   }
-}    
+}
 
 
-glmfit<-glm(BB~day.int,data=species.split3,offset=all)
+daily.count1<-twospecies.river.escapement("Vaughan 2023 count data.csv",
+                                          fixtime=T,
+                                          downstream.migration=T,
+                                          database=F,
+                                          2023,
+                                          2,
+                                          channel,
+                                          species.split=species.split1)
 
-out<-data.frame(day.int=1:30,
-                all=rep(100,30))
+daily.count2<-twospecies.river.escapement("Vaughan 2023 count data.csv",
+                                          fixtime=T,
+                                          downstream.migration=T,
+                                          database=F,
+                                          2023,
+                                          2,
+                                          channel,
+                                          species.split=species.split2)
 
-out.pred<-predict(glmfit,newdata=out,type="response") 
+daily.count3<-twospecies.river.escapement("Vaughan 2023 count data.csv",
+                                          fixtime=T,
+                                          downstream.migration=T,
+                                          database=F,
+                                          2023,
+                                          2,
+                                          channel,
+                                          species.split=species.split3)
 
-glmfit1<-glm(BB~day.int,data=species.split3,offset=all,family="poisson")
-glmfit2<-glm(BB~day.int,data=species.split3,offset=all,family="quasibinomial")
+ph1<-twospecies.river.escapement("Powerhouse 2023 count data1.csv",
+                                 fixtime=T,
+                                 downstream.migration=T,
+                                 database=F,
+                                 2023,
+                                 14,
+                                 channel,
+                                 species.split=species.split1)
 
-out.pred1<-predict(glmfit1,newdata=out,type="response") 
-if(nspp==1){
-  daily.count<-onespecies.river.escapement(year=year,
-                              site=site,
-                              channel=channel) }
-if(nspp==2){
-  daily.count<-twospecies.river.escapement(year=year,
-                                  site=site,
-                                  channel=channel)  }
 
-#Get bio data from DB
-bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
+x<-daily.count1[[176]]
 
-missingdays<-missing.days(bio.data)
-mergedays<- c() # For missing sample days, we merge the counts from two days
-                # and use that in the weighting calculation. 
-                # For example, ff day 112 is missing then decide if you want to merge the counts
-                # with day 111 or 113. Do this for all the missing dates and provide the
-                # replacement days in this vector. Length(mergedays)==Length(missingdays)
-            
-ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
+ph1.a<-ph1[[167]]
+ph1.b<-ph1[[170]]
+
+
+##worrying about downstream counts
+vau<-read.csv("Vaughan 2023 count data.csv")
+vau$number.up<-vau$count.upstream-vau$count.downstream
+
+# daily.count1<-twospecies.river.escapement(year=year,
+#                                           site=site,
+#                                           channel=channel,
+#                                           species.split=species.split1)
+# 
+# daily.count2<-twospecies.river.escapement(year=year,
+#                                           site=site,
+#                                           channel=channel,
+#                                           species.split=species.split2)  
+# 
+# daily.count3<-twospecies.river.escapement(year=year,
+#                                           site=site,
+#                                           channel=channel,
+#                                           species.split=species.split3)  
+
+# #Get bio data from DB NONE IN 2023
+# bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
+# 
+# missingdays<-missing.days(bio.data)
+# mergedays<- c() # For missing sample days, we merge the counts from two days
+#                 # and use that in the weighting calculation. 
+#                 # For example, ff day 112 is missing then decide if you want to merge the counts
+#                 # with day 111 or 113. Do this for all the missing dates and provide the
+#                 # replacement days in this vector. Length(mergedays)==Length(missingdays)
+#             
+# ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
 
 
 

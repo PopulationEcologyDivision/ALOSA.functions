@@ -7,6 +7,7 @@
 # Inputs:
 #        - filename: filename where escapement counts are
 #        - fixtime=F: default is F but use T if the minutes/seconds columns are present
+#        - downstream.migration=F: if true sets all up-down=Total that are negative to 0
 #        - database=T: pull count data from database instead of local file (prefered method)
 #        - year: use if database=T
 #        - site: use if database=T
@@ -26,12 +27,14 @@
 
 onespecies.river.escapement<-function(filename,
                                       fixtime=F,
+                                      downstream.migration=F,
                                       database=T,
                                       year,
                                       site,
                                       channel)
 {
-  require(dplyr)
+  library(dplyr)
+  
   if(database==T){
     count.data<-get.count.data(year, site, channel)
     names(count.data)[1]<-"year"
@@ -75,13 +78,18 @@ onespecies.river.escapement<-function(filename,
   #---
   # DATA CLEAN UP/REORGANIZATION
   count.data$total=count.data$count.upstream-count.data$count.downstream
-  #date conversion amalgamates month and year columns into one format
+  
+  #set all negative totals (due to downstream migration) to 0
+  if(downstream.migration==T){
+  count.data$total<-ifelse(count.data$total<0,0,count.data$total)
+  }
   
   if(database==F & fixtime==T){
     count.data$total=round((count.data$total/
                               (count.data$minutes*60+count.data$seconds))*300)
   }
   
+  #date conversion amalgamates month and year columns into one format
   count.data$date=as.Date(paste(count.data$day,count.data$mon,count.data$year,sep="-"),
                           format="%d-%m-%Y")
   

@@ -7,6 +7,7 @@
 # Inputs:
 #        - filename: filename where escapement counts are
 #        - fixtime=F: default is F but use T if the minutes/seconds columns are present
+#        - downstream.migration=F: if true sets all up-down=Total that are negative to 0
 #        - database=T: pull count data from database instead of local file (prefered method)
 #        - year: use if database=T
 #        - site: use if database=T
@@ -27,6 +28,7 @@
 
 twospecies.river.escapement<-function(filename,
                                       fixtime=T,
+                                      downstream.migration=F,
                                       database=T,
                                       year,
                                       site,
@@ -108,6 +110,11 @@ twospecies.river.escapement<-function(filename,
     
   data$total=data$count.upstream-data$count.downstream
   #date conversion amalgamates month and year columns into one format
+  
+  #set all negative totals (due to downstream migration) to 0
+  if(downstream.migration==T){
+    data$total<-ifelse(data$total<0,0,data$total)
+  }
   
   if(fixtime==T){
     data$total=round((data$total/
