@@ -102,10 +102,10 @@ twospecies.river.escapement<-function(filename,
   ##create output list before forloop
   out<-list()
 
-  for (i in 1:2){
-    if(i==1){
+  for (sp in 1:2){
+    if(sp==1){
       data=alewife.count.data}
-    if(i==2){
+    if(sp==2){
       data=blueback.count.data}
     
   data$total=data$count.upstream-data$count.downstream
@@ -344,13 +344,13 @@ twospecies.river.escapement<-function(filename,
   daily.summary$total<-round(daily.summary$total,digits=1)
   
   # if(i==1){
-  #  assign('daily.summary.A',daily.summary,envir = .GlobalEnv) 
+  #  assign('daily.summary.A',daily.summary,envir = .GlobalEnv)
   # }
   # if(i==2){
-  #   assign('daily.summary.B',daily.summary,envir = .GlobalEnv) 
+  #   assign('daily.summary.B',daily.summary,envir = .GlobalEnv)
   # }
-  # 
-  out[[i]]<-daily.summary
+
+  out[[sp]]<-daily.summary
   
   }
   

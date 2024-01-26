@@ -84,7 +84,7 @@ onespecies.river.escapement<-function(filename,
   count.data$total<-ifelse(count.data$total<0,0,count.data$total)
   }
   
-  if(database==F & fixtime==T){
+  if(fixtime==T){
     count.data$total=round((count.data$total/
                               (count.data$minutes*60+count.data$seconds))*300)
   }
@@ -315,5 +315,6 @@ onespecies.river.escapement<-function(filename,
   
   daily.summary$total<-round(daily.summary$total,digits=1)
   return(daily.summary)
+  # return(summary.data)
   ##End of function::  
 } 

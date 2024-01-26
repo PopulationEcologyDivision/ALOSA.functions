@@ -42,8 +42,9 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau Rive
 # site=3
 # channel=channel
 
-x<-onespecies.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
-x<-onespecies.partial.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
+# x<-onespecies.river.escapement("White Rock Counts - final.csv",fixtime=T,database=F,2023,3,channel)
+
+# x<-onespecies.partial.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
 
 x<-round(x)
 n<-dim(x)[1]
@@ -51,8 +52,9 @@ n<-dim(x)[1]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-write.csv(x,file="inseasonsummary.csv",row.names=F)
-#plot
+write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+
+#plot for in season emails
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
 old.data$date=as.Date(paste(old.data$day,old.data$mon,2023,sep="-"),
@@ -123,30 +125,30 @@ flow.gen$conversion.to.cfs[flow.gen$conversion.to.cfs<0]<-0
 x$Date<-as.Date(paste(2023,x$mon,x$day,sep="-"))
 x$Date<-as.POSIXlt(x$Date)
 x$Date<-as.POSIXct(x$Date)
+flow.scaler<-30
 
 #actually plot
-par(mar=c(5,4,4,4))
-plot(x$Date[1:51],x$total[1:51],type="l", xlim=c(min(as.integer(x$Date)),max(as.integer(x$Date))), ylim=c(0,90000),lwd=1,
-     ylab="Number of Fish",xlab="Date",xaxt="n")
-lines(x$Date[52:55],x$total[52:55],lwd=1)
-lines(x$Date[56:63],x$total[56:63],lwd=1)
-lines(x$Date[1:51],x$chigh[1:51],lty=3)
-lines(x$Date[52:55],x$chigh[52:55],lty=3)
-lines(x$Date[56:63],x$chigh[56:63],lty=3)
-lines(x$Date[1:51],x$clow[1:51],lty=3)
-lines(x$Date[52:55],x$clow[52:55],lty=3)
-lines(x$Date[56:63],x$clow[56:63],lty=3)
-lines(flow.gate$datetime,flow.gate$Flow..cfs.*50,col="blue")
-lines(flow.gen$datetime,flow.gen$conversion.to.cfs*50,col="red")
+png(filename="Gaspereau River 2023 Escapement and flows.png",width=800,height=600)
+par(mar=c(5,4,4,6))
+plot(x$Date,x$total,type="l", xlim=c(min(as.integer(x$Date)),max(as.integer(x$Date))), ylim=c(0,90000),lwd=1,
+     ylab="Thousands of Fish",xlab="Date",xaxt="n",yaxt="n")
+lines(x$Date,x$chigh,lty=3)
+lines(x$Date,x$clow,lty=3)
+segments(x$Date[27],0,x$Date[27],120000,lwd=2) #season closure
+lines(flow.gate$datetime,flow.gate$Flow..cfs.*flow.scaler,col="blue")
+lines(flow.gen$datetime,flow.gen$conversion.to.cfs*flow.scaler,col="red")
 date.key<-c(as.integer(x$Date[8]),as.integer(x$Date[17]),as.integer(x$Date[27]),as.integer(x$Date[39]),as.integer(x$Date[48]),as.integer(x$Date[55])+86400)
 axis(1,at=date.key,labels=c("1","10","20","1","10","20"))
-axis(4,at=c(0,200,400,600)*50,labels=c(0,200,400,600),las=2)
-mtext("Flow (cfs)",4,1)
+axis(2,at=c(20000,40000,60000,80000),labels=c("20","40","60","80"),las=2)
+axis(4,at=c(0,200,400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000)*flow.scaler,
+     labels=c(0,200,400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000),las=2)
+mtext("Flow (cfs)",4,3)
 mtext("May",1,2,adj=0.25)
 mtext("June",1,2,adj=0.72)
+dev.off()
 
 
-##post season meeting plot
+#### post season meeting plot####
 plot(x$dayofyear[1:51],x$total[1:51],type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,90000),lwd=1,
      ylab="Number of Fish",xlab="May                                      June",xaxt="n")
 lines(x$dayofyear[52:55],x$total[52:55],lwd=1)
@@ -158,34 +160,19 @@ lines(x$dayofyear[1:51],x$clow[1:51],lty=3)
 lines(x$dayofyear[52:55],x$clow[52:55],lty=3)
 lines(x$dayofyear[56:63],x$clow[56:63],lty=3)
 axis(1,at=c(121,130,140,152,161,171),labels=c("1","10","20","1","10","20"))
-#...............................................................................
+
 #### Post season ####
-year<-year
-site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
-#                  1=Carleton and 2=Vaughan. Use 'i.forgot.the.siteIDs(channel) for other locations
-nspp<-nspecies # Either 1 or 2
-sppID<-sppID #Either 3501 for Alewife or 3502 for BB
 seed=666 #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
 
-
-
-if(nspp==1){
-  daily.count<-onespecies.river.escapement(year=year,
-                              site=site,
-                              channel=channel) }
-if(nspp==2){
-  daily.count<-twospecies.river.escapement(year=year,
-                                  site=site,
-                                  channel=channel)  }
+x<-onespecies.river.escapement(fixtime=T,database=T,year=2023,site=3,channel=channel)
 
 #Check Bio data
-checkers("White Rock 2023 biocharacteristics data.csv")
+checkers("White Rock 2023 biocharacteristics data.csv") # this file has the correct column names, same data as WE 2023 bio data.csv
 
 #Get bio data from DB
 bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
-bio.data<-read.csv("WR 2023 bio data.csv")
-bd<-read.csv("White Rock 2023 biocharacteristics data.csv")
+bio.data<-read.csv("WR 2023 bio data.csv") # read in csv because wasn't in data base yet
 daily.count<-x
 
 missingdays<-missing.days(bio.data)
@@ -196,21 +183,10 @@ c() # For missing sample days, we merge the counts from two days
                 # For example, ff day 112 is missing then decide if you want to merge the counts
                 # with day 111 or 113. Do this for all the missing dates and provide the
                 # replacement days in this vector. Length(mergedays)==Length(missingdays)
-            
-ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
 
-
-sacle.age<-read.csv("to be aged_rename this file.csv")
-
-
-
-
-
-
-
-
-
-
+#ran July 4th 2023 to get ages for student work      
+# ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
+# scale.age<-read.csv("to be aged_rename this file.csv")
 
 
 

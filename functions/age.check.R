@@ -14,7 +14,7 @@
 age.check<-function(filename){
   data=read.csv(filename, header=T, stringsAsFactors = F)
   
-  goodnames<-(c("year","sample","species","current.age","age.at.first.spawn")) 
+  goodnames<-(c("year","sample","species","current.age","age.at.first.spawn","notes","age.structure.sample")) 
   missingnames=goodnames[!goodnames%in%(names(data))]
   if (length(missingnames>0)){
     cat("Missing column name(s):","\n", missingnames,"\n")

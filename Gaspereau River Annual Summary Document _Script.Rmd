@@ -4,7 +4,7 @@ header-includes:
 - \usepackage{fancyhdr}
 - \pagestyle{fancy}
 - \renewcommand{\headrulewidth}{0pt}
-- \fancyhead[L]{Gaspereau River 2022 Assessment Summary}
+- \fancyhead[L]{Gaspereau River 2023 Assessment Summary}
 - \fancyfoot[R]{\thepage}
 - \fancypagestyle{plain}{\pagestyle{fancy}}
 - \fancyfoot[C]{}
@@ -22,6 +22,7 @@ library(tinytex)
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
+2023| 1,600,000| 1,312,700+/-52,246| 2,912,700 |54.9
 2022| 1,562,900| 874,862+/-36,935| 2,437,762 |64.1
 2021| 1,231,005| 984,094+/-36,504| 2,215,099 |55.6
 2020| 1,202,604| NA| NA| NA
@@ -220,7 +221,8 @@ text(2.8,0.67,"2017",pos=1,col="gray35",cex=0.85)
 text(2.8,0.85,"2018",pos=3,col="gray35",cex=0.85)
 text(2.43,0.81,"2019",pos=3,col="gray35",cex=0.85)
 text(2.61,1.02,"2021",pos=3,col="gray35",cex=0.85)
-text(2.35,1.2,"2022",pos=3,col="red",cex=0.85)
+text(2.35,1.2,"2022",pos=3,col="gray35",cex=0.85)
+text(3.38,1.02,"2023",pos=3,col="red",cex=0.85)
 arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
 ```
 

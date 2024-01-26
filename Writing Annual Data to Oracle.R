@@ -20,9 +20,9 @@ sourcery()
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"TUSKET_2019_VAUGHAN_bio.csv"
-filename.agedata<-"TUSKET_2019_VAUGHAN_age.csv"
-filename.countdata<-"TUSKET_2019_VAUGHAN_count.csv"
+filename.biodata<-"White Rock 2023 biocharacteristics data.csv"
+filename.agedata<-"to be aged_White Rock 2023 final.csv"
+filename.countdata<-"White Rock Counts - final.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 
@@ -73,7 +73,7 @@ dbWriteTable(conn = channel, schema="GASPEREA",
 # Format biological data
 oracle.bio<-format.BIODATA.onesite(filename.biodata)
 
-oracle.bio<-oracle.bio[oracle.bio$FISH_ID>1338,]
+# oracle.bio<-oracle.bio[oracle.bio$FISH_ID>1338,]
 
 # If you are happy with it, proceed to uploading it the GASPERA database
 dbWriteTable(conn = channel, schema="GASPEREA", 

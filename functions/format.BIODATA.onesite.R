@@ -63,7 +63,7 @@ format.BIODATA.onesite<-function(filename){
   data<-data[,names(data)%in%goodnames]
   data$SITE_ID<-siteID
   
-  A.names=c("Alewife","A","a","alewife","ale","Ale","ALE")
+  A.names=c("Alewife","Alewife ","A","a","alewife","ale","Ale","ALE")
   B.names=c("Blueback Herring","blueback herring","Blueback",
             "blueback","BBH","b","B","bbh","Bbh","Bb","BB","bb")
   data$species[data$species%in%A.names]<-3501
