@@ -4,7 +4,7 @@ header-includes:
    - \usepackage{fancyhdr}
    - \pagestyle{fancy}
    - \renewcommand{\headrulewidth}{0pt}
-   - \fancyhead[L]{Tusket River 2022 Assessment Summary}
+   - \fancyhead[L]{Tusket River 2023 Assessment Summary}
    - \fancyfoot[R]{\thepage}
    - \fancypagestyle{plain}{\pagestyle{fancy}}
    - \fancyfoot[C]{}
@@ -24,7 +24,8 @@ library(tinytex)
 Alewife and Blueback Herring on the Tusket River, NS.
 
 Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring escapement estimate| Alewife exploitation rate estimate| Blueback Herring exploitation rate estimate
------|------------|-----------|-----------|-----------|-----------
+-----|---------|----------|----------|--------|--------|
+2023| 2,119,723| 2,101,735| 17,988| 0.43| 0.16
 2022| 1,670,471| 1,662,008| 8,463| 0.4404^g^| 0.25^h^ 
 2021| 1,956,804| 1,941,411| 15,394| 0.38^f^| 0.44^f^ 
 2020^d^| NA| NA| NA| NA| NA 
@@ -159,8 +160,8 @@ Fupper=0.53
 
 series14.15=TR[TR$year>=2014 & TR$year<=2015,]
 series19=TR[TR$year==2019,]
-series21.22=TR[TR$year>=2021 & TR$year<=2022,]
-series22.present=TR[TR$year==2022,]
+series21.23=TR[TR$year>=2021 & TR$year<=2023,]
+series23.present=TR[TR$year==2023,]
 
 points(series14.15$escape/ssnmsy,series14.15$er/Fupper,pch=1)
 lines(series14.15$escape/ssnmsy,series14.15$er/Fupper)
@@ -168,17 +169,18 @@ lines(series14.15$escape/ssnmsy,series14.15$er/Fupper)
 points(series19$escape/ssnmsy,series19$er/Fupper,pch=1)
 lines(series19$escape/ssnmsy,series19$er/Fupper)
 
-points(series21.22$escape/ssnmsy,series21.22$er/Fupper,pch=1)
-lines(series21.22$escape/ssnmsy,series21.22$er/Fupper)
+points(series21.23$escape/ssnmsy,series21.23$er/Fupper,pch=1)
+lines(series21.23$escape/ssnmsy,series21.23$er/Fupper)
 
-points(series22.present$escape/ssnmsy,series22.present$er/Fupper,pch=19)
-lines(series22.present$escape/ssnmsy,series22.present$er/Fupper)
+points(series23.present$escape/ssnmsy,series23.present$er/Fupper,pch=19)
+lines(series23.present$escape/ssnmsy,series23.present$er/Fupper)
 
 text(0.57,1.13,"2014",pos=2,col="gray35",cex=0.85)
 text(0.75,0.92,"2015",pos=4,col="gray35",cex=0.85)
 text(0.12,0.9,"2019",pos=2,col="gray35",cex=0.85)
 text(0.65,0.7,"2021",pos=4,col="gray35",cex=0.85)
 text(0.53,0.82,"2022",pos=2,col="gray35",cex=0.85)
+text(0.7,0.82,"2023",pos=4,col="gray35",cex=0.85)
 ```
 
 **Figure 2.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status for 2014, 2015, 2019, and 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.

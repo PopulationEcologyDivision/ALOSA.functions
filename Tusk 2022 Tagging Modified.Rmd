@@ -1,0 +1,702 @@
+---
+title: "Tusket Acoustic 2022"
+author: "Goblins"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+require(dplyr)
+require(lubridate)
+require(knitr)
+require(xtable)
+require(Hmisc)
+##source all function
+
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+
+```
+```{r}
+##Run function with correct metadata stuff
+
+CleanVR2WData(data.dir = "C:/Users/BillardMa/Desktop/Tusket Tracking/Acoustic Data/ReceiverLogs/",
+              receiver.meta.path = "C:/Users/BillardMa/Desktop/Tusket Tracking/Acoustic Data/OTN_format_2022_Tusket_Receivers.csv",
+              tags.meta.path = "C:/Users/BillardMa/Desktop/Tusket Tracking/Acoustic Data/2022 Acoustic tagging data_Vaughan ladder.csv",
+              threshold = 3,
+              dataset.name = "tusk22")
+
+##remove any rows of NAs from teh tag meta data and reciever meta data files
+tusk22.VR.tag.meta<-tusk22.VR.tag.meta[complete.cases(tusk22.VR.tag.meta[,"TAG_SERIAL_NUMBER"]),]
+tusk22.VR.rec.meta<-tusk22.VR.rec.meta[complete.cases(tusk22.VR.rec.meta[,"INS_SERIAL_NO"]),]
+
+####Fix tag and rec meta data date time cols####
+tusk22.VR.tag.meta$UTC_RELEASE_DATE_TIME<-gsub("T"," ",tusk22.VR.tag.meta$UTC_RELEASE_DATE_TIME)
+tusk22.VR.tag.meta$UTC_RELEASE_DATE_TIME<-as.POSIXct(tusk22.VR.tag.meta$UTC_RELEASE_DATE_TIME)
+tusk22.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.<-gsub("T"," ",tusk22.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.)
+tusk22.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.<-as.POSIXct(tusk22.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.)
+tusk22.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.<-gsub("T"," ",tusk22.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.)
+tusk22.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.<-as.POSIXct(tusk22.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.)
+
+#create cleaned 2021 tag detection df
+#good.data<-tusk22.VR.data
+good.data<-rbind(tusk22.VR.data,tusk22.VR.few.detects[tusk22.VR.few.detects$tag.id.code==57461,])
+#good.data<-rbind(tusk21.VR.data,tusk21.VR.late.or.early[tusk21.VR.late.or.early$tag.id.code==53526,])
+
+#re order factor levels to make more sense
+good.data$OTN.array<-ordered(good.data$OTN.array,levels=c("Confluence","Downstream Vaughan Ladder","Downstream Powerhouse",
+                                           "Upstream Vaughan Ladder","Middle Lake Vaughan","Upper Lake Vaughan",
+                                           "Downstream Carleton Ladder","Carleton Ladder Exit","Upstream Carleton Ladder",
+                                           "Raynardton Lake","Lower Quinan Gavelton Bridge","Upper Quinan Wilson's Bridge"))
+
+#merge with larger metadata file
+colnames(tusk22.VR.tag.meta)[6] <- "tag.id.code"
+fulldet <- merge(good.data, tusk22.VR.tag.meta, by = "tag.id.code")
+```
+
+
+## Introduction
+
+The Tusket River Watershed is a large river system in the southwest region of Nova Scotia.  It is 
+
+## Methods
+
+Seven 180kHz VR2W receivers were deployed in and around Lake Vaughan (Fig. 1).
+
+```{r echo=FALSE}
+require(ggplot2)
+require(dplyr)
+require(sf)
+require(ggrepel)
+
+
+### using NHN data from watershed limits
+setwd("C:/Users/BillardMa/Desktop/ARC Stuff/Tusket/NHN")
+
+##read in relevant shapefiles
+limit <- st_read("NHN_01EA000___WORKUNIT_LIMIT_2.shp") #watershed limit, can be used to determine bounding box for fullscale map
+nhnbod <- st_read("NHN_01EA000_3_0_HD_WATERBODY_2.shp") #waterbodies within limit
+#get names of lakes to plot 
+nhnbodnames <- nhnbod[is.na(nhnbod$LAKENAME_1) == F,]
+watbodpoint <- st_point_on_surface(nhnbodnames)
+watbodcoords <- as.data.frame(st_coordinates(watbodpoint))
+watbodcoords$LAKENAME_1 <- nhnbodnames$LAKENAME_1
+
+nlflow <- st_read("NHN_01EA000_3_0_HN_NLFLOW_1.shp") # rivers
+litt <- st_read("NHN_01EA000_3_0_HN_LITTORAL_1.shp") #littoral boundaries
+slwat <- st_read("NHN_01EA000_3_0_HD_SLWATER_1.shp") # not too sure, seems to be redundant as a feature shape
+island <- st_read("NHN_01EA000_3_0_HD_ISLAND_2.shp") # self explanatory
+del <- st_read("NHN_01EA000_3_0_HN_DELIMITER_1.shp") # also somewhat redundant
+
+#edited shapefile for just the ocean portion of the watersehd delineation (Used QGIS to create this layer, was not able to create in R)
+
+# fudge <- st_read("test_water.shp")
+
+###Plotting receivers deployment locations by site name
+
+# recs <- read.csv("C:/Users/naug/Documents/Acoustic/Tusket Tracking/OTN_format_2021_Tusket_Receivers.csv")
+recs<-tusk22.VR.rec.meta
+points <- st_as_sf(recs[1:12,], coords = c("DEPLOY_LONG", "DEPLOY_LAT"), remove = F, crs = 4326)
+##get bounding box for points to set in coord_sf
+st_bbox(points)
+
+### Plot 1: General watershed map
+```
+
+```{r echo=F, fig.cap="Figure", fig.height=9, fig.width=8}
+ggplot()+
+  geom_sf(data = limit, color = "steelblue2", fill = "palegreen2")+
+  # geom_sf(data = fudge, color = "steelblue1", fill = "steelblue1")+
+  #geom_sf(data = del, color = gray(.7), fill = gray(.7))+
+  #geom_sf(data = litt, color = gray(.7))
+  geom_sf(data = nlflow, color = "steelblue2") +
+  geom_sf(data = nhnbod, color = "steelblue1", fill = "steelblue1") +
+  geom_sf(data = island, color = "steelblue1", fill = "palegreen2") +
+  #geom_sf(data = contour, aes(color = "palegreen3"))+
+  geom_sf(data = points, size = 3)+
+  geom_text_repel(data = recs[1:12,], aes(x = DEPLOY_LONG, y = DEPLOY_LAT, label = OTN_ARRAY), size = 3)+
+  geom_text(data = watbodcoords, aes(X, Y, label = LAKENAME_1), colour = "steelblue4", size = 2)+
+  coord_sf(xlim = c(-65.98, -65.86), ylim = c(43.87, 43.985), datum = NA, expand = FALSE, clip = "off")+
+  theme_minimal()+
+  # labs(title = "Tusket River Watershed, Receiver Deployments", size  = 40, x = NULL, y = NULL)
+  labs(title = NULL, x = NULL, y = NULL)
+```
+
+Results
+
+```{r, include =F}
+table1 <- tusk22.VR.tag.meta %>%
+  group_by(COMMON_NAME_E, SEX)%>%
+  summarise("Number of Tags Deployed" = length(unique(tag.id.code)))%>%
+  rename(Species = COMMON_NAME_E, Sex = SEX)
+```
+
+```{r, echo = F}
+### table of total deployed tags
+kable(table1, caption = "Number of tags deployed")
+```
+
+## Results
+
+```{r, include = F}
+#number of tags deployed, vs number of fish detected
+table2 <- fulldet%>%
+  group_by(COMMON_NAME_E, SEX)%>%
+  summarise("Number of Tags Detected" = length(unique(tag.id.code)))%>%
+  rename(Species = COMMON_NAME_E, Sex = SEX)
+```
+
+```{r, echo=F}
+kable(table2, caption = "Number of tags detected")
+```
+
+
+```{r, include = FALSE}
+
+
+#num fish at each receiver
+table3 <- fulldet %>%
+  group_by(COMMON_NAME_E, OTN.array)%>%
+  summarise("Number of Tags" = length(unique(tag.id.code)))%>%
+  rename(Species = COMMON_NAME_E, "Receiver Station Name" = OTN.array)
+
+```
+
+```{r, echo=F}
+kable(table3, caption = "Number of tags detected at each receiver.")
+
+```
+
+
+```{r, include=F}
+#tags.deployed<-tusk21.VR.tag.meta$TAG_ID_CODE
+tags.detected<-unique(fulldet$tag.id.code)
+end.rec<-rep(NA,length(tags.detected))
+end.rec.df<-data.frame(tags.detected,end.rec)
+names(end.rec.df)<-c("TAG_ID_CODE","Last.OTN.array")
+
+for(i in 1:nrow(end.rec.df)){
+  sub<-fulldet[fulldet$tag.id.code==end.rec.df$TAG_ID_CODE[i],]
+  end.rec.df$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+}
+
+end.rec.df <- rename(end.rec.df, tag.id.code = TAG_ID_CODE)
+
+mytags <- tusk22.VR.tag.meta
+mytags$tag.id.code <- as.factor(mytags$tag.id.code)
+end.rec.df2 <- left_join(end.rec.df, mytags)
+
+table4 <- end.rec.df2%>%
+  group_by(COMMON_NAME_E, Last.OTN.array)%>%
+  summarise("Number of Tags" = length(unique(tag.id.code)))%>%
+  rename("Species" = COMMON_NAME_E, "Last Receiver" = Last.OTN.array)
+```
+
+```{r, echo = F}
+kable(table4, caption = "Number of tags that had their last detections at each receiver.")
+```
+
+
+```{r, include = FALSE}
+#### Where tags were detected paragraph ####
+
+####Get tag meta into good.data ####
+# tag.meta.sub<-tusk22.VR.tag.meta[,c(5,6,15,30,37)] ##grab some tag meta data, maybe add more later
+# names(tag.meta.sub)<-c("TAG_SERIAL_NUMBER","tag.id.code","Species","SEX","UTC_RELEASE_DATE_TIME")
+# fulldet <- merge(good.data, tag.meta.sub, by = "tag.id.code")
+
+n.released<-length(na.omit(tusk22.VR.tag.meta$tag.id.code)) ##total tags released
+
+tusk22.VR.tag.meta.A<-tusk22.VR.tag.meta[tusk22.VR.tag.meta$COMMON_NAME_E=="Alewife",]
+n.A.released<-length(na.omit(tusk22.VR.tag.meta.A$tag.id.code)) ##total A released
+A.det<-intersect(tusk22.VR.tag.meta.A$TAG_ID_CODE,tags.detected)
+n.A.detected<-length(A.det) ##total A detected
+
+fulldet.A<-fulldet[fulldet$COMMON_NAME_E=="Alewife",]
+
+tags.A.2<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Upstream Vaughan Ladder"])
+length(tags.A.2) ##number alewife detected at OTN.array upstream Vaughan Dam Ladder
+tags.A.3<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Middle Lake Vaughan"])
+length(tags.A.3) ##number alewife detected at OTN.array Middle Lake Vaughan
+tags.A.4<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Upper Lake Vaughan"])
+length(tags.A.4) ##number alewife detected at OTN.array downstream Carleton Ladder
+tags.A.5<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Downstream Carleton Ladder"])
+length(tags.A.5) ##number alewife detected at OTN.array downstream Carleton Ladder
+tags.A.6<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Carleton Ladder Exit"])
+length(tags.A.6) ##number alewife detected at OTN.array Carleton Ladder Exit
+tags.A.7<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Upstream Carleton Ladder"])
+length(tags.A.7) ##number alewife detected at OTN.array Upstream Carleton Ladder
+tags.A.8<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Raynardton Lake"])
+length(tags.A.8) ##number alewife detected at OTN.array Raynardton Lake
+tags.A.9<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Lower Quinan Gavelton Bridge"])
+length(tags.A.9) ##number alewife detected at OTN.array Lower Quinan gavelton bridge
+tags.A.10<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Upper Quinan Wilson's Bridge"])
+length(tags.A.10) ##number alewife detected at OTN.array Upper quinan wilson's Bridge
+tags.A.1<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Downstream Powerhouse"])
+length(tags.A.1) ##number alewife detected at OTN.array 1 downstream powerhouse
+tags.A.0<-unique(fulldet.A$tag.id.code[fulldet.A$OTN.array=="Confluence"])
+length(tags.A.0) ##number alewife detected at OTN.array 1 downstream powerhouse
+tags.A.N1<-setdiff(A.det,tags.A.0)#alewife not detected at the confluence
+length(tags.A.N1)#number alewife not detected at downstream Vaughan Ladder
+
+
+
+# end.rec.A.N1<-rep(NA,length(tags.A.N1))
+# end.rec.df.A.N1<-data.frame(tags.A.N1,end.rec.A.N1)
+# names(end.rec.df.A.N1)<-c("TAG_ID_CODE","Last.OTN.array")
+# end.rec.df.A.N1$Species<-rep(NA,nrow(end.rec.df.A.N1))
+# for(i in 1:nrow(end.rec.df.A.N1)){
+# sub<-fulldet[fulldet$tag.id.code==end.rec.df.A.N1$TAG_ID_CODE[i],]
+# end.rec.df.A.N1$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+# end.rec.df.A.N1$Species[i]<-unique(sub$Species)
+# }
+# table(end.rec.df.A.N1$Last.OTN.array)
+
+
+
+##BB time
+# tusk22.VR.tag.meta.B<-tusk22.VR.tag.meta[tusk22.VR.tag.meta$COMMON_NAME_E=="Blueback Herring",]
+# n.B.released<-nrow(tusk22.VR.tag.meta.B) ##total B released
+# B.det<-intersect(tusk22.VR.tag.meta.B$TAG_ID_CODE,tags.detected)
+# n.B.detected<-length(B.det) ##total B detected
+# 
+# 
+# 
+# fulldet.B<-fulldet[fulldet$COMMON_NAME_E=="Blueback Herring",]
+# 
+# 
+# 
+# tags.B.2<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==2])##Blueback Herring detected at station 2
+# length(tags.B.2) ##number Blueback Herring detected at station 2 upstream Vaughan Ladder
+# tags.B.3<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==3])##Blueback Herring detected at station 3
+# length(tags.B.3) ##number Blueback Herring detected at station 3 Upper Lake Vaughan
+# tags.B.1<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==1])##Blueback Herring detected at station 1
+# length(tags.B.1) ##number Blueback Herring detected at station 1 downstream Vaughan Ladder
+# tags.B.N1<-setdiff(B.det,tags.B.1)#Blueback Herring not detected at downstream Vaughan Ladder
+# length(tags.B.N1)#number blueback herring not detected at downstream Vaughan Ladder
+# 
+# 
+# 
+# end.rec.B.N1<-rep(NA,length(tags.B.N1))
+# end.rec.df.B.N1<-data.frame(tags.B.N1,end.rec.B.N1)
+# names(end.rec.df.B.N1)<-c("TAG_ID_CODE","Last.OTN.array")
+# end.rec.df.B.N1$Species<-rep(NA,nrow(end.rec.df.B.N1))
+# for(i in 1:nrow(end.rec.df.B.N1)){
+# sub<-fulldet[fulldet$tag.id.code==end.rec.df.B.N1$TAG_ID_CODE[i],]
+# end.rec.df.B.N1$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+# end.rec.df.B.N1$Species[i]<-unique(sub$Species)
+# }
+# table(end.rec.df.B.N1$Last.OTN.array)
+
+
+
+```
+
+`r n.released` tags were released in total: `r n.A.released` for alewife, and `r n.B.released` for blueback herring.
+
+Of the `r n.A.released` Alewives tagged, `r  n.A.detected ` in total were detected. All `r length(tags.A.2)` detected tags were detected at the upstream Vaughan ladder location. Of those `r length(tags.A.2)`, `r length(tags.A.3)` were detected at Middle Lake Vaughan, and `r length(intersect(tags.A.3,tags.A.4))` of those `r length(tags.A.3)` were detected at Upper Lake Vaughan, plus `r length(setdiff(tags.A.4,tags.A.3))` more tags that weren't detected at Middle Lake Vaughan. `r length(tags.A.5)` tags were detected at Downstream Carleton Ladder, and `r length(setdiff(tags.A.6,tags.A.5))` more was detected at all receivers upstream from Downstream Carleton Ladder. Of the `r length(tags.A.5) + length(setdiff(tags.A.6,tags.A.5))` there were detected at or inferred to be at Downstream Carleton Ladder, `r length(tags.A.6)` were detected at Carleton Ladder Exit, `r length(tags.A.7)` of those `r length(tags.A.6)` were detected at Upstream Carleton ladder, and `r length(tags.A.8)` of those `r length(tags.A.7)` were detected at Raynardton Lake.
+
+Two receivers, Lower Quinan Gavelton Bridge and Upper Quinan Wilson's Bridge were deployed in the NHJVSDONHAWEV branch of the watershed. `r length(tags.A.9)` were detected at Lower Quinan Gavelton Bridge, all of which were detected at Upstream Vaughan Ladder; `r length(intersect(tags.A.9, tags.A.4)` were also detected at Middle Lake Vaughan, and `r length(intersect(tags.A.9, tags.A.5)` of those was also detected at Upper Lake Vaughan. Of the `r length(tags.A.9)` tags detected at Lower Quinan Gavelton Bridge, `r length(tags.A.10)` were detected at Upper Quinan Wilson's Bridge. 
+
+`r length(tags.A.0)` were detected at the Confluence, presumed to be leaving the system. Of those, `r length(tags.A.1)` were detected at Downstream Powerhouse, prior to being detected at the Confluence. No tags were detected at Downstream Vaughan Ladder, presumably due to high flows and poor detection efficiency, rather than Alewife not using this route for downstream passage. 
+
+<!-- Of the `r n.B.released` blueback tagged, `r n.B.detected` in total were detected. All `r length(tags.B.2)` detected tags were detected at the upstream Vaughan ladder location. Of those `r length(tags.B.2)`, `r length(tags.B.3)` were detected at Upper Vaughan. No tagged blueback were detected at below Carleton, or at Quinan gavelton bridge. `r length(tags.B.1)` of the `r length(tags.B.2)` tags were detected downstream of Vaughan ladder. The `r length(tags.B.N1)` that weren't detected at downstream Vaughan ladder, were last detected at the locations in the following table. -->
+
+```{r}
+#add first and last detection times to tag meta data
+tusk22.VR.tag.meta$first.detect.dt<-rep(NA,nrow(tusk22.VR.tag.meta))
+tusk22.VR.tag.meta$last.detect.dt<-rep(NA,nrow(tusk22.VR.tag.meta))
+for(i in 1:nrow(tusk22.VR.tag.meta))
+{
+  tusk22.VR.tag.meta$first.detect.dt[i]<-min(good.data$datetimeUTC[good.data$tag.id.code==tusk22.VR.tag.meta$tag.id.code[i]])
+  tusk22.VR.tag.meta$last.detect.dt[i]<-max(good.data$datetimeUTC[good.data$tag.id.code==tusk22.VR.tag.meta$tag.id.code[i]])
+}
+
+res.time.df<-tusk22.VR.tag.meta[,c(6,37,58,59)]
+res.time.df$first.detect.dt<-as.POSIXct(res.time.df$first.detect.dt)
+res.time.df$last.detect.dt<-as.POSIXct(res.time.df$last.detect.dt)
+res.time.df$first.detect.dt-res.time.df$UTC_RELEASE_DATE_TIME
+
+
+```
+
+```{r}
+##a for loop that plots all tags' detections at all receviers over time
+for(i in 1:nrow(tusk22.VR.tag.meta))
+{
+sub<-fulldet[fulldet$tag.id.code==tusk22.VR.tag.meta$tag.id.code[i],]
+par(mar=c(5,12,3,2))
+plot(sub$datetimeUTC,sub$OTN.array,yaxt="n",ann=F)
+axis(2,at=1:12,labels=levels(fulldet$OTN.array),las=2)
+mtext(unique(sub$tag.id.code),3,adj=1)
+mtext(unique(sub$COMMON_NAME_E),3,adj=0)
+mtext("Date",1,line=3)
+}
+
+#tags that were not detected at downstream vaughan receiver
+tags.below.vaughan<-unique(fulldet$tag.id.code[fulldet$OTN.array=="Confluence"])
+tags.not.below.vaughan<-setdiff(tusk22.VR.tag.meta$tag.id.code,tags.below.vaughan)
+
+# sub<-fulldet[fulldet$tag.id.code==57375,]
+
+
+##migration to crleton delay
+tags.at.carleton<-unique(fulldet$tag.id.code[fulldet$OTN.array %in% levels(fulldet$OTN.array)[8:10]]) #not just carleton but all recs above. works out to the same
+tags.at.carleton<-na.omit(tags.at.carleton)#removes first NA row
+mig.delay<-data.frame(tag.id.code=tags.at.carleton,
+                      first.det=rep(NA,length(tags.at.carleton)),
+                      carl.det=rep(NA,length(tags.at.carleton))
+                      )
+carl.fish<-fulldet[fulldet$tag.id.code %in% tags.at.carleton,]
+for(i in 1:length(tags.at.carleton))
+{
+mig.delay$first.det[i]<-min(carl.fish$datetimeUTC[carl.fish$tag.id.code==tags.at.carleton[i]])
+mig.delay$carl.det[i]<-min(carl.fish$datetimeUTC[carl.fish$tag.id.code==tags.at.carleton[i] & carl.fish$OTN.array %in% levels(carl.fish$OTN.array)[8:10]],na.rm=T)
+}
+mig.delay$first.det<-as.POSIXct(mig.delay$first.det)
+mig.delay$carl.det<-as.POSIXct(mig.delay$carl.det)
+mig.delay$delay<-mig.delay$carl.det-mig.delay$first.det
+
+##calculate migration delay by adding or omitting certain groups
+##Alewife only
+mean(mig.delay$delay[mig.delay$tag.id.code %in% tusk22.VR.tag.meta.A$tag.id.code])
+
+#Alewife tags released between May 08 and May 22 (study period)
+tag.key<-tusk22.VR.tag.meta.A$tag.id.code[tusk22.VR.tag.meta.A$dayofyear<147]
+mean(mig.delay$delay[mig.delay$tag.id.code %in% tag.key])
+
+#Alewife tags released between May 08 and May 27 
+tag.key<-tusk22.VR.tag.meta.A$tag.id.code[tusk22.VR.tag.meta.A$dayofyear<=147]
+mean(mig.delay$delay[mig.delay$tag.id.code %in% tag.key]) # same as Alewife only
+
+```
+
+```{r}
+##run tusk 2022 assessment script in order to get daily summary counts
+#PIT
+#make a daily count plot with shaded region of study period
+##make vector of x and y for polygons outside of plot because carleton has NA
+v.x<-c(131:148,148,131)
+v.y<-c(daily.summary.A$total[daily.summary.A$dayofyear %in% 131:148],0,0)
+c.x<-c(134:151,151,134)
+c.y<-c(carleton.summary$total[carleton.summary$dayofyear %in% 134:151],0,0)
+c.y[is.na(c.y)]<-0
+
+
+
+#plot
+# pdf("Escapement plot.pdf",width=6.5,height=4)
+# tiff("Escapement plot.tiff",width=6.5,height=4,units="in",res=300)
+par(mfrow=c(2,1),oma=c(5,5,2,2),mar=c(0,0,0,0))
+
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",axes=F,ylim=c(0,85000))
+polygon(v.x,v.y,border=NA,density=25)
+lines(carleton.summary$dayofyear,carleton.summary$total,lty=2)
+polygon(c.x,c.y,border=NA,density=25,angle=135)
+axis(2,at=c(0,20000,40000,60000,80000),labels=c(0,20,40,60,80),las=2)
+mtext("PIT",3,line=-2,adj=0.05)
+box()
+
+#Acoustic
+#make a daily count plot with shaded region of study period
+##make vector of x and y for polygons outside of plot because carleton has NA
+v.x<-c(125:147,147,125)
+v.y<-c(daily.summary.A$total[daily.summary.A$dayofyear %in% 125:147],0,0)
+c.x<-c(129:151,151,129)
+c.y<-c(carleton.summary$total[carleton.summary$dayofyear %in% 129:151],0,0)
+c.y[is.na(c.y)]<-0
+
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",axes=F,ylim=c(0,85000))
+polygon(v.x,v.y,border=NA,density=25)
+lines(carleton.summary$dayofyear,carleton.summary$total,lty=2)
+polygon(c.x,c.y,border=NA,density=25,angle=135)
+axis(2,at=c(0,20000,40000,60000,80000),labels=c(0,20,40,60,80),las=2)
+axis(1,at=c(91,105,121,135,153,166),labels=c("Apr 01","Apr 15","May 01","May 15","Jun 01","Jun 15"))
+mtext("Acoustic",3,line=-2,adj=0.05)
+box()
+
+mtext("Date",1,line=3,outer=T,cex=1)
+mtext("Thousands of Fish",2,line=3,outer=T,cex=1)
+# dev.off()
+
+###get count proportions
+#PIT
+pit.carl<-sum(carleton.summary$total[carleton.summary$dayofyear %in% 134:151],na.rm=T)
+pit.vaughan<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 131:148],na.rm=T)
+print(paste("PIT count prop is" ,pit.carl/pit.vaughan))
+
+aco.carl<-sum(carleton.summary$total[carleton.summary$dayofyear %in% 129:151],na.rm=T)
+aco.vaughan<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 125:147],na.rm=T)
+print(paste("Acoustic count prop is" ,aco.carl/aco.vaughan))
+
+```
+
+
+```{r}
+##run tusk 2022 assessment script in order to get daily summary counts
+tusk22.VR.tag.meta.A$dayofyear<-as.numeric(format(as.Date(tusk22.VR.tag.meta.A$UTC_RELEASE_DATE_TIME),"%j"))
+
+#scale tags to escapement at Vaughan
+#release date are doy 128,135,142,147,154
+#extend ranges to 125-131, 132-138, 139-144, 145-150, 151-157
+
+##need to trim relative to carleton counts, which only go to doy 151. so we need to lose last release group, and any detections after doy 151
+#4 day delay
+
+fulldet.A.trimmed<-fulldet.A[fulldet.A$datetimeUTC<="2022-05-31 23:59",]
+tags.above.carl<-unique(fulldet.A.trimmed$tag.id.code[fulldet.A.trimmed$OTN.array %in% levels(fulldet.A.trimmed$OTN.array)[8:10]])
+
+N.r1<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 125:131])
+N.r2<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 132:138])
+N.r3<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 139:144])
+N.r4<-sum(daily.summary.A$total[daily.summary.A$dayofyear %in% 145:150])
+
+n.r1<-nrow(tusk22.VR.tag.meta.A[tusk22.VR.tag.meta.A$dayofyear==128,])
+n.r2<-nrow(tusk22.VR.tag.meta.A[tusk22.VR.tag.meta.A$dayofyear==135,])
+n.r3<-nrow(tusk22.VR.tag.meta.A[tusk22.VR.tag.meta.A$dayofyear==142,])
+n.r4<-nrow(tusk22.VR.tag.meta.A[tusk22.VR.tag.meta.A$dayofyear==147,])
+
+w1<-N.r1/n.r1
+w2<-N.r2/n.r2
+w3<-N.r3/n.r3
+w4<-N.r4/n.r4
+
+##two tags from r1, two from r2, one from r3
+##take weights from each release group, multiply by number of detections
+#then divide by the total count for all periods, divided by the total released for all periods,
+#to scale it back down to the appropriate size.
+#this essentially corrects the number of tags detected, while the denominator of tags released stays the same
+tag.numerator<-sum(w1*2+w2*2+w3)/((N.r1+N.r2+N.r3)/(n.r1+n.r2+n.r3))
+
+prop.test(c(tag.numerator,aco.carl),c(49,aco.vaughan),alternative = "less") #acoustic
+prop.test(c(10.6,pit.carl),c(125,pit.vaughan),alternative="less") #pit
+#10.6 is the new PIT numerator
+
+##prop tests for fun
+prop.test(c(tag.numerator,10.6),c(49,125))
+prop.test(c(pit.carl,aco.carl),c(pit.vaughan,aco.vaughan))
+```
+
+```{r}
+###mig delay weighted#
+#let's take the weights calculated above and apply them to mig delay
+mig.delay$weights<-c(w1,w1,w2,w2,w3,w4,w4,NA)
+##Alewife only
+weighted.mean(mig.delay$delay[mig.delay$tag.id.code %in% tusk22.VR.tag.meta.A$tag.id.code],
+              mig.delay$weights[mig.delay$tag.id.code %in% tusk22.VR.tag.meta.A$tag.id.code])
+
+#Alewife tags released between May 08 and May 22 (study period)
+##note that as.numeric is necessary for wtd.var to work. weighted.mean works the same with and without
+#units are in days
+tag.key<-tusk22.VR.tag.meta.A$tag.id.code[tusk22.VR.tag.meta.A$dayofyear<147]
+weighted.mean(as.numeric(mig.delay$delay[mig.delay$tag.id.code %in% tag.key]),
+              mig.delay$weights[mig.delay$tag.id.code %in% tag.key])
+sqrt(wtd.var(as.numeric(mig.delay$delay[mig.delay$tag.id.code %in% tag.key]),
+              mig.delay$weights[mig.delay$tag.id.code %in% tag.key]))
+
+	weighted.var.se <- function(x, w, na.rm=FALSE)
+		#  Computes the variance of a weighted mean following Cochran 1977 definition
+	{
+		if (na.rm) { w <- w[i <- !is.na(x)]; x <- x[i] }
+		n = length(w)
+		xWbar = weighted.mean(x,w,na.rm=na.rm)
+		wbar = mean(w)
+		out = n/((n-1)*sum(w)^2)*(sum((w*x-wbar*xWbar)^2)-2*xWbar*sum((w-wbar)*(w*x-wbar*xWbar))+xWbar^2*sum((w-wbar)^2))
+		return(out)
+	}
+sqrt(weighted.var.se(as.numeric(mig.delay$delay[mig.delay$tag.id.code %in% tag.key]),
+              mig.delay$weights[mig.delay$tag.id.code %in% tag.key]))
+
+#Alewife tags released between May 08 and May 27 
+tag.key<-tusk22.VR.tag.meta.A$tag.id.code[tusk22.VR.tag.meta.A$dayofyear<=147]
+weighted.mean(mig.delay$delay[mig.delay$tag.id.code %in% tag.key],
+              mig.delay$weights[mig.delay$tag.id.code %in% tag.key]) # same as Alewife only
+```
+
+```{r}
+#verifying the tagged sample is representative of the untagged sample
+#get biodata from database, calculate weights
+tus22<-get.bio.data(2022,2,3501,channel)
+colnames(tus22)<-c("fish_id","site_id","year","mon","day","species_id","sex_id","fork_length","weight","scale", "notes")
+tus22=merge(tus22,daily.summary.A[,c(1:4)], by=c("mon","day"),all=T)
+for(i in 1:nrow(tus22))
+{
+	tus22$fork_length.weights[i]=
+		tus22$total[i]/sum(tus22$dayofyear==tus22$dayofyear[i]&!is.na(tus22$fork_length))
+}
+tus22$tag<-"N"
+tus22<-tus22[,c(3,12,8,14,15)]
+colnames(tus22)<-c("id","dayofyear","fl","flweights","tag")
+tus22<-tus22[complete.cases(tus22),]
+tus22<-tus22[tus22$dayofyear>=125 & tus22$dayofyear<=147,]
+ptus22<-tus22[tus22$dayofyear>=131 & tus22$dayofyear<=148,]
+
+#apply weights to tagged fish data
+aco22<-tusk22.VR.tag.meta.A[tusk22.VR.tag.meta.A$dayofyear<147,c(6,22,58)] #get only tags released in study period, and only desired cols
+aco22$fl.weights<-ifelse(aco22$dayofyear==128,w1,ifelse(aco22$dayofyear==135,w2,w3))
+aco22$tag<-"A"
+aco22<-aco22[,c(1,3,2,4,5)]
+colnames(aco22)<-c("id","dayofyear","fl","flweights","tag")
+aco22$fl<-aco22$fl*100
+
+#merge them
+all22<-rbind(tus22,aco22)
+
+#model
+fit1<-lm(fl~tag,data=all22,weights=all22$flweights)
+fit2<-lm(fl~tag+dayofyear,data=all22,weights=all22$flweights)
+fit3<-lm(fl~dayofyear,data=all22,weights=flweights)
+
+##PIT for plot. George did PIT models. sent me csv of PIT FL
+
+pit22<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Tusket Tracking/2022/PITTAGDATAFORMARKSPLOT.csv")
+pit22<-pit22[,c(2,6,19)]
+pit22$flweights<-NA
+pit22$tag<-"P"
+pit22<-pit22[,c(1,3,2,4,5)]
+colnames(pit22)<-c("id","dayofyear","fl","flweights","tag")
+pall22<-rbind(ptus22,pit22)
+
+#plot
+# tiff("FL boxplot.tiff",width=6.5,height=4,units="in",res=300)
+pdf("FL boxplot.pdf",width=6.5,height=4)
+par(mfrow=c(1,2),mar=c(0,0,0,0),oma=c(5,5,2,2))
+boxplot(all22$fl[all22$tag=="N"],all22$fl[all22$tag=="A"],las=2)
+axis(1,at=1:2,labels=c("Daily Sampled","Tagged"))
+mtext("Acoustic Study Period",3)
+boxplot(pall22$fl[pall22$tag=="N"],pall22$fl[pall22$tag=="P"],axes=F)
+axis(1,at=1:2,labels=c("Daily Sampled","Tagged"))
+box()
+mtext("PIT Study Period",3)
+mtext("Fork Length",2,outer=T,line=3)
+dev.off()
+```
+
+
+```{r}
+#playing with delays
+#earliest doy with vcount=92, ccount=104
+#last ccount on doy 151
+prop.list<-list()
+time.window<-c(18,23,10,40)
+# tiff("Sensitivity plot.tiff",width=6.5,height=4,units="in",res=300)
+# pdf("Sensitivity plot.pdf",width=6.5,height=4)
+par(mfrow=c(2,2),mar=c(0,0,0,0),oma=c(5,5,2,2))
+for(t in 1:length(time.window))
+{
+doy<-101:(151-time.window[t])
+df<-data.frame(doy=doy,
+               del1=rep(NA,length(doy)),
+               del2=rep(NA,length(doy)),
+               del3=rep(NA,length(doy)),
+               del4=rep(NA,length(doy)),
+               del5=rep(NA,length(doy)),
+               del6=rep(NA,length(doy))
+               )
+for(j in 1:6)
+{
+for(i in 1:length(doy))
+{
+delay<-j
+start.doy.v<-min(doy)+i-1
+end.doy.v<-start.doy.v+time.window[t]
+start.doy.c<-start.doy.v+delay
+end.doy.c<-start.doy.c+time.window[t]
+##note the >= and < signs!!! end day is the first day WITHOUT counts as written, not the last day fo counts
+df[i,j+1]<-sum(carleton.summary$total[carleton.summary$dayofyear>=start.doy.c & carleton.summary$dayofyear<end.doy.c],na.rm=T)/sum(daily.summary.A$total[daily.summary.A$dayofyear>=start.doy.v & daily.summary.A$dayofyear<end.doy.v])
+}
+}
+
+
+plot(df$doy,df$del1,type="l",col="red",xlim=c(100,138),ylim=c(0,0.75),xlab=NA,ylab=NA,axes=FALSE)
+lines(df$doy,df$del2,col="orange")
+lines(df$doy,df$del3,col="yellow")
+lines(df$doy,df$del4,col="green")
+lines(df$doy,df$del5,col="blue")
+lines(df$doy,df$del6,col="purple")
+box()
+if(t!=3){mtext(paste("Study period of",time.window[t],"days"),side=3,line=-1,padj=0.25,adj=0.95,cex=0.75,outer=FALSE)}
+if(t==3){mtext(paste("Study period of",time.window[t],"days"),side=3,line=-1,padj=0.25,adj=0.05,cex=0.75,outer=FALSE)}
+if(t==1){points(131,0.186,pch=16)}#PIT actual count prop
+if(t==2){points(125,0.230,pch=16)}#PIT actual count prop
+if(t==1){axis(2,las=2)}
+if(t==3){
+  axis(2,las=2)
+  axis(1,at=c(100,110,121,131),labels=c("Apr 10","Apr 20","May 01","May 10"))}
+if(t==4){axis(1,at=c(100,110,121,131),labels=c("Apr 10","Apr 20","May 01","May 10"))}
+if(t==4)
+{
+  legend(125,0.6,title="Delay of",lty=1,cex=0.8,
+         legend=c("1 day","2 days","3 days","4 days","5 days","6 days"),
+         col=c("red","orange","yellow","green","blue","purple"))
+}
+if(t==3){mtext("Date",1,line=3,outer=F,adj=1.05)}
+if(t==1){mtext("Proportion of Carleton Count to Vaughan Count",2,line=3,outer=F,adj=0.95)}
+
+prop.list[[t]]<-df
+} #closes t loop
+# dev.off()
+```
+
+```{r}
+##rerun escapement script with only study period counts to get updated SD
+#only need to do once, then paste values into rnorm calls below
+#pull vaughan from database. I compared database vs old csv, they are simialr with difference due to a NA in may 9th downstream count
+#in csv resulting in that count not being included. database fills in NA with 0, which is correct
+#database pull depsite not having empty rows for missing strata (may 27) still fills it in correctly
+# aco.vaughan.counts<-get.count.data(2022,2,channel)
+# aco.vaughan.counts<-aco.vaughan.counts[,-10]
+# aco.vaughan.counts<-aco.vaughan.counts[aco.vaughan.counts$MON==5,]##only May
+# aco.vaughan.counts<-aco.vaughan.counts[aco.vaughan.counts$DAY>=5 & aco.vaughan.counts$DAY<=27,]
+# colnames(aco.vaughan.counts)<-c("year", "mon", "day", "strata", "time", "count.upstream", "count.downstream", "minutes", "seconds")
+# write.csv(aco.vaughan.counts,file="aco.vaughan.counts.csv",row.names=F)
+# aco.vaughan.summary<-onespecies.river.escapement(filename="aco.vaughan.counts.csv",
+#                                                  fixtime=T,
+#                                                  database=F)
+# 
+# 
+# #carelton counts only worked when done from old csv, maybe due to missing entire days?
+# setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
+# aco.carl.counts<-read.csv("Carleton Count Sheet Cleaned 2022.csv")
+# aco.carl.counts<-aco.carl.counts[aco.carl.counts$mon==5,]##only May
+# aco.carl.counts<-aco.carl.counts[aco.carl.counts$day>=9 & aco.carl.counts$day<=31,]
+# write.csv(aco.carl.counts,file="aco.carl.counts.csv",row.names=F)
+# aco.carl.summary<-onespecies.partial.river.escapement(filename="aco.carl.counts.csv",
+#                                                  fixtime=T,
+#                                                  database=F)
+# 
+# pit.vaughan.counts<-get.count.data(2022,2,channel)
+# pit.vaughan.counts<-pit.vaughan.counts[,-10]
+# pit.vaughan.counts<-pit.vaughan.counts[pit.vaughan.counts$MON==5,]##only May
+# pit.vaughan.counts<-pit.vaughan.counts[pit.vaughan.counts$DAY>=11 & pit.vaughan.counts$DAY<=28,]
+# colnames(pit.vaughan.counts)<-c("year", "mon", "day", "strata", "time", "count.upstream", "count.downstream", "minutes", "seconds")
+# write.csv(pit.vaughan.counts,file="pit.vaughan.counts.csv",row.names=F)
+# pit.vaughan.summary<-onespecies.river.escapement(filename="pit.vaughan.counts.csv",
+#                                                  fixtime=T,
+#                                                  database=F)
+# 
+# 
+# #carelton counts only worked when done from old csv, maybe due to missing entire days?
+# setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
+# pit.carl.counts<-read.csv("Carleton Count Sheet Cleaned 2022.csv")
+# pit.carl.counts<-pit.carl.counts[pit.carl.counts$mon==5,]##only May
+# pit.carl.counts<-pit.carl.counts[pit.carl.counts$day>=14 & pit.carl.counts$day<=31,]
+# write.csv(pit.carl.counts,file="pit.carl.counts.csv",row.names=F)
+# pit.carl.summary<-onespecies.partial.river.escapement(filename="pit.carl.counts.csv",
+#                                                  fixtime=T,
+#                                                  database=F)
+##bootstrap distribution of Carleton/Vaughan ratio
+#acoustic
+prop.vec<-rnorm(1000,271678,6958)/rnorm(1000,1183791,22511) #total and sd from escapement script output
+summary(prop.vec)
+prop.test(c(tag.numerator,aco.carl*0.99),c(49,aco.vaughan),alternative = "less") #gives a p of 0.0499, and a count prop of 0.2277
+
+#pit
+prop.vec.pit<-rnorm(1000,187117.8,sqrt(32852287))/rnorm(1000,1010434,sqrt(443334169)) #total and sd from escapement script output
+summary(prop.vec.pit)
+prop.test(c(10.6,pit.carl*0.752),c(125,pit.vaughan),alternative = "less")#gives a p of 0.05044, and a count prop of 0.140
+```
+

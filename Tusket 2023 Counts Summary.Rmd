@@ -1,0 +1,97 @@
+---
+title: "Tusket 2023 Counts Summary"
+output: pdf_document
+date: ''
+author: Mark Billard, DFO-Science
+---
+```{r setup, echo=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(knitr)
+```
+
+```{r message=FALSE, results=FALSE, warning=FALSE}
+##Make sure you have run the below script to get the output objects needed for this document
+source("~/git/ALOSA.functions/Assessment_Script_Tusket_2022.R")
+```
+
+This document summarizes the daily counts of Gaspereau, a collective name for Alewife and Blueback Herring, at two fish ladders in the Tusket River, Nova Scotia in the spring of 2023. The vast majority of spawning habitat for Alewife and Blueback Herring is upstream of the Lake Vaughan and the Powerhouse fish ladders, which both provide access to Lake Vaughan. The Carleton fish ladder, located at the north end of Lake Vaughan, allows fish to access the Carleton branch of the watershed above the Carleton Dam. Fish that exit the Lake Vaughan or Powerhouse ladder can also access the Quinan/Tusket branch of the watershed up to the Great Barren Lake Dam.
+
+Compared to 2022, a greater proportion of gaspereau ascended the Powerhouse fish ladder, likely due to the changes made to the operation of this ladder by NSP. For these reasons, the counts from the Lake Vaughan and Powerhouse fish ladders are used to assess the Alewife population relative to reference points. Counts at the both ladders are also used to assess the Blueback Herring population. Counts from the Powerhouse ladder were only conducted in 2022 and not conducted in recent years, as it was thought that Gaspereau primarily migrated through the Lake Vaughan fish ladder. The counts in 2022 generaly confirmed that under the pre-2023 configuration of the Powerhouse Ladder, very low numbers of fish used that ladder for upstream migration.
+
+Counts were completed following a two-way stratified random sampling design. Each day, a total of 24 five minute video blocks were counted. To ensure that different parts of the day were represented, each day was broken into six sections, or strata, and four five minute video counts were sampled from each strata. Dividing the day into sections, or strata, is important for providing an accurate estimate of the number of fish migrating upstream through the fish ladders, as there are times of the day when more fish migrate than during other times of the day. 
+
+The four video counts from each stratum (section) were averaged, and that average was multiplied by the number of five minute blocks within each stratum of the day. For example, Strata 2 is from 0500 to 1030, so contains 69 five minute blocks. If the average count in Strata 2 for a given day was 20, we multiply 20 by 69 to give us a total of 1380 fish for Strata 2. We repeat this for each stratum in a day, and sum all strata totals to get the daily totals.
+
+A more in depth description of this assessment method is described by Bowlby and Gibson in the CSAS document "River Herring Assessment for the Tusket River, Nova Scotia" under the "Escapement" section.
+
+\newpage
+Lake Vaughan Fish Ladder Counts
+
+The camera was installed from March 01 2023 to June 25 2023, though flow conditions prevented any counts from occurring until March 23 2023 (Fig. 1). A total of 1,662,007 +/- 51,040 Alewife, and 8,463 +/- 1,196 Blueback Herring were estimated to have ascended the ladder. 
+```{r}
+##fishing days
+fishing.doy<-c(92,93,98,99,100,105,106,107,112,113,114,119,120,121,126,127,128,133,134,135,140,141,142)
+fs<-c(92,98,105,112,119,126,133,140)##fishing start
+fe<-c(93,100,107,114,121,128,135,142)##fishing end
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
+rect(fs,0,fe,max(daily.summary.A$total,na.rm=T),col="grey",density=30)
+rect(147,0,149,max(daily.summary.A$total,na.rm=T),col="yellow",density=30)
+axis(1,at=c(90,105,121,135,152,167),labels=c("April 1","April 15","May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000),labels=c(0,10,20,30,40,50,60,70,80,90))
+lines(daily.summary.B$dayofyear,daily.summary.B$total,col="blue")
+```
+
+Figure 1. Lake Vaughan Fish Ladder Counts for the Tusket River, 2023. The red line is for daily counts of Alewife, and the blue line is for daily counts of Blueback Herring. The shaded grey boxes represent days during which the fishing season was open; Fridays, Saturdays and Sundays during April and May. The yellow shaded box represents the last weekend in May when the fishery would typically be open, but was closed in 2023.
+
+\newpage
+Powerhouse Fish Ladder Counts
+
+Counts were conducted from March 16 2023 to June 19 2023 at the Powerhouse fish ladder (Fig. 3). 
+A lack of species sampling prevented an estimate of the number of Alewife and Blueback Herring, so all counts refer to the collective gaspereau.
+
+```{r}
+plot(powerhouse.summary$dayofyear,powerhouse.summary$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Number of Fish")
+rect(156,0,161,max(powerhouse.summary$total,na.rm=T),col="gray")
+axis(1,at=c(121,135,152,167),labels=c("May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,500,1000,1500),labels=c(0,500,1000,1500))
+# lines(powerhouse.summary$dayofyear,powerhouse.summary$clow,col="red",lty=3)
+# lines(powerhouse.summary$dayofyear,powerhouse.summary$chigh,col="red",lty=3)
+```
+
+Figure 3. Powerhouse Fish Ladder counts for the Tusket River, 2022. The grey rectangle covers the time period where downstream migration was observed, and the camera was removed from the ladder due to modifications to the fish ladder by NSP. Alewife and Blueback Herring were not differentiated for the counts presented in this figure.
+
+
+\newpage
+Overlaying the counts from the three ladders demonstrates the different numbers of fish that passed through each fish ladder (Fig. 4). 
+
+```{r}
+plot(daily.summary.A$dayofyear,daily.summary.A$total,type="l",xaxt="n",yaxt="n",xlab="Date",ylab="Thousands of Fish",col="red")
+axis(1,at=c(90,105,121,135,152,167),labels=c("April 1","April 15","May 01","May 15","June 01","June 15"))
+axis(2,at=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000),labels=c(0,10,20,30,40,50,60,70,80,90))
+lines(daily.summary.B$dayofyear,daily.summary.B$total,col="blue")
+lines(carleton.summary$dayofyear,carleton.summary$total)
+lines(powerhouse.summary$dayofyear,powerhouse.summary$total,col="green")
+```
+
+Figure 4. Daily counts from the Lake Vaughan Fish Ladder, Carleton Fish Ladder, and Powerhouse fish Ladder on the Tusket River, Nova Scotia, in Spring of 2022. The red line represents daily Alewife counts from the Lake Vaughan Fish Ladder, the blue line represents daily Blueback Herring counts from the Lake Vaughan Fish Ladder, the black line represents daily Gaspereau counts from the Carleton Fish Ladder, and the green line represents daily counts from the Powerhouse Fish Ladder.
+
+\newpage
+Appendix
+
+```{r table}
+daily.summary.A.out<-daily.summary.A
+names(daily.summary.A.out)<-c("Month", "Day", "Day of Year", "Total", "Standard Deviation", "clow", "chigh")
+kable(daily.summary.A.out[,1:5],caption="Daily count estimates of Alewife leaving the Lake Vaughan Fish Ladder. Counts are presented for April (Month = 4), May (Month = 5), and June (Month = 6). Total is the total number of Alewife estimated to have exited the ladder that day, and Standard Deviation is the standard deviation for that daily total estimate.")
+
+daily.summary.B.out<-daily.summary.B
+names(daily.summary.B.out)<-c("Month", "Day", "Day of Year", "Total", "Standard Deviation", "clow", "chigh")
+kable(daily.summary.B.out[,1:5],caption="Daily count estimates of Blueback Herring leaving the Lake Vaughan Fish Ladder. Counts are presented for May (Month = 5) and June (Month = 6). Total is the total number of Blueback Herring estimated to have exited the ladder that day, and Standard Deviation is the standard deviation for that daily total estimate.")
+
+carleton.summary.out<-carleton.summary
+names(carleton.summary.out)<-c("Month", "Day", "Day of Year", "Total", "Standard Deviation", "clow", "chigh")
+kable(carleton.summary.out[,1:5],caption="Daily count estimates of Gaspereau leaving the Carleton Fish Ladder. Counts are presented for April (Month = 4) and May (Month = 5). Total is the total number of Gaspereau estimated to have exited the ladder that day, and Standard Deviation is the standard deviation for that daily total estimate.")
+
+powerhouse.summary.out<-powerhouse.summary
+names(powerhouse.summary.out)<-c( "Month", "Day", "Day of Year", "Total", "Standard Deviation", "clow", "chigh")
+kable(powerhouse.summary.out[,1:5],caption="Daily count estimates of Gaspereau leaving the Powerhouse Fish Ladder. Counts are presented for April (Month = 4) and May (Month = 5). Total is the total number of Gaspereau estimated to have exited the ladder that day, and Standard Deviation is the standard deviation for that daily total estimate. Note that counts are for Alewife and Blueback Herring combined, as no species ID were completed at the ladder.")
+```

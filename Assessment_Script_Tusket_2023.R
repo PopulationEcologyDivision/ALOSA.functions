@@ -147,7 +147,7 @@ glmfit1<-glm(BB~day.int,data=species.split,offset=log(all),family="poisson")
 out<-data.frame(day.int=1:32,
                 all=rep(1,32)) ##all is set to 1 to give proportions
 
-out.pred<-predict(glmfit,newdata=out,type="response") #outputs fitted values for day/int in out
+# out.pred<-predict(glmfit,newdata=out,type="response") #outputs fitted values for day/int in out
 ##gets overwritten by below. learned below from https://stackoverflow.com/questions/40985366/prediction-of-poisson-regression
 out.predci<-predict(glmfit1,newdata=out,type="link",se.fit=T) #list of 3
 ginv <- glmfit1$family$linkinv
@@ -184,7 +184,11 @@ daily.count<-twospecies.river.escapement(fixtime=T,
                                            site = 2,
                                            channel=channel,
                                            species.split=species.split1)
-
+#assign species specific counts to objects and clean foramt
+va<-daily.count[[1]]
+vb<-daily.count[[2]]
+va$dayofyear<-as.integer(levels(va$dayofyear))
+vb$dayofyear<-as.integer(levels(vb$dayofyear))
 ###IMPORTANT! powerhouse counts are uploaded to database, but need some processing
 ### before the escapement script will run, due to large gaps in March and April.
 ### trim so counts fun from April 25 to end, June 19. or run from csv on R drive
@@ -196,7 +200,70 @@ ph1<-twospecies.river.escapement("Powerhouse 2023 count data1.csv",
                                  14,
                                  channel,
                                  species.split=species.split1)
+pa<-ph1[[1]]
+pb<-ph1[[2]]
+pa$dayofyear<-as.integer(levels(pa$dayofyear))
+pb$dayofyear<-as.integer(levels(pb$dayofyear))
 
+##combined counts
+data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
+              header=T,stringsAsFactors = F)
+data$doy=as.Date(paste(data$day,data$mon,data$year,sep="-"),format="%d-%m-%Y")
+data$doy=as.numeric(strftime(data$doy, format="%j"))
+TRdata=data[data$river=="tusket",]
+combtotalA<-TRdata[TRdata$year==2023 & TRdata$species=="A",]
+combtotalB<-TRdata[TRdata$year==2023 & TRdata$species=="B",]
+
+####PLOT FOR AC MEETING####
+par(oma=c(7,3,3,0.5),mfrow=c(3,1),mar=c(0,5,0,3))
+  #plot one
+  plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(va$total*1.2/1000))),xlim=c(96,177),xaxt="n",yaxt='n',cex.axis=2)
+  rect(91, -5, 121, (max(va$total)*1.2/1000)+5, border = NA,col="gray90")
+  rect(152, -5, 182, (max(va$total)*1.2/1000)+5, border = NA,col="gray90")
+  box()
+  lines(va$dayofyear,va$total/1000,lty=1,lwd=1.5)
+  lines(va$dayofyear,va$clow/1000,lty=2,lwd=1.5)
+  lines(va$dayofyear,va$chigh/1000,lty=2,lwd=1.5)
+  lines(vb$dayofyear,vb$total/1000,lty=1,lwd=1.5,col="blue")
+  lines(vb$dayofyear,vb$clow/1000,lty=2,lwd=1.5)
+  lines(vb$dayofyear,vb$chigh/1000,lty=2,lwd=1.5)
+  text(94,max(va$total)/1000,"Vaughan",cex=2,pos=4)
+  # text(171,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
+  # text(94,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total     =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="All"],sep=" "),cex=1.5,pos=4)
+  # text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.8,paste("Total A =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="A"],sep=" "),cex=1.5,pos=4)
+  # text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.6,paste("Total B =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="B"],sep=" "),cex=1.5,pos=4)
+  axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+  
+  plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(pa$total*1.5/1000))),xlim=c(96,177),xaxt="n",yaxt='n',cex.axis=2)
+  rect(91, -5, 121, (max(va$total)*1.2/1000)+5, border = NA,col="gray90")
+  rect(152, -5, 182, (max(va$total)*1.2/1000)+5, border = NA,col="gray90")
+  box()
+  lines(pa$dayofyear,pa$total/1000,lty=1,lwd=1.5)
+  lines(pa$dayofyear,pa$clow/1000,lty=2,lwd=1.5)
+  lines(pa$dayofyear,pa$chigh/1000,lty=2,lwd=1.5)
+  lines(pb$dayofyear,pb$total/1000,lty=1,lwd=1.5,col="blue")
+  lines(pb$dayofyear,pb$clow/1000,lty=2,lwd=1.5)
+  lines(pb$dayofyear,pb$chigh/1000,lty=2,lwd=1.5)
+  text(94,max(pa$total)/1000,"Powerhouse",cex=2,pos=4)
+  axis(2,cex.axis=1.5, at=c(2,4,6,8,10,12,14))
+
+  
+  plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(combtotalA$number*1.2/1000))),xlim=c(96,177),xaxt="n",yaxt='n',cex.axis=2)
+  rect(91, -5, 121, (max(combtotalA$number)*1.2/1000)+5, border = NA,col="gray90")
+  rect(152, -5, 182, (max(combtotalA$number)*1.2/1000)+5, border = NA,col="gray90")
+  box()
+  lines(combtotalA$doy,combtotalA$number/1000,lty=1,lwd=1.5)
+  lines(combtotalB$doy,combtotalB$number/1000,lty=1,lwd=1.5,col="blue")
+  text(94,max(combtotalA$number)/1000,"Combined",cex=2,pos=4)
+  axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+axis(1,cex.axis=1.5, at=c(91,100,110,121,130,140,152,161,171), 
+     labels=c("1","10","20","1","10","20","1","10","20"))
+
+mtext("April",1,at=105,cex=1.5,line=3)
+mtext("May",1,at=135,cex=1.5,line=3)
+mtext("June",1,at=166,cex=1.5,line=3)
+mtext("Date",1,at=135,cex=1.5,line=5.5)
+mtext("Number of Fish (1000's)",2, outer=T,cex=1.5,las=3)
 ####Other stuff not important####
 # 
 # reference.point.plot(400000 ,232400 ,0.53,0.35,rivername="Gaspereau River",

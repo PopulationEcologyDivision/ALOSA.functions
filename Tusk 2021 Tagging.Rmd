@@ -1,0 +1,292 @@
+---
+title: "Tusket Acoustic 2021"
+output: pdf_document
+author: Goblins
+---
+
+```{r setup, include=FALSE}
+require(dplyr)
+require(lubridate)
+require(knitr)
+require(xtable)
+##source Mark's function
+
+source("R:/Science/Population Ecology Division/DFD/Alosa/Tusket Tracking/Scripts/VR2WDataCleaner1.1.R")
+
+##Run function with correct metadata stuff
+
+CleanVR2WData(data.dir = "R:/Science/Population Ecology Division/DFD/Alosa/Tusket Tracking/Receiver Downloads",
+              receiver.meta.path = "R:/Science/Population Ecology Division/DFD/Alosa/Tusket Tracking/OTN_format_2021_Tusket_Receivers.csv",
+              tags.meta.path = "R:/Science/Population Ecology Division/DFD/Alosa/Tusket Tracking/OTN_format_2021_Tusket_Tags.csv",
+              threshold = 3,
+              dataset.name = "tusk21")
+
+####Fix tag and rec meta data date time cols####
+#tusk21.VR.tag.meta$UTC_RELEASE_DATE_TIME<-gsub("T"," ",tusk21.VR.tag.meta$UTC_RELEASE_DATE_TIME)
+#tusk21.VR.tag.meta$UTC_RELEASE_DATE_TIME<-as.POSIXct(tusk21.VR.tag.meta$UTC_RELEASE_DATE_TIME,tz="UTC")
+tusk21.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.<-gsub("T"," ",tusk21.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.)
+tusk21.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.<-as.POSIXct(tusk21.VR.rec.meta$DEPLOY_DATE_TIME....yyyy.mm.ddThh.mm.ss.,tz="UTC")
+tusk21.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.<-gsub("T"," ",tusk21.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.)
+tusk21.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.<-as.POSIXct(tusk21.VR.rec.meta$RECOVER_DATE_TIME..yyyy.mm.ddThh.mm.ss.,tz="UTC")
+
+
+#create cleaned 2021 tag detection df
+
+good.data<-rbind(tusk21.VR.data,tusk21.VR.late.or.early[tusk21.VR.late.or.early$Station.Name==2,])
+good.data<-rbind(tusk21.VR.data,tusk21.VR.late.or.early[tusk21.VR.late.or.early$tag.id.code==53526,])
+
+#merge with larger metadata file
+
+mytags <- read.csv('R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2021/Acoustic Tracking/Tusket_2021_acoustic_tag_fish_metadata.csv')
+mytags$dt <- ymd_hms(paste(mytags$YR, '-', mytags$MR, '-', mytags$DR, ' ',mytags$HOURR, ':',
+                           mytags$MINR, ':', '00'), tz = "Canada/Atlantic")
+
+#compare all tags detected to all tags released, if there are any detected that aren't in metadata
+
+# for(i in 1:length(good.data$tag.id.code)){
+#   good.data$tag.id.code[i] 
+# }
+
+mytags <- mytags %>%
+  rename(
+    tag.id.code = ID)
+
+fulldet <- merge(good.data, mytags, by = "tag.id.code")
+```
+
+
+## Introduction
+
+The Tusket River Watershed is a large river system in the southwest region of Nova Scotia.  It is 
+
+## Methods
+
+Seven 180kHz VR2W receivers were deployed in and around Lake Vaughan (Fig. 1).
+
+```{r, include = F}
+require(ggplot2)
+require(dplyr)
+require(sf)
+require(ggrepel)
+
+
+### using NHN data from watershed limits
+setwd("C:/Users/naug/Documents/R/GIS/Tusket R/Shapefiles/NHN")
+
+##read in relevant shapefiles
+limit <- st_read("NHN_01EA000___WORKUNIT_LIMIT_2.shp") #watershed limit, can be used to determine bounding box for fullscale map
+nhnbod <- st_read("NHN_01EA000_3_0_HD_WATERBODY_2.shp") #waterbodies within limit
+#get names of lakes to plot 
+nhnbodnames <- nhnbod[is.na(nhnbod$LAKENAME_1) == F,]
+watbodpoint <- st_point_on_surface(nhnbodnames)
+watbodcoords <- as.data.frame(st_coordinates(watbodpoint))
+watbodcoords$LAKENAME_1 <- nhnbodnames$LAKENAME_1
+
+nlflow <- st_read("NHN_01EA000_3_0_HN_NLFLOW_1.shp") # rivers
+litt <- st_read("NHN_01EA000_3_0_HN_LITTORAL_1.shp") #littoral boundaries
+slwat <- st_read("NHN_01EA000_3_0_HD_SLWATER_1.shp") # not too sure, seems to be redundant as a feature shape
+island <- st_read("NHN_01EA000_3_0_HD_ISLAND_2.shp") # self explanatory
+del <- st_read("NHN_01EA000_3_0_HN_DELIMITER_1.shp") # also somewhat redundant
+
+#edited shapefile for just the ocean portion of the watersehd delineation (Used QGIS to create this layer, was not able to create in R)
+
+fudge <- st_read("test_water.shp")
+
+###Plotting receivers deployment locations by site name
+
+recs <- read.csv("C:/Users/naug/Documents/Acoustic/Tusket Tracking/OTN_format_2021_Tusket_Receivers.csv")
+points <- st_as_sf(recs[1:7,], coords = c("DEPLOY_LONG", "DEPLOY_LAT"), remove = F, crs = 4326)
+##get bounding box for points to set in coord_sf
+st_bbox(points)
+
+### Plot 1: General watershed map
+```
+
+```{r, echo = F, fig.cap="Figure 1. 2021 Receiver Deployment Locations"}
+ggplot()+
+  geom_sf(data = limit, color = "steelblue2", fill = "palegreen2")+
+  geom_sf(data = fudge, color = "steelblue1", fill = "steelblue1")+
+  #geom_sf(data = del, color = gray(.7), fill = gray(.7))+
+  #geom_sf(data = litt, color = gray(.7))
+  geom_sf(data = nlflow, color = "steelblue2") +
+  geom_sf(data = nhnbod, color = "steelblue1", fill = "steelblue1") +
+  geom_sf(data = island, color = "steelblue1", fill = "palegreen2") +
+  #geom_sf(data = contour, aes(color = "palegreen3"))+
+  geom_sf(data = points, size = 3)+
+  geom_text_repel(data = recs[1:7,], aes(x = DEPLOY_LONG, y = DEPLOY_LAT, label = OTN_ARRAY), size = 3)+
+  geom_text(data = watbodcoords, aes(X, Y, label = LAKENAME_1), colour = "steelblue4", size = 2)+
+  coord_sf(xlim = c(-66, -65.84), ylim = c(43.85, 43.94), datum = NA, expand = FALSE, clip = "off")+
+  theme_minimal()+
+  labs(title = "Tusket River Watershed, Receiver Deployments", size  = 40, x = NULL, y = NULL)
+```
+
+Results
+
+```{r, include =F}
+table1 <- mytags %>%
+  group_by(SP, SX)%>%
+  summarize("Number of Tags Deployed" = length(unique(tag.id.code)))%>%
+  rename(Species = SP, Sex = SX)
+```
+
+```{r, echo = F}
+### table of total deployed tags
+kable(table1, caption = "Number of tags deployed")
+```
+
+## Results
+
+```{r, include = F}
+#number of tags deployed, vs number of fish detected
+table2 <- fulldet%>%
+  group_by(SP, SX)%>%
+  summarize("Number of Tags Detected" = length(unique(tag.id.code)))%>%
+  rename(Species = SP, Sex = SX)
+```
+
+```{r, echo=F}
+kable(table2, caption = "Number of tags detected")
+```
+
+
+```{r, include = FALSE}
+
+
+#num fish at each receiver
+table3 <- fulldet %>%
+  group_by(OTN.array, SP)%>%
+  summarize("Number of Tags" = length(unique(tag.id.code)))%>%
+  rename("Receiver Station Name" = OTN.array, Species = SP)
+
+```
+
+```{r, echo=F}
+kable(table3, caption = "Number of tags detected at each receiver.")
+
+```
+
+
+```{r, include=F}
+#tags.deployed<-tusk21.VR.tag.meta$TAG_ID_CODE
+tags.detected<-unique(fulldet$tag.id.code)
+end.rec<-rep(NA,length(tags.detected))
+end.rec.df<-data.frame(tags.detected,end.rec)
+names(end.rec.df)<-c("TAG_ID_CODE","Last.OTN.array")
+
+for(i in 1:nrow(end.rec.df)){
+  sub<-fulldet[fulldet$tag.id.code==end.rec.df$TAG_ID_CODE[i],]
+  end.rec.df$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+}
+
+end.rec.df <- rename(end.rec.df, tag.id.code = TAG_ID_CODE)
+
+mytags2 <- mytags
+mytags2$tag.id.code <- as.factor(mytags2$tag.id.code)
+end.rec.df2 <- left_join(end.rec.df, mytags2)
+
+table4 <- end.rec.df2%>%
+  group_by(Last.OTN.array, SP)%>%
+  summarize("Number of Tags" = length(unique(tag.id.code)))%>%
+  rename("Last Receiver" = Last.OTN.array, "Species" = SP)
+```
+
+```{r, echo = F}
+kable(table4, caption = "Number of tags that had their last detections at each receiver.")
+```
+
+```{r, include = FALSE}
+#### Where tags were detected paragraph ####
+#### Where tags were detected paragraph ####
+
+####Get tag meta into good.data ####
+tag.meta.sub<-tusk21.VR.tag.meta[,c(5,6,15,30,37)] ##grab some tag meta data, maybe add more later
+names(tag.meta.sub)<-c("TAG_SERIAL_NUMBER","tag.id.code","Species","SEX","UTC_RELEASE_DATE_TIME")
+fulldet <- merge(good.data, tag.meta.sub, by = "tag.id.code")
+n.released<-nrow(tusk21.VR.tag.meta) ##total tags released
+
+
+
+tusk21.VR.tag.meta.A<-tusk21.VR.tag.meta[tusk21.VR.tag.meta$COMMON_NAME_E=="Alewife",]
+n.A.released<-nrow(tusk21.VR.tag.meta.A) ##total A released
+A.det<-intersect(tusk21.VR.tag.meta.A$TAG_ID_CODE,tags.detected)
+n.A.detected<-length(A.det) ##total A detected
+
+
+
+fulldet.A<-fulldet[fulldet$Species=="Alewife",]
+
+
+
+tags.A.2<-unique(fulldet.A$tag.id.code[fulldet.A$Station.Name==2])##alewife detected at station 2
+length(tags.A.2) ##number alewife detected at station 2 upstream Vaughan Ladder
+tags.A.3<-unique(fulldet.A$tag.id.code[fulldet.A$Station.Name==3])##alewife detected at station 3
+length(tags.A.3) ##number alewife detected at station 3 Upper Lake Vaughan
+tags.A.4<-unique(fulldet.A$tag.id.code[fulldet.A$Station.Name==4])##alewife detected at station 4
+length(tags.A.4) ##number alewife detected at station 4 downstream Carleton Ladder
+tags.A.6<-unique(fulldet.A$tag.id.code[fulldet.A$Station.Name==6])##alewife detected at station 4
+length(tags.A.6) ##number alewife detected at station 6 quinan gavelton bridge
+length(intersect(tags.A.6,tags.A.4)) #tags at quinan and below carleton
+length(intersect(tags.A.6,tags.A.3)) #tags at quinan and upper lake vaughan
+tags.A.1<-unique(fulldet.A$tag.id.code[fulldet.A$Station.Name==1])##alewife detected at station 1
+length(tags.A.1) ##number alewife detected at station 1 downstream Vaughan Ladder
+tags.A.N1<-setdiff(A.det,tags.A.1)#alewife not detected at downstream Vaughan Ladder
+length(tags.A.N1)#number alewife not detected at downstream Vaughan Ladder
+
+
+
+end.rec.A.N1<-rep(NA,length(tags.A.N1))
+end.rec.df.A.N1<-data.frame(tags.A.N1,end.rec.A.N1)
+names(end.rec.df.A.N1)<-c("TAG_ID_CODE","Last.OTN.array")
+end.rec.df.A.N1$Species<-rep(NA,nrow(end.rec.df.A.N1))
+for(i in 1:nrow(end.rec.df.A.N1)){
+sub<-fulldet[fulldet$tag.id.code==end.rec.df.A.N1$TAG_ID_CODE[i],]
+end.rec.df.A.N1$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+end.rec.df.A.N1$Species[i]<-unique(sub$Species)
+}
+table(end.rec.df.A.N1$Last.OTN.array)
+
+
+
+##BB time
+tusk21.VR.tag.meta.B<-tusk21.VR.tag.meta[tusk21.VR.tag.meta$COMMON_NAME_E=="Blueback Herring",]
+n.B.released<-nrow(tusk21.VR.tag.meta.B) ##total B released
+B.det<-intersect(tusk21.VR.tag.meta.B$TAG_ID_CODE,tags.detected)
+n.B.detected<-length(B.det) ##total B detected
+
+
+
+fulldet.B<-fulldet[fulldet$Species=="Blueback Herring",]
+
+
+
+tags.B.2<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==2])##Blueback Herring detected at station 2
+length(tags.B.2) ##number Blueback Herring detected at station 2 upstream Vaughan Ladder
+tags.B.3<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==3])##Blueback Herring detected at station 3
+length(tags.B.3) ##number Blueback Herring detected at station 3 Upper Lake Vaughan
+tags.B.1<-unique(fulldet.B$tag.id.code[fulldet.B$Station.Name==1])##Blueback Herring detected at station 1
+length(tags.B.1) ##number Blueback Herring detected at station 1 downstream Vaughan Ladder
+tags.B.N1<-setdiff(B.det,tags.B.1)#Blueback Herring not detected at downstream Vaughan Ladder
+length(tags.B.N1)#number blueback herring not detected at downstream Vaughan Ladder
+
+
+
+end.rec.B.N1<-rep(NA,length(tags.B.N1))
+end.rec.df.B.N1<-data.frame(tags.B.N1,end.rec.B.N1)
+names(end.rec.df.B.N1)<-c("TAG_ID_CODE","Last.OTN.array")
+end.rec.df.B.N1$Species<-rep(NA,nrow(end.rec.df.B.N1))
+for(i in 1:nrow(end.rec.df.B.N1)){
+sub<-fulldet[fulldet$tag.id.code==end.rec.df.B.N1$TAG_ID_CODE[i],]
+end.rec.df.B.N1$Last.OTN.array[i]<-as.character(sub$OTN.array[sub$datetimeUTC==max(sub$datetimeUTC)])
+end.rec.df.B.N1$Species[i]<-unique(sub$Species)
+}
+table(end.rec.df.B.N1$Last.OTN.array)
+
+
+
+```
+
+`r n.released` tags were released in total: `r n.A.released` for alewife, and `r n.B.released` for blueback herring.
+
+Of the `r n.A.released` alewife tagged, `r  n.A.detected ` in total were detected. All `r length(tags.A.2)` detected tags were detected at the upstream Vaughan ladder location. Of those `r length(tags.A.2)`, `r length(tags.A.3)` were detected at upper Vaughan, and `r length(tags.A.4)` of those `r length(tags.A.3)` were detected at below Carleton. `r length(tags.A.6)` alewife tags were detected at lower Quinan gavelton bridge: `r length(intersect(tags.A.6,tags.A.3))` of those `r length(tags.A.6 )` were also in the `r length(tags.A.3)` detected at upper Vaughan, and of those `r length(intersect(tags.A.6,tags.A.3))`, `r length(intersect(tags.A.6,tags.A.4))` were also at below Carleton. `r length(tags.A.1)` of the `r n.A.detected` detected tags were detected downstream of Vaughan ladder. The `r length(tags.A.N1)` that weren't detected at downstream Vaughan ladder, were last detected at the locations in the following table.
+
+Of the `r n.B.released` blueback tagged, `r n.B.detected` in total were detected. All `r length(tags.B.2)` detected tags were detected at the upstream Vaughan ladder location. Of those `r length(tags.B.2)`, `r length(tags.B.3)` were detected at Upper Vaughan. No tagged blueback were detected at below Carleton, or at Quinan gavelton bridge. `r length(tags.B.1)` of the `r length(tags.B.2)` tags were detected downstream of Vaughan ladder. The `r length(tags.B.N1)` that weren't detected at downstream Vaughan ladder, were last detected at the locations in the following table.
