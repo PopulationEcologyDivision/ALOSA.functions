@@ -186,8 +186,7 @@ x1=aggregate(catch.t$KGS, by=list(YEAR=catch.t$YEAR),FUN=sum)
 TUSKET.2021=function(){
 
 ## PULL all Tusket records for 2021.
-catch.TUS2021=catch[catch$RIVERNAME_CLEANED=="TUSKET" &
-,    catch$YEAR==2021,]
+catch.TUS2021=catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR==2021,]
 catch.TUS2021<-convert.KGS(catch.TUS2021)
 #List gears
 table(catch.TUS2021$LICENCE_ID,catch.TUS2021$GEAR_DESCRIPTION,useNA = "ifany")
