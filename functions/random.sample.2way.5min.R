@@ -16,6 +16,8 @@ random.sample.2way.5min<-function(seed,startmonth,endmonth,startday,filename,
 {
   path = getwd()
   set.seed(seed)
+  ##2024 Tusket (Vaughan) seed is 222 and start date is March 15th
+  ##2024 Tusket (Powerhouse) seed is 223 and start date is March 15th
   ##2023 Tusket (Vaughan) seed is 112 and start date is March 1st
   ##2022 Gaspereau for WR seed is 741 and start date April. 15th
   ##2022 Gaspereau for LM seed is 789 and start date April. 15th
@@ -36,7 +38,7 @@ random.sample.2way.5min<-function(seed,startmonth,endmonth,startday,filename,
   
   ###Tusket Counts
   ###2018 seed 676, 4 strata
-  previousseeds=c(676,889,999,357,123,676,345,456,253,654,163,543)
+  previousseeds=c(676,889,999,357,123,676,345,456,253,654,163,543,112,113,112,741)
   if (seed %in% previousseeds){
     stop("Seed has already been used (2013-2020). Pick a new one and try again")
   }
