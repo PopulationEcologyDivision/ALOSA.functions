@@ -12,143 +12,144 @@
 # This function is used by: MARFIS_all in one.R
 # 
 
+# Load in a pulled dataframe
+load("C:/Users/graylo/Documents/GitHub/data/marfis-pull-2024-03-21.Rdata")
+
 # Create a temporary data frame of catch just for testing the code so that 
 # we don't commit any changes to the actual pulled data frame
-df <- catch
-df$KGS <- NULL
-df$NOTES <- NULL
-df$RIVERNAME_LOGBOOK <- NULL
+#catch <- catch
 
 # conversion factor from count of fish to kilograms
 conv <- 0.240
 
 # This functions uses:
 
-####2019####
+# 2019 #########################################################################
 
 #120037
-df[df$LICENCE_ID==120037 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120037 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120037 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120037 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120037 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120037 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120039
-df[df$LICENCE_ID==120039 & df$YEAR==2019, "FV_HOURS_FISHED"] <- NA
+catch[catch$LICENCE_ID==120039 & catch$YEAR==2019, "FV_HOURS_FISHED"] <- NA
 
 #120091
-df[df$LICENCE_ID==120091 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-16", "FV_WEIGHT"] <- 816
-df[df$LICENCE_ID==120091 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-18", "FV_WEIGHT"] <- 847
+catch[catch$LICENCE_ID==120091 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-16", "FV_WEIGHT"] <- 816
+catch[catch$LICENCE_ID==120091 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-18", "FV_WEIGHT"] <- 847
 
 #120100
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-02", "FV_WEIGHT"] <- 150
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-05", "FV_WEIGHT"] <- 250
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-06", "FV_WEIGHT"] <- 900
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-07", "FV_WEIGHT"] <- 350
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-09", "FV_WEIGHT"] <- 300
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-30", "FV_WEIGHT"] <- 250
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-04", "FV_WEIGHT"] <- 165
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-05", "FV_WEIGHT"] <- 150
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-09", "FV_WEIGHT"] <- 324
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-10", "FV_WEIGHT"] <- 800
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-12", "FV_WEIGHT"] <- 66
-df[df$LICENCE_ID==120100 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-13", "FV_WEIGHT"] <- 50
-df[df$LICENCE_ID==120100 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120100 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-02", "FV_WEIGHT"] <- 150
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-05", "FV_WEIGHT"] <- 250
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-06", "FV_WEIGHT"] <- 900
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-07", "FV_WEIGHT"] <- 350
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-09", "FV_WEIGHT"] <- 300
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-30", "FV_WEIGHT"] <- 250
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-04", "FV_WEIGHT"] <- 165
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-05", "FV_WEIGHT"] <- 150
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-09", "FV_WEIGHT"] <- 324
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-10", "FV_WEIGHT"] <- 800
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-12", "FV_WEIGHT"] <- 66
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-13", "FV_WEIGHT"] <- 50
+catch[catch$LICENCE_ID==120100 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120100 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120046
-df[df$LICENCE_ID==120046 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120046 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120046 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120046 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120046 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120046 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120050
-df[df$LICENCE_ID==120050 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120050 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="27", "DAY"] <- "22"
-df[df$LICENCE_ID==120050 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="22", "FV_DATE_FISHED"] <- "2019-04-22"
+catch[catch$LICENCE_ID==120050 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120050 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="27", "DAY"] <- "22"
+catch[catch$LICENCE_ID==120050 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="22", "FV_DATE_FISHED"] <- "2019-04-22"
 
 #120065
-df[df$LICENCE_ID==120065 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120065 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
 
 #120073
-df[df$LICENCE_ID==120073 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120073 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120085
-df[df$LICENCE_ID==120085 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120085 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120085 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120085 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120088 - how to remove a single row with character criteria
-df <- df[!(df$LICENCE_ID==120088 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-15" & df$MEASUREMENT_UNIT=="POUNDS"), ]
+catch <- catch[!(catch$LICENCE_ID==120088 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-15" & catch$MEASUREMENT_UNIT=="POUNDS"), ]
 
 #120089
-df[df$LICENCE_ID==120089 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120089 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120103
-df[df$LICENCE_ID==120103 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="16", "FV_WEIGHT"] <- 108
+catch[catch$LICENCE_ID==120103 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="16", "FV_WEIGHT"] <- 108
 
 #120108
-df[df$LICENCE_ID==120108 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120108 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120108 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120108 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120118
-df[df$LICENCE_ID==120118 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120118 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120118 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120118 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120121
-df[df$LICENCE_ID==120121 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120121 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120121 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="02", "FV_WEIGHT"] <- 650 * conv
-df[df$LICENCE_ID==120121 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="22", "FV_WEIGHT"] <- 180 * conv
+catch[catch$LICENCE_ID==120121 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120121 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120121 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="02", "FV_WEIGHT"] <- 650 * conv
+catch[catch$LICENCE_ID==120121 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="22", "FV_WEIGHT"] <- 180 * conv
 
 #120124
-df[df$LICENCE_ID==120124 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-13", "FV_WEIGHT" ] <- 2750
-df[df$LICENCE_ID==120124 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="06", "FV_HOURS_FISHED" ] <- 5
-df[df$LICENCE_ID==120124 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-23" & df$FV_WEIGHT==1500, "FV_DATE_FISHED" ] <- "2019-05-24"
-df[df$LICENCE_ID==120124 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
+catch[catch$LICENCE_ID==120124 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-13", "FV_WEIGHT" ] <- 2750
+catch[catch$LICENCE_ID==120124 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="06", "FV_HOURS_FISHED" ] <- 5
+catch[catch$LICENCE_ID==120124 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-23" & catch$FV_WEIGHT==1500, "FV_DATE_FISHED" ] <- "2019-05-24"
+catch[catch$LICENCE_ID==120124 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
 
 #120135
-df[df$LICENCE_ID==120135 & df$YEAR==2019, "FV_GEAR_CODE"] <- 08L
-df[df$LICENCE_ID==120135 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
-df[df$LICENCE_ID==120135 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-13", "FV_WEIGHT" ] <- 2750
+catch[catch$LICENCE_ID==120135 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120135 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
+catch[catch$LICENCE_ID==120135 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-13", "FV_WEIGHT" ] <- 2750
 
 #120139
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="14", "DAY"] <- "15"
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="15", "FV_DATE_FISHED"] <- "2019-05-15"
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$MONTH=="06" & df$DAY=="01", "DAY"] <- "05"
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$MONTH=="06" & df$DAY=="05", "FV_DATE_FISHED"] <- "2019-06-05"
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-12", "FV_WEIGHT"] <- 25
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-15", "FV_WEIGHT"] <- 63
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-19", "FV_WEIGHT"] <- 47
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 50
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-21", "FV_WEIGHT"] <- 68
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 57
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-23", "FV_WEIGHT"] <- 82
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-26", "FV_WEIGHT"] <- 79
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-27", "FV_WEIGHT"] <- 62
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-05", "FV_WEIGHT"] <- 74
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-06", "FV_WEIGHT"] <- 120
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-09", "FV_WEIGHT"] <- 82
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-12", "FV_WEIGHT"] <- 77
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-18", "FV_WEIGHT"] <- 120
-df[df$LICENCE_ID==120139 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-20", "FV_WEIGHT"] <- 35
-df[df$LICENCE_ID==120139 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120139 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="14", "DAY"] <- "15"
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="15", "FV_DATE_FISHED"] <- "2019-05-15"
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$MONTH=="06" & catch$DAY=="01", "DAY"] <- "05"
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$MONTH=="06" & catch$DAY=="05", "FV_DATE_FISHED"] <- "2019-06-05"
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-12", "FV_WEIGHT"] <- 25
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-15", "FV_WEIGHT"] <- 63
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-19", "FV_WEIGHT"] <- 47
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 50
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-21", "FV_WEIGHT"] <- 68
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 57
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-23", "FV_WEIGHT"] <- 82
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-26", "FV_WEIGHT"] <- 79
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-27", "FV_WEIGHT"] <- 62
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-05", "FV_WEIGHT"] <- 74
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-06", "FV_WEIGHT"] <- 120
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-09", "FV_WEIGHT"] <- 82
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-12", "FV_WEIGHT"] <- 77
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-18", "FV_WEIGHT"] <- 120
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-20", "FV_WEIGHT"] <- 35
+catch[catch$LICENCE_ID==120139 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120139 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120144
-df[df$LICENCE_ID==120144 & df$YEAR==2019 & df$MONTH=="01", "MONTH"] <- "05"
-df[df$LICENCE_ID==120144 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="29", "FV_DATE_FISHED"] <- "2019-05-29"
-df[df$LICENCE_ID==120144 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="30", "FV_DATE_FISHED"] <- "2019-05-30"
+catch[catch$LICENCE_ID==120144 & catch$YEAR==2019 & catch$MONTH=="01", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120144 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="29", "FV_DATE_FISHED"] <- "2019-05-29"
+catch[catch$LICENCE_ID==120144 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="30", "FV_DATE_FISHED"] <- "2019-05-30"
 
 #120146
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="23", "FV_DATE_FISHED"] <- "2019-05-24"
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="23", "DAY"] <- "24"
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$MONTH=="01", "MONTH"] <- "05"
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-22 23:00:00", "FV_DATE_FISHED"] <- "2019-05-22"
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-26 23:00:00", "FV_DATE_FISHED"] <- "2019-05-26"
-df[df$LICENCE_ID==120146 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-29"
-df[df$LICENCE_ID==120146 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="23", "FV_DATE_FISHED"] <- "2019-05-24"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="23", "DAY"] <- "24"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$MONTH=="01", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-22 23:00:00", "FV_DATE_FISHED"] <- "2019-05-22"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-26 23:00:00", "FV_DATE_FISHED"] <- "2019-05-26"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-29"
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120154
-df[df$LICENCE_ID==120154 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-05", "FV_DATE_FISHED"] <- "2019-05-20"
-df[df$LICENCE_ID==120154 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-20", "DAY"] <- "20"
-df[df$LICENCE_ID==120154 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-21", "FV_HOURS_FISHED"] <- "3"
-df[df$LICENCE_ID==120154 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-22", "FV_HOURS_FISHED"] <- "2"
-df[df$LICENCE_ID==120154 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-23", "FV_HOURS_FISHED"] <- "2"
+catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-05", "FV_DATE_FISHED"] <- "2019-05-20"
+catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-20", "DAY"] <- "20"
+catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-21", "FV_HOURS_FISHED"] <- "3"
+catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-22", "FV_HOURS_FISHED"] <- "2"
+catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-23", "FV_HOURS_FISHED"] <- "2"
 
 #120196
-df[df$LICENCE_ID==120196 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-17", "FV_DATE_FISHED"] <- "2019-05-24"
-df[df$LICENCE_ID==120196 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
+catch[catch$LICENCE_ID==120196 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-17", "FV_DATE_FISHED"] <- "2019-05-24"
+catch[catch$LICENCE_ID==120196 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
 new_row <- data.frame(
   LICENCE_ID = 120196,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 100,
   FV_GEAR_CODE = 41L,
@@ -163,15 +164,16 @@ new_row <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "SALMON",
   COUNTY = "DIGBY COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, new_row)
+catch <- rbind(catch, new_row)
 
 #120203
-# df[df$LICENCE_ID==120203 & df$YEAR==2019, "FV_GEAR_CODE "] <- 41L
-# df[df$LICENCE_ID==120203 & df$YEAR==2019, "FV_GEAR_CODE "] <- 42L
-# df[df$LICENCE_ID==120203 & df$YEAR==2019, "GEAR_DESCRIPTION "] <- "GILL NET (SET OR FIXED)"
-# df[df$LICENCE_ID==120203 & df$YEAR==2019, "GEAR_DESCRIPTION "] <- "GILL NET, DRIFT"
+# catch[catch$LICENCE_ID==120203 & catch$YEAR==2019, "FV_GEAR_CODE "] <- 41L
+# catch[catch$LICENCE_ID==120203 & catch$YEAR==2019, "FV_GEAR_CODE "] <- 42L
+# catch[catch$LICENCE_ID==120203 & catch$YEAR==2019, "GEAR_DESCRIPTION "] <- "GILL NET (SET OR FIXED)"
+# catch[catch$LICENCE_ID==120203 & catch$YEAR==2019, "GEAR_DESCRIPTION "] <- "GILL NET, DRIFT"
 
 #120216
 weights <- c(
@@ -187,116 +189,117 @@ dates <- c(
   "2019-06-13","2019-06-17"
   )
 
-subset_rows <- df$LICENCE_ID==120216 & df$YEAR==2019
-df$FV_WEIGHT[subset_rows] <- weights
-df$FV_DATE_FISHED[subset_rows] <- dates
+subset_rows <- catch$LICENCE_ID==120216 & catch$YEAR==2019
+catch$FV_WEIGHT[subset_rows] <- weights
+catch$FV_DATE_FISHED[subset_rows] <- dates
 
-df[df$LICENCE_ID==120216 & df$YEAR==2019, "MONTH"] <- "05"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-09", "DAY"] <- "09"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-10", "DAY"] <- "10"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-13", "DAY"] <- "13"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-14", "DAY"] <- "14"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-15", "DAY"] <- "15"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-16", "DAY"] <- "16"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-17", "DAY"] <- "17"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-20", "DAY"] <- "20"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-21", "DAY"] <- "21"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-22", "DAY"] <- "22"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-23", "DAY"] <- "23"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-27", "DAY"] <- "27"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-28", "DAY"] <- "28"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-29", "DAY"] <- "29"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-30", "DAY"] <- "30"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-31", "DAY"] <- "31"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019, "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-09", "DAY"] <- "09"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-10", "DAY"] <- "10"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-13", "DAY"] <- "13"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-14", "DAY"] <- "14"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-15", "DAY"] <- "15"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-16", "DAY"] <- "16"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-17", "DAY"] <- "17"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-20", "DAY"] <- "20"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-21", "DAY"] <- "21"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-22", "DAY"] <- "22"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-23", "DAY"] <- "23"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-27", "DAY"] <- "27"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-28", "DAY"] <- "28"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-29", "DAY"] <- "29"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-30", "DAY"] <- "30"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-31", "DAY"] <- "31"
 
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-03", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-03", "DAY"] <- "03"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-04", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-04", "DAY"] <- "04"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-05", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-05", "DAY"] <- "05"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-06", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-06", "DAY"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-07", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-07", "DAY"] <- "07"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-11", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-11", "DAY"] <- "11"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-12", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-12", "DAY"] <- "12"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-13", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-13", "DAY"] <- "13"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-17", "MONTH"] <- "06"
-df[df$LICENCE_ID==120216 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-17", "DAY"] <- "17"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-03", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-03", "DAY"] <- "03"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-04", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-04", "DAY"] <- "04"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-05", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-05", "DAY"] <- "05"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-06", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-06", "DAY"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-07", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-07", "DAY"] <- "07"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-11", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-11", "DAY"] <- "11"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-12", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-12", "DAY"] <- "12"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-13", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-13", "DAY"] <- "13"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-17", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-17", "DAY"] <- "17"
 
 #120232
-df[df$LICENCE_ID==120232 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120232 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120235
-df[df$LICENCE_ID==120235 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="08", "FV_WEIGHT"] <- 353
-df[df$LICENCE_ID==120235 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120235 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120235 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120235 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="08", "FV_WEIGHT"] <- 353
+catch[catch$LICENCE_ID==120235 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120235 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120235 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120237
-df[df$LICENCE_ID==120237 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120237 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
 
 #120257
 temp <- data.frame(YEAR=2019, LICENCE_ID=120257, NIL_REPORT_FLAG="Y")
 didnotfish <- rbind(temp, didnotfish)
 
 #120260
-dupes <- df[df$LICENCE_ID==120260 & df$YEAR==2019, ]
+dupes <- catch[catch$LICENCE_ID==120260 & catch$YEAR==2019, ]
 dupes_removed <- dupes[!duplicated(dupes[c("MONTH","DAY")]), ]
-df <- df[!(df$LICENCE_ID==120260 & df$YEAR==2019), ]
-df <- rbind(df, dupes_removed)
+catch <- catch[!(catch$LICENCE_ID==120260 & catch$YEAR==2019), ]
+catch <- rbind(catch, dupes_removed)
 
 #120271
-df[df$LICENCE_ID==120271 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120271 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
 
 #120285
-df[df$LICENCE_ID==120285 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="17", "FV_WEIGHT"] <- 915
-df[df$LICENCE_ID==120285 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="24", "DAY"] <- "14"
-df[df$LICENCE_ID==120285 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="14", "FV_DATE_FISHED"] <- "2019-04-14"
-df[df$LICENCE_ID==120285 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120285 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="17", "FV_WEIGHT"] <- 915
+catch[catch$LICENCE_ID==120285 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="24", "DAY"] <- "14"
+catch[catch$LICENCE_ID==120285 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="14", "FV_DATE_FISHED"] <- "2019-04-14"
+catch[catch$LICENCE_ID==120285 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
 
 #120311
-df[df$LICENCE_ID==120311 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120311 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120311 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120311 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120311 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120311 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120312
-df[df$LICENCE_ID==120312 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120312 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120312 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120312 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120312 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120312 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120326
-df[df$LICENCE_ID==120326 & df$YEAR==2019, "FV_GEAR_CODE"] <- NA
+catch[catch$LICENCE_ID==120326 & catch$YEAR==2019, "FV_GEAR_CODE"] <- NA
 
 #120334
-df[df$LICENCE_ID==120334 & df$YEAR==2019 & df$MONTH=="01" & df$DAY=="14", "MONTH"] <- "04"
-df[df$LICENCE_ID==120334 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="14", "FV_DATE_FISHED"] <- "2019-04-14"
+catch[catch$LICENCE_ID==120334 & catch$YEAR==2019 & catch$MONTH=="01" & catch$DAY=="14", "MONTH"] <- "04"
+catch[catch$LICENCE_ID==120334 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="14", "FV_DATE_FISHED"] <- "2019-04-14"
 
 #120344
-df[df$LICENCE_ID==120344 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120344 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120344 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120344 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120344 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120344 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120348
 temp <- data.frame(YEAR=2019, LICENCE_ID=120348, NIL_REPORT_FLAG="Y")
 didnotfish <- rbind(temp, didnotfish)
 
 #120353
-df[df$LICENCE_ID==120353 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120353 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120353 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120353 & df$YEAR==2019, "FV_GEAR_CODE"] <- 41L
-df[df$LICENCE_ID==120353 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+catch[catch$LICENCE_ID==120353 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120353 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120353 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120353 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120353 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
 
 #120355
-df[df$LICENCE_ID==120355 & df$YEAR==2019 &df$FV_DATE_FISHED=="2019-04-16", "FV_WEIGHT"] <- 88 * conv
+catch[catch$LICENCE_ID==120355 & catch$YEAR==2019 &catch$FV_DATE_FISHED=="2019-04-16", "FV_WEIGHT"] <- 88 * conv
 
 #120359
-df[df$LICENCE_ID==120359 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120359 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120377
 temp <- data.frame(
   LICENCE_ID = 120377,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 24,
   FV_GEAR_CODE = 62L,
@@ -311,50 +314,52 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "OROMOCTO",
   COUNTY = "SUNBURY COUNTY",
-  PROVINCE = "NB"
+  PROVINCE = "NB",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 #120378
-df[df$LICENCE_ID==120378 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="10", "FV_HOURS_FISHED"] <- 48
+catch[catch$LICENCE_ID==120378 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="10", "FV_HOURS_FISHED"] <- 48
 
 #120387
 temp <- data.frame(YEAR=2019, LICENCE_ID=120387, NIL_REPORT_FLAG="Y")
 didnotfish <- rbind(temp, didnotfish)
 
 #120426
-df[df$LICENCE_ID==120426 & df$YEAR==2019, "FV_GEAR_CODE"] <- 42L
-df[df$LICENCE_ID==120426 & df$YEAR==2019, "GEAR_DESCRIPTION"] <-  "GILL NET, DRIFT" 
-df[df$LICENCE_ID==120426 & df$YEAR==2019, "MONTH"] <- "05"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-08 23:00:00", "FV_DATE_FISHED"] <- "2019-05-08"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-08 00:00:00", "DAY"] <- "08"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-09 23:00:00", "FV_DATE_FISHED"] <- "2019-05-10"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-12 23:00:00", "FV_DATE_FISHED"] <- "2019-05-13"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-20 23:00:00", "FV_DATE_FISHED"] <- "2019-05-21"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-21 23:00:00", "FV_DATE_FISHED"] <- "2019-05-22"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-22 23:00:00", "FV_DATE_FISHED"] <- "2019-05-23"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-26 23:00:00", "FV_DATE_FISHED"] <- "2019-05-27"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-27 23:00:00", "FV_DATE_FISHED"] <- "2019-05-28"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-28 23:00:00", "FV_DATE_FISHED"] <- "2019-05-29"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-30"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-30"
-df[df$LICENCE_ID==120426 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-01-30 23:00:00", "FV_DATE_FISHED"] <- "2019-05-31"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 42L
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <-  "GILL NET, DRIFT" 
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019, "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-08 23:00:00", "FV_DATE_FISHED"] <- "2019-05-08"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-08 00:00:00", "DAY"] <- "08"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-09 23:00:00", "FV_DATE_FISHED"] <- "2019-05-10"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-12 23:00:00", "FV_DATE_FISHED"] <- "2019-05-13"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-20 23:00:00", "FV_DATE_FISHED"] <- "2019-05-21"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-21 23:00:00", "FV_DATE_FISHED"] <- "2019-05-22"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-22 23:00:00", "FV_DATE_FISHED"] <- "2019-05-23"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-26 23:00:00", "FV_DATE_FISHED"] <- "2019-05-27"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-27 23:00:00", "FV_DATE_FISHED"] <- "2019-05-28"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-28 23:00:00", "FV_DATE_FISHED"] <- "2019-05-29"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-30"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-29 23:00:00", "FV_DATE_FISHED"] <- "2019-05-30"
+catch[catch$LICENCE_ID==120426 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-01-30 23:00:00", "FV_DATE_FISHED"] <- "2019-05-31"
 
 #120440
-df[df$LICENCE_ID==120440 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120440 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120440 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120440 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
-df[df$LICENCE_ID==120440 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120440 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120440 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120440 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120440 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120440 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
 
 #120457
-df[df$LICENCE_ID==120457 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
-df[df$LICENCE_ID==120457 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120457 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120457 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
 
 #120462
-df[df$LICENCE_ID==120462 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="13", "MONTH"] <- "05"
-df[df$LICENCE_ID==120462 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="13", "FV_DATE_FISHED"] <- "2019-05-13"
+catch[catch$LICENCE_ID==120462 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="13", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120462 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="13", "FV_DATE_FISHED"] <- "2019-05-13"
 temp <- data.frame(
   LICENCE_ID = 120462,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = NA,
   FV_GEAR_CODE = 70,
@@ -369,58 +374,60 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "ANNIS",
   COUNTY = "YARMOUTH COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 #120482
-df[df$LICENCE_ID==120482 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
-df[df$LICENCE_ID==120482 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-17" & df$FV_WEIGHT==343, "FV_WEIGHT"] <- 1064
-df[df$LICENCE_ID==120482 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 343
-df[df$LICENCE_ID==120482 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-21", "FV_WEIGHT"] <- 107
-df[df$LICENCE_ID==120482 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 451
+catch[catch$LICENCE_ID==120482 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120482 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-17" & catch$FV_WEIGHT==343, "FV_WEIGHT"] <- 1064
+catch[catch$LICENCE_ID==120482 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 343
+catch[catch$LICENCE_ID==120482 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-21", "FV_WEIGHT"] <- 107
+catch[catch$LICENCE_ID==120482 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 451
 
 #120495
-df[df$LICENCE_ID==120495 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
-df[df$LICENCE_ID==120495 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120495 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120495 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
 
 #120514
-df[df$LICENCE_ID==120514 & df$YEAR==2019, "FV_GEAR_CODE"] <- 08L
-df[df$LICENCE_ID==120514 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
+catch[catch$LICENCE_ID==120514 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120514 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
 
 #120535
-df[df$LICENCE_ID==120535 & df$YEAR==2019, "FV_GEAR_CODE"] <- 08L
-df[df$LICENCE_ID==120535 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
+catch[catch$LICENCE_ID==120535 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120535 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
 
 #120548
-df[df$LICENCE_ID==120548 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
-df[df$LICENCE_ID==120548 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120548 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120548 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
 
 #120561
-df[df$LICENCE_ID==120561 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120561 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120561 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-07-28", "FV_DATE_FISHED"] <- "2019-04-28"
-df[df$LICENCE_ID==120561 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-28", "MONTH"] <- "04"
+catch[catch$LICENCE_ID==120561 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120561 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120561 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-07-28", "FV_DATE_FISHED"] <- "2019-04-28"
+catch[catch$LICENCE_ID==120561 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-28", "MONTH"] <- "04"
 
 #120567
-df[df$LICENCE_ID==120567 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
+catch[catch$LICENCE_ID==120567 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
 
 #120573
-df[df$LICENCE_ID==120573 & df$YEAR==2019 & df$MONTH=="10" & df$DAY=="15", "MONTH"] <- "05"
-df[df$LICENCE_ID==120573 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="15", "FV_DATE_FISHED"] <- "2019-05-15"
+catch[catch$LICENCE_ID==120573 & catch$YEAR==2019 & catch$MONTH=="10" & catch$DAY=="15", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120573 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="15", "FV_DATE_FISHED"] <- "2019-05-15"
 
 #120577
-df[df$LICENCE_ID==120577 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120577 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120588
-df[df$LICENCE_ID==120588 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
-df[df$LICENCE_ID==120588 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120588 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120588 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
 
 #120590
 
-df <- subset(df, !(LICENCE_ID==120590 & YEAR==2019))
+catch <- subset(catch, !(LICENCE_ID==120590 & YEAR==2019))
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 3,
   FV_GEAR_CODE = 70,
@@ -435,12 +442,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 3,
   FV_GEAR_CODE = 70,
@@ -455,12 +464,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "LAHAVE",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 4,
   FV_GEAR_CODE = 70,
@@ -475,12 +486,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -495,12 +508,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MIDDLE RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 6,
   FV_GEAR_CODE = 70,
@@ -515,12 +530,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 6,
   FV_GEAR_CODE = 70,
@@ -535,12 +552,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "LAHAVE",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -555,12 +574,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "PETITE RIVIERE",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 7,
   FV_GEAR_CODE = 70,
@@ -575,12 +596,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -595,12 +618,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "INDIAN",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 6,
   FV_GEAR_CODE = 70,
@@ -615,12 +640,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 1,
   FV_GEAR_CODE = 70,
@@ -635,12 +662,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "LAHAVE",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 4,
   FV_GEAR_CODE = 70,
@@ -655,12 +684,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -675,12 +706,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MUSHAMUSH",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 8,
   FV_GEAR_CODE = 70,
@@ -695,12 +728,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 6,
   FV_GEAR_CODE = 70,
@@ -715,12 +750,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -735,12 +772,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MIDDLE RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 6,
   FV_GEAR_CODE = 70,
@@ -755,12 +794,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 1,
   FV_GEAR_CODE = 70,
@@ -775,12 +816,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "LAHAVE",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 4,
   FV_GEAR_CODE = 70,
@@ -795,12 +838,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 3,
   FV_GEAR_CODE = 70,
@@ -815,12 +860,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 2,
   FV_GEAR_CODE = 70,
@@ -835,12 +882,14 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MARTIN'S RIVER",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 temp <- data.frame(
   LICENCE_ID = 120590,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 1,
   FV_GEAR_CODE = 70,
@@ -855,55 +904,57 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "MUSHAMUSH",
   COUNTY = "LUNENBURG COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 #120619
-df[df$LICENCE_ID==120619 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120619 & df$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120619 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120619 & catch$YEAR==2019, "FV_WEIGHT"] * conv
 
 #120626
-df[df$LICENCE_ID==120626 & df$YEAR==2019, "FV_GEAR_CODE"] <- 08L
-df[df$LICENCE_ID==120626 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
-df[df$LICENCE_ID==120626 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120626 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120626 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP STAND"
+catch[catch$LICENCE_ID==120626 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120633
-df[df$LICENCE_ID==120633 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120633 & df$YEAR==2019 & df$MONTH=="01" & df$DAY=="12", "MONTH"] <- "06"
-df[df$LICENCE_ID==120633 & df$YEAR==2019 & df$MONTH=="06" & df$DAY=="12", "FV_DATE_FISHED"] <- "2019-06-12"
+catch[catch$LICENCE_ID==120633 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120633 & catch$YEAR==2019 & catch$MONTH=="01" & catch$DAY=="12", "MONTH"] <- "06"
+catch[catch$LICENCE_ID==120633 & catch$YEAR==2019 & catch$MONTH=="06" & catch$DAY=="12", "FV_DATE_FISHED"] <- "2019-06-12"
 
 #120636
-df[df$LICENCE_ID==120636 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120636 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 1200
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-22", "FV_WEIGHT"] <- 1200
 
 #120645
 temp <- data.frame(YEAR=2019, LICENCE_ID=120645, NIL_REPORT_FLAG="Y")
 didnotfish <- rbind(temp, didnotfish)
 
 #120654
-df[df$LICENCE_ID==120654 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
-df[df$LICENCE_ID==120654 & df$YEAR==2019, "FV_GEAR_CODE"] <- 70L
-df[df$LICENCE_ID==120654 & df$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
+catch[catch$LICENCE_ID==120654 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120654 & catch$YEAR==2019, "FV_GEAR_CODE"] <- 70L
+catch[catch$LICENCE_ID==120654 & catch$YEAR==2019, "GEAR_DESCRIPTION"] <- "DIP NET"
 
 #120663
-df[df$LICENCE_ID==120663 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-06-11", "RIVERNAME_CLEANED"] <- "LAHAVE"
-df[df$LICENCE_ID==120663 & df$YEAR==2019 & df$RIVERNAME_CLEANED=="MAHONE BAY", "RIVERNAME_CLEANED"] <- "MARTINS RIVER"
+catch[catch$LICENCE_ID==120663 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-11", "RIVERNAME_CLEANED"] <- "LAHAVE"
+catch[catch$LICENCE_ID==120663 & catch$YEAR==2019 & catch$RIVERNAME_CLEANED=="MAHONE BAY", "RIVERNAME_CLEANED"] <- "MARTINS RIVER"
 
 #120665
-df[df$LICENCE_ID==120665 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-08", "FV_WEIGHT"] <- 600
+catch[catch$LICENCE_ID==120665 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-08", "FV_WEIGHT"] <- 600
 
 #120679
-df[df$LICENCE_ID==120679 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120679 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #120698
-df[df$LICENCE_ID==120698 & df$YEAR==2019 & df$MONTH=="06" & df$DAY=="07", "MONTH"] <- "05"
-df[df$LICENCE_ID==120698 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="07", "FV_DATE_FISHED"] <- "2019-05-07"
+catch[catch$LICENCE_ID==120698 & catch$YEAR==2019 & catch$MONTH=="06" & catch$DAY=="07", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120698 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="07", "FV_DATE_FISHED"] <- "2019-05-07"
 
 #120715
-df[df$LICENCE_ID==120715 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-08", "FV_DATE_FISHED"] <- "2019-05-09"
-df[df$LICENCE_ID==120715 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-09", "DAY"] <- "09"
+catch[catch$LICENCE_ID==120715 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-08", "FV_DATE_FISHED"] <- "2019-05-09"
+catch[catch$LICENCE_ID==120715 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-09", "DAY"] <- "09"
 temp <- data.frame(
   LICENCE_ID = 120715,
+  RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
   FV_HOURS_FISHED = 3,
   FV_GEAR_CODE = 70,
@@ -918,24 +969,27 @@ temp <- data.frame(
   FV_CATCH_USAGE_CODE = NA,
   RIVERNAME_CLEANED = "ARGYLE",
   COUNTY = "YARMOUTH COUNTY",
-  PROVINCE = "NS"
+  PROVINCE = "NS",
+  NOTES = ""
 )
-df <- rbind(df, temp)
+catch <- rbind(catch, temp)
 
 #120716
-df[df$LICENCE_ID==120716 & df$YEAR==2019 & df$MONTH=="04" & df$DAY=="30", "MONTH"] <- "05"
-df[df$LICENCE_ID==120716 & df$YEAR==2019 & df$MONTH=="05" & df$DAY=="30", "FV_DATE_FISHED"] <- "2019-05-30"
+catch[catch$LICENCE_ID==120716 & catch$YEAR==2019 & catch$MONTH=="04" & catch$DAY=="30", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120716 & catch$YEAR==2019 & catch$MONTH=="05" & catch$DAY=="30", "FV_DATE_FISHED"] <- "2019-05-30"
 
 #120751
-df[df$LICENCE_ID==120751 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 500
-df[df$LICENCE_ID==120751 & df$YEAR==2019, "FV_WEIGHT"] <- df[df$LICENCE_ID==120751 & df$YEAR==2019, "FV_WEIGHT"] * conv
-df[df$LICENCE_ID==120751 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120751 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-20", "FV_WEIGHT"] <- 500
+catch[catch$LICENCE_ID==120751 & catch$YEAR==2019, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120751 & catch$YEAR==2019, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120751 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #303395
-df[df$LICENCE_ID==303395 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-08" & df$FV_WEIGHT==40.00, "FV_DATE_FISHED"] <- "2019-05-06"
-df[df$LICENCE_ID==303395 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-05-06", "DAY"] <- "06"
-df[df$LICENCE_ID==303395 & df$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==303395 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-08" & catch$FV_WEIGHT==40.00, "FV_DATE_FISHED"] <- "2019-05-06"
+catch[catch$LICENCE_ID==303395 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-06", "DAY"] <- "06"
+catch[catch$LICENCE_ID==303395 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
 #303397
-df[df$LICENCE_ID==303397 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-22" & df$FV_WEIGHT==28.80, "FV_DATE_FISHED"] <- "2019-04-23"
-df[df$LICENCE_ID==303397 & df$YEAR==2019 & df$FV_DATE_FISHED=="2019-04-23", "DAY"] <- "23"
+catch[catch$LICENCE_ID==303397 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-22" & catch$FV_WEIGHT==28.80, "FV_DATE_FISHED"] <- "2019-04-23"
+catch[catch$LICENCE_ID==303397 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-04-23", "DAY"] <- "23"
+
+# 2020 #########################################################################
