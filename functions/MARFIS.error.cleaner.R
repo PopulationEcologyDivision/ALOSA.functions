@@ -2480,3 +2480,48 @@ temp <- data.frame(
   NOTES = ""
 )
 catch <- rbind(catch, temp)
+
+#120636
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2020 & catch$FV_DATE_FISHED=="2020-05-21", "FV_HOURS_FISHED"] <- 6
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2020 & catch$FV_DATE_FISHED=="2020-05-25", "FV_HOURS_FISHED"] <- 8
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2020, "FV_GEAR_CODE"] <- 62L
+catch[catch$LICENCE_ID==120636 & catch$YEAR==2020, "GEAR_DESCRIPTION"] <- "TRAP"
+
+#120644
+catch <- subset(catch, !(LICENCE_ID==120644 & YEAR==2020 & RIVERNAME_LOGBOOK=="PETITE RIVERIERE"))
+
+#120663
+catch[catch$LICENCE_ID==120663 & catch$YEAR==2020 & catch$FV_DATE_FISHED=="2020-06-02", "RIVERNAME_CLEANED"] <- "LAHAVE"
+catch[catch$LICENCE_ID==120663 & catch$YEAR==2020 & catch$FV_DATE_FISHED=="2020-06-04", "RIVERNAME_CLEANED"] <- "LAHAVE"
+catch[catch$LICENCE_ID==120663 & catch$YEAR==2020 & catch$FV_DATE_FISHED=="2020-06-08", "RIVERNAME_CLEANED"] <- "LAHAVE"
+
+#120677
+catch[catch$LICENCE_ID==120677 & catch$YEAR==2020, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120677 & catch$YEAR==2020, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120677 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120679
+catch[catch$LICENCE_ID==120679 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120680
+catch[catch$LICENCE_ID==120680 & catch$YEAR==2020, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120680 & catch$YEAR==2020, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120680 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120707
+catch[catch$LICENCE_ID==120707 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120708
+catch[catch$LICENCE_ID==120708 & catch$YEAR==2020, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120708 & catch$YEAR==2020, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120708 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120751
+catch[catch$LICENCE_ID==120751 & catch$YEAR==2020, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120751 & catch$YEAR==2020, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120751 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120753
+catch[catch$LICENCE_ID==120753 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120755
+catch[catch$LICENCE_ID==120755 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120760
+catch[catch$LICENCE_ID==120760 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
