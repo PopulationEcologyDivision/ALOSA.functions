@@ -1,28 +1,25 @@
 #
 # Description: MARFIS Cleaner script
-# takes the catch data frame, and manually corrects all errors identified 
-# by checking the logbooks
-# all errors are wrapped in an if statement, that checks if the pre-existing
-# issue is still there. if it has been changed in the data base, the correction
+#
+# Takes the catch data frame, and manually corrects all errors identified 
+# by checking the logbooks.
+#
+# All errors are wrapped in an if statement, that checks if the pre-existing
+# issue is still there. If it has been changed in the data base, the correction
 # will not be applied and a warning will be printed so that the correction can 
 # be deleted.
+#
 # Inputs: catch data frame from pulling from the MARFIS database
-
+#
 #
 # This function is used by: MARFIS_all in one.R
 # 
 
-# Load in a pulled dataframe
+# Load in a pulled data-frame
 load("C:/Users/graylo/Documents/GitHub/data/marfis-pull-2024-03-21.Rdata")
 
-# Create a temporary data frame of catch just for testing the code so that 
-# we don't commit any changes to the actual pulled data frame
-#catch <- catch
-
-# conversion factor from count of fish to kilograms
+# This conversion factor is for converting a count of fish to mass in kilograms
 conv <- 0.240
-
-# This functions uses:
 
 # 2019 #########################################################################
 
@@ -147,7 +144,7 @@ catch[catch$LICENCE_ID==120154 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-
 #120196
 catch[catch$LICENCE_ID==120196 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-17", "FV_DATE_FISHED"] <- "2019-05-24"
 catch[catch$LICENCE_ID==120196 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-05-24", "DAY"] <- "24"
-new_row <- data.frame(
+temp <- data.frame(
   LICENCE_ID = 120196,
   RIVERNAME_LOGBOOK = "",
   YEAR = 2019,
@@ -167,7 +164,7 @@ new_row <- data.frame(
   PROVINCE = "NS",
   NOTES = ""
 )
-catch <- rbind(catch, new_row)
+catch <- rbind(catch, temp)
 
 #120203
 # catch[catch$LICENCE_ID==120203 & catch$YEAR==2019, "FV_GEAR_CODE "] <- 41L
@@ -231,6 +228,9 @@ catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-
 catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-17", "MONTH"] <- "06"
 catch[catch$LICENCE_ID==120216 & catch$YEAR==2019 & catch$FV_DATE_FISHED=="2019-06-17", "DAY"] <- "17"
 
+rm(dates)
+rm(weights)
+rm(subset_rows)
 #120232
 catch[catch$LICENCE_ID==120232 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
 
@@ -247,10 +247,10 @@ temp <- data.frame(YEAR=2019, LICENCE_ID=120257, NIL_REPORT_FLAG="Y")
 didnotfish <- rbind(temp, didnotfish)
 
 #120260
-dupes <- catch[catch$LICENCE_ID==120260 & catch$YEAR==2019, ]
-dupes_removed <- dupes[!duplicated(dupes[c("MONTH","DAY")]), ]
+temp <- catch[catch$LICENCE_ID==120260 & catch$YEAR==2019, ]
+temp <- temp[!duplicated(temp[c("MONTH","DAY")]), ]
 catch <- catch[!(catch$LICENCE_ID==120260 & catch$YEAR==2019), ]
-catch <- rbind(catch, dupes_removed)
+catch <- rbind(catch, temp)
 
 #120271
 catch[catch$LICENCE_ID==120271 & catch$YEAR==2019, "MEASUREMENT_UNIT"] <- "POUNDS"
@@ -2525,3 +2525,1015 @@ catch[catch$LICENCE_ID==120755 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOG
 
 #120760
 catch[catch$LICENCE_ID==120760 & catch$YEAR==2020, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+# 2021 #########################################################################
+
+#120028
+catch[catch$LICENCE_ID==120028 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120055
+catch[catch$LICENCE_ID==120055 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-04-26",
+  FV_WEIGHT = 52,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "26",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-04-28",
+  FV_WEIGHT = 97,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "28",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-04-30",
+  FV_WEIGHT = 234,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "30",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-03",
+  FV_WEIGHT = 185,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "03",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-04",
+  FV_WEIGHT = 92,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "04",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-10",
+  FV_WEIGHT = 63,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "10",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-11",
+  FV_WEIGHT = 122,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "11",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-12",
+  FV_WEIGHT = 327,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "12",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120055,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 42L,
+  GEAR_DESCRIPTION = "GILL NET, DRIFT",
+  FV_DATE_FISHED = "2019-05-13",
+  FV_WEIGHT = 328,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "13",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+#120065
+catch[catch$LICENCE_ID==120065 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120072
+catch[catch$LICENCE_ID==120072 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120072 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120088
+catch[catch$LICENCE_ID==120088 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120095
+catch[catch$LICENCE_ID==120095 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-17", "FV_DATE_FISHED"] <- "2021-05-17"
+catch[catch$LICENCE_ID==120095 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-17", "MONTH"] <- "05"
+
+#120112
+catch[catch$LICENCE_ID==120112 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120112 & catch$YEAR==2021, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120112 & catch$YEAR==2021, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120112 & catch$YEAR==2021, "FV_HOURS_FISHED"] <- "24"
+catch[catch$LICENCE_ID==120112 & catch$YEAR==2021, "RIVERNAME_CLEANED"] <- "CATALONE"
+
+#120124
+catch[catch$LICENCE_ID==120124 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120135
+catch[catch$LICENCE_ID==120135 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120135 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "DIP STAND"
+
+#120136
+catch[catch$LICENCE_ID==120136 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120136 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120142
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 8,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-20",
+  FV_WEIGHT = 438 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "20",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 9,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-21",
+  FV_WEIGHT = 656 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "21",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 8,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-22",
+  FV_WEIGHT = 283 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "22",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 9,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-25",
+  FV_WEIGHT = 124 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "25",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 7,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-26",
+  FV_WEIGHT = 264 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "26",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 10,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-27",
+  FV_WEIGHT = 300 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "27",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 9,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-28",
+  FV_WEIGHT = 181 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "28",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 10,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-04-29",
+  FV_WEIGHT = 352 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "29",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 10,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-05-02",
+  FV_WEIGHT = 956 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "02",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 11,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-05-03",
+  FV_WEIGHT = 777 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "03",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 10,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-05-04",
+  FV_WEIGHT = 850 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "04",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 9,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-05-05",
+  FV_WEIGHT = 971 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "05",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120142,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 10,
+  FV_GEAR_CODE = 44L,
+  GEAR_DESCRIPTION = "SQUARE NET",
+  FV_DATE_FISHED = "2021-05-06",
+  FV_WEIGHT = 705 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "06",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SHUBENACADIE",
+  COUNTY = "COLCHESTER COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+#120146
+catch[catch$LICENCE_ID==120146 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120157
+catch[catch$LICENCE_ID==120157 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120159
+catch[catch$LICENCE_ID==120159 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120159 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120168
+catch[catch$LICENCE_ID==120168 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120168 & catch$YEAR==2021, "RIVERNAME_CLEANED"] <- "CATALONE"
+
+#120180
+catch[catch$LICENCE_ID==120180 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120186
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-30", "FV_DATE_FISHED"] <- "2021-05-30"
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-30", "MONTH"] <- "05"
+
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-03-31", "FV_DATE_FISHED"] <- "2021-04-30"
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-30", "MONTH"] <- "04"
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-30", "DAY"] <- "30"
+
+catch[catch$LICENCE_ID==120186 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120202
+catch[catch$LICENCE_ID==120202 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120202 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+catch[catch$LICENCE_ID==120202 & catch$YEAR==2021, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120202 & catch$YEAR==2021, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120202 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120203
+catch[catch$LICENCE_ID==120203 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 42L
+catch[catch$LICENCE_ID==120203 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET, DRIFT"
+
+#120226
+catch[catch$LICENCE_ID==120226 & catch$YEAR==2021, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120226 & catch$YEAR==2021, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120226 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120226 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120233
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-26", "FV_HOURS_FISHED"] <- 10
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-27", "FV_HOURS_FISHED"] <- 8
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-29", "FV_HOURS_FISHED"] <- 10
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-30", "FV_HOURS_FISHED"] <- 12
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-03", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-04", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-06", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-07", "FV_HOURS_FISHED"] <- 12
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-10", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-11", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-13", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-14", "FV_HOURS_FISHED"] <- 14
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-17", "FV_HOURS_FISHED"] <- 12
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-18", "FV_HOURS_FISHED"] <- 10
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-20", "FV_HOURS_FISHED"] <- 10
+catch[catch$LICENCE_ID==120233 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-21", "FV_HOURS_FISHED"] <- 12
+
+#120236
+catch[catch$LICENCE_ID==120236 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 44L
+catch[catch$LICENCE_ID==120236 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "SQUARE NET"
+
+#120237
+catch[catch$LICENCE_ID==120237 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-01-26 23:00:00", "FV_DATE_FISHED"] <- "2021-05-27"
+catch[catch$LICENCE_ID==120237 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-27", "MONTH"] <- "05"
+
+#120239
+catch[catch$LICENCE_ID==120239 & catch$YEAR==2021, "FV_WEIGHT"] <- catch[catch$LICENCE_ID==120239 & catch$YEAR==2021, "FV_WEIGHT"] * conv
+catch[catch$LICENCE_ID==120239 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120239 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120242
+catch[catch$LICENCE_ID==120242 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120246
+catch[catch$LICENCE_ID==120246 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+catch[catch$LICENCE_ID==120246 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 44L
+catch[catch$LICENCE_ID==120246 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "SQUARE NET"
+
+#120250
+catch[catch$LICENCE_ID==120250 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-01-29 23:00:00", "FV_DATE_FISHED"] <- "2021-05-31"
+catch[catch$LICENCE_ID==120250 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-31", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120250 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-31", "DAY"] <- "31"
+
+#120255
+catch[catch$LICENCE_ID==120255 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120256
+catch[catch$LICENCE_ID==120256 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-23", "FV_DATE_FISHED"] <- "2021-04-03"
+catch[catch$LICENCE_ID==120256 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-03", "DAY"] <- "03"
+
+#120263
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021, "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-01-31 23:00:00", "FV_DATE_FISHED"] <- "2021-05-01"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-01 23:00:00", "FV_DATE_FISHED"] <- "2021-05-02"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-02 23:00:00", "FV_DATE_FISHED"] <- "2021-05-03"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-07 23:00:00", "FV_DATE_FISHED"] <- "2021-05-08"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-08 23:00:00", "FV_DATE_FISHED"] <- "2021-05-09"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-09 23:00:00", "FV_DATE_FISHED"] <- "2021-05-10"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-13 23:00:00", "FV_DATE_FISHED"] <- "2021-05-14"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-14 23:00:00", "FV_DATE_FISHED"] <- "2021-05-15"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-17 23:00:00", "FV_DATE_FISHED"] <- "2021-05-18"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-20 23:00:00", "FV_DATE_FISHED"] <- "2021-05-21"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-02-22 23:00:00", "FV_DATE_FISHED"] <- "2021-05-22"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-22" & catch$FV_WEIGHT==192, "DAY"] <- "22"
+catch[catch$LICENCE_ID==120263 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-22" & catch$FV_WEIGHT==24, "FV_DATE_FISHED"] <- "2021-05-23"
+
+#120279
+catch[catch$LICENCE_ID==120279 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120286
+catch[catch$LICENCE_ID==120286 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120286 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120287
+didnotfish <- subset(didnotfish, !(LICENCE_ID=="120287" & YEAR=="2021" & NIL_REPORT_FLAG=="N"))
+
+#120292
+catch[catch$LICENCE_ID==120292 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+#120304
+catch[catch$LICENCE_ID==120304 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-06-07", "FV_WEIGHT"] <- 10800 * conv
+catch <- subset(catch, !(LICENCE_ID==120304 & YEAR==2021 & FV_DATE_FISHED=="2021-05-07"))
+
+#120311
+catch[catch$LICENCE_ID==120311 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-08", "FV_WEIGHT"] <- 700 * conv
+
+#120314
+temp <- catch %>% filter(LICENCE_ID==120314 & YEAR==2021) %>% mutate(FV_GEAR_CODE = if_else(is.na(FV_GEAR_CODE), 08, FV_GEAR_CODE))
+catch <- catch %>% anti_join(temp, by = c("LICENCE_ID", "YEAR")) %>%  bind_rows(temp)
+
+temp <- catch %>% filter(LICENCE_ID==120314 & YEAR==2021) %>% mutate(GEAR_DESCRIPTION = if_else(is.na(GEAR_DESCRIPTION), "DIP STAND", GEAR_DESCRIPTION))
+catch <- catch %>% anti_join(temp, by = c("LICENCE_ID", "YEAR")) %>%  bind_rows(temp)
+
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-01", "FV_DATE_FISHED"] <- "2021-05-01"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-01", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-02", "FV_DATE_FISHED"] <- "2021-05-02"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-02", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-03", "FV_DATE_FISHED"] <- "2021-05-03"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-03", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-07", "FV_DATE_FISHED"] <- "2021-05-07"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-07", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-08", "FV_DATE_FISHED"] <- "2021-05-08"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-08", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-09", "FV_DATE_FISHED"] <- "2021-05-09"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-09", "MONTH"] <- "05"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-10", "FV_DATE_FISHED"] <- "2021-05-10"
+catch[catch$LICENCE_ID==120314 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-10", "MONTH"] <- "05"
+
+#120317
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-13" & catch$FV_WEIGHT==100, "FV_WEIGHT"] <- 1000
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-14" & catch$FV_WEIGHT==2600, "FV_WEIGHT"] <- 26000
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-07" & catch$FV_WEIGHT==100, "FV_WEIGHT"] <- 1000
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-11" & catch$FV_WEIGHT==200, "FV_WEIGHT"] <- 2000
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-12" & catch$FV_WEIGHT==9200, "FV_DATE_FISHED"] <- "2021-05-13"
+catch[catch$LICENCE_ID==120317 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-13", "DAY"] <- "13"
+
+#120318
+catch[catch$LICENCE_ID==120318 & catch$YEAR==2021 & catch$FV_WEIGHT==1200, "FV_WEIGHT"] <- 12000 * conv
+catch <- subset(catch, !(LICENCE_ID==120318 & YEAR==2021 & FV_WEIGHT==1680))
+
+#120322
+catch[catch$LICENCE_ID==120322 & catch$YEAR==2021, "MEASUREMENT_UNIT"] <- "KILOGRAMS"
+
+temp <- data.frame(
+  LICENCE_ID = 120322,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 48,
+  FV_GEAR_CODE = 45L,
+  GEAR_DESCRIPTION = "BOX NET",
+  FV_DATE_FISHED = "2021-05-28",
+  FV_WEIGHT = 2600,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "28",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "SAINT JOHN",
+  COUNTY = "SAINT JOHN COUNTY",
+  PROVINCE = "NB",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+#120326
+catch[catch$LICENCE_ID==120326 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120326 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "DIP STAND"
+
+#120334
+catch[catch$LICENCE_ID==120334 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120334 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120336
+catch <- subset(catch, !(LICENCE_ID==120336 & YEAR==2021 & FV_DATE_FISHED=="2021-05-14"))
+catch <- subset(catch, !(LICENCE_ID==120336 & YEAR==2021 & FV_DATE_FISHED=="2021-05-15"))
+
+temp <- data.frame(
+  LICENCE_ID = 120336,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = NA,
+  FV_GEAR_CODE = 41L,
+  GEAR_DESCRIPTION = "GILL NET (SET OR FIXED)",
+  FV_DATE_FISHED = "2021-05-14",
+  FV_WEIGHT = 12700 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "14",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120336,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = NA,
+  FV_GEAR_CODE = 41L,
+  GEAR_DESCRIPTION = "GILL NET (SET OR FIXED)",
+  FV_DATE_FISHED = "2021-05-15",
+  FV_WEIGHT = 10300 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "15",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+#120381
+catch[catch$LICENCE_ID==120381 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-09", "FV_DATE_FISHED"] <- "2021-04-29"
+catch[catch$LICENCE_ID==120381 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-29", "DAY"] <- "29"
+
+#120437
+catch[catch$LICENCE_ID==120437 & catch$YEAR==2021, "FV_HOURS_FISHED"] <- 24
+
+#120441
+catch[catch$LICENCE_ID==120441 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 41L
+catch[catch$LICENCE_ID==120441 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "GILL NET (SET OR FIXED)"
+
+#120449
+catch <- subset(catch, !(LICENCE_ID==120449 & YEAR==2021))
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 6,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-04-09",
+  FV_WEIGHT = 1300 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "09",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 4,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-04-11",
+  FV_WEIGHT = 1200 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "11",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 4,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-04-24",
+  FV_WEIGHT = 1600 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "24",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 4,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-04-25",
+  FV_WEIGHT = 780 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "04",
+  DAY = "25",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 5,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-01",
+  FV_WEIGHT = 1300 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "01",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 3,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-02",
+  FV_WEIGHT = 800 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "02",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 4,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-08",
+  FV_WEIGHT = 1600 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "08",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 4,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-09",
+  FV_WEIGHT = 400 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "09",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)
+
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 2,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-22",
+  FV_WEIGHT = 900 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "22",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)#rm(temp)
+
+
+temp <- data.frame(
+  LICENCE_ID = 120449,
+  RIVERNAME_LOGBOOK = "",
+  YEAR = 2021,
+  FV_HOURS_FISHED = 6,
+  FV_GEAR_CODE = 70L,
+  GEAR_DESCRIPTION = "DIP NET",
+  FV_DATE_FISHED = "2021-05-23",
+  FV_WEIGHT = 1400 * conv,
+  MEASUREMENT_UNIT = "KILOGRAMS",
+  MONTH = "05",
+  DAY = "23",
+  FV_SSF_SPECIES_CODE = 350L,
+  LICENCE_TYPE = "NON-VESSEL BASED LIMITED",
+  FV_CATCH_USAGE_CODE = NA,
+  RIVERNAME_CLEANED = "TUSKET",
+  COUNTY = "YARMOUTH COUNTY",
+  PROVINCE = "NS",
+  NOTES = ""
+)
+catch <- rbind(catch, temp)#rm(conv)
+
+#120453
+catch[catch$LICENCE_ID==120453 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 08L
+catch[catch$LICENCE_ID==120453 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "DIP STAND"
+
+#120457
+catch[catch$LICENCE_ID==120457 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-01-29 23:00:00", "FV_DATE_FISHED"] <- "2021-05-30"
+catch[catch$LICENCE_ID==120457 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-30", "MONTH"] <- "05"
