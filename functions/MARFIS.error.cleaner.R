@@ -1,4 +1,3 @@
-#
 # Description: MARFIS Cleaner script
 #
 # Takes the catch data frame, and manually corrects all errors identified 
@@ -11,14 +10,14 @@
 #
 # Inputs: catch data frame from pulling from the MARFIS database
 #
-#
 # This function is used by: MARFIS_all in one.R
-# 
 
-# Load in a pulled data-frame
-load("C:/Users/graylo/Documents/GitHub/data/marfis-pull-2024-03-21.Rdata")
+# LOAD DATA ####################################################################
 library(tidyverse)
-# This conversion factor is for converting a count of fish to mass in kilograms
+
+load("C:/Users/graylo/Documents/GitHub/data/marfis-pull-2024-03-21.Rdata")
+
+# This factor is for converting a count of fish to a mass in kilograms
 conv <- 0.240
 
 # 2019 #########################################################################
@@ -3788,3 +3787,5 @@ catch[catch$LICENCE_ID==322015 & catch$YEAR==2021, "FV_GEAR_CODE"] <- 70L
 catch[catch$LICENCE_ID==322015 & catch$YEAR==2021, "GEAR_DESCRIPTION"] <- "DIP NET"
 catch[catch$LICENCE_ID==322015 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-04-09" & catch$FV_WEIGHT==216, "FV_DATE_FISHED"] <- "2021-05-09"
 catch[catch$LICENCE_ID==322015 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-09", "MOTNH"] <- "05"
+
+# 2022 #########################################################################
