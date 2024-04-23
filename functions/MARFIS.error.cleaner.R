@@ -12,6 +12,8 @@
 #
 # This function is used by: MARFIS_all in one.R
 
+MARFIS.error.cleaner<-function(catch)
+{
 # LOAD DATA ####################################################################
 library(tidyverse)
 
@@ -3789,3 +3791,4 @@ catch[catch$LICENCE_ID==322015 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-
 catch[catch$LICENCE_ID==322015 & catch$YEAR==2021 & catch$FV_DATE_FISHED=="2021-05-09", "MOTNH"] <- "05"
 
 # 2022 #########################################################################
+}
