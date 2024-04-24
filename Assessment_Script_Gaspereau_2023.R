@@ -367,7 +367,7 @@ mean.firstspawnage.r=mean(agedata$AGE_AT_FIRST_SPAWN[agedata$CURRENT_AGE>agedata
   boxplot(weight~current.age,data=speciesdata)
   boxplot(fork.length~current.age,data=speciesdata)
   with(speciesdata,plot(weight,fork.length))
-}
+
 
 
 
