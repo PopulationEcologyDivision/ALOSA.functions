@@ -203,6 +203,8 @@ onespecies.river.escapement<-function(filename,
   print(paste("Strata 3 total:",strata.percent(3,summary.data)))
   print(paste("Strata 4 total:",strata.percent(4,summary.data)))
   print(paste("Strata 5 total:",strata.percent(5,summary.data)))
+  print(paste("Strata 6 total:",strata.percent(6,summary.data)))
+  
   
   #if(n.strata==6){
    # print(paste("Strata 6 total:",strata.percent(6,summary.data)))

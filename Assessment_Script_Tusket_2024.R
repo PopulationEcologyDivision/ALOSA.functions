@@ -33,6 +33,11 @@ channel = dbConnect(
 # In season ####
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024")
 
+# Make sure to save the xlsx sheet that we all use in the sharepoint to a csv.
+# It is located in: OneDrive - DFO-MPO\Alosa\Counts\2024.
+# I cannot figure out how to access the file path of stuff on sharepoint, so this
+# is currently the easiest way I know to update the data
+
 x <- onespecies.river.escapement(
   "Vaughan 2024 count data.csv",
   fixtime = T,
@@ -45,6 +50,8 @@ x <- onespecies.river.escapement(
 
 x <- round(x)
 n <- dim(x)[1]
+
+# This takes off the latest day, helpful for when it is incomplete.
 x <- x[1:n-1, ]
 
 # x$dayofyear<-as.numeric(as.character(x$dayofyear))
