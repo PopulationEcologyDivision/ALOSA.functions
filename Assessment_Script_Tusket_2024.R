@@ -52,7 +52,7 @@ x <- round(x)
 n <- dim(x)[1]
 
 # This takes off the latest day, helpful for when it is incomplete.
-x <- x[1:n-1, ]
+#x <- x[1:n-1, ]
 
 # x$dayofyear<-as.numeric(as.character(x$dayofyear))
 

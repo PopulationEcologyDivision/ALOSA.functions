@@ -15,7 +15,7 @@ y <- round(y)
 n <- dim(y)[1]
 
 # This takes off the latest day, helpful for when it is incomplete.
-y <- y[1:n-1, ]
+#y <- y[1:n-1, ]
 
 print(paste0("Total escapement as of ", y$mon[n], "-", y$day[n], " is ", sum(y$total), sep = ""))
 
