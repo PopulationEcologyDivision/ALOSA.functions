@@ -16,7 +16,7 @@ MARFIS.error.cleaner <- function(catch) {
 # LOAD DATA ####################################################################
 library(tidyverse)
 
-load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis-pull-2024-03-21.Rdata")
+#load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis-pull-2024-03-21.Rdata")
 
 # This factor is for converting a count of fish to a mass in kilograms
 conv <- 0.240
