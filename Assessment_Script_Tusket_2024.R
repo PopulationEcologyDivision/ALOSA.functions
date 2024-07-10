@@ -60,43 +60,6 @@ print(paste0("Total escapement as of ", x$mon[n], "-", x$day[n], " is ", sum(x$t
 
 write.csv(x, file = "inseasonsummary.csv", row.names = F)
 
-# Email plot script
-
-library(tidyverse)
-
-# Load in the powerhouse data too so we can combine them later
-#source("C:/Users/graylo/Documents/GitHub/Rscripts/email_estimated_gaspereau_counts_tusket_powerhouse.R")
-
-# Calculate powerhouse escapement
-# In season ####
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024")
-
-y <- onespecies.river.escapement(
-  "Powerhouse 2024 count data.csv",
-  fixtime = T,
-  downstream.migration = F,
-  database = F,
-  2024,
-  2,
-  channel
-)
-
-y <- round(y)
-n <- dim(y)[1]
-
-# This takes off the latest day, helpful for when it is incomplete.
-#y <- y[1:n-1, ]
-
-print(paste0("Total escapement as of ", y$mon[n], "-", y$day[n], " is ", sum(y$total), sep = ""))
-
-write.csv(y, file = "powerhouse_inseasonsummary.csv", row.names = F)
-
-# Calculate count estimates, produces "x" which has count, date, etc
-#source("~/git/ALOSA.functions/Assessment_Script_Tusket_2024.R")
-
-# Write the counts to a csv
-# I couldn't figure out a way to access the data when it was just as "x" in R
-# so this is my roundabout way of doing things for now
 write_csv(x, "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/2024_counts.csv")
 
 # Get total count and represent it as a number with commas at the thousands places
@@ -132,6 +95,70 @@ vaughan_long$location <- "Lake Vaughan"
 # Extract the last full day for which data are available
 last_date <- make_datetime(year = 2024, month = tail(x$mon, 1), day = tail(x$day, 1))
 
+# POWERHOUSE
+# In season ####
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024")
+
+y <- onespecies.river.escapement(
+  "Powerhouse 2024 count data.csv",
+  fixtime = T,
+  downstream.migration = F,
+  database = F,
+  2024,
+  2,
+  channel
+)
+
+y <- round(y)
+n <- dim(y)[1]
+
+# This takes off the latest day, helpful for when it is incomplete.
+#y <- y[1:n-1, ]
+
+print(paste0("Total escapement as of ", y$mon[n], "-", y$day[n], " is ", sum(y$total), sep = ""))
+
+write.csv(y, file = "powerhouse_inseasonsummary.csv", row.names = F)
+
+# add new counts to csv file from x; I couldn't figure out a more effecient way
+write_csv(y, "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/2024_counts_powerhouse.csv")
+
+# load in data from previous years
+powerhouse <- read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/powerhouse_counts_pre_2024.csv")
+
+# get total count
+library(scales)
+total_count <- signif(sum(y$total), digits = 3)
+total_count_comma <- label_comma()(total_count)
+
+# Add column for year
+y$year <- 2024
+
+powerhouse <- bind_rows(powerhouse, y)
+powerhouse <- select(powerhouse, -sd, -clow, -chigh)
+
+# This makes the dates for all observations, even those prior to 2024, as 2024.
+# This is on purpose to make them overlap when they plot
+powerhouse$date <- make_date(
+  year = 2024,
+  month = powerhouse$mon,
+  day = powerhouse$day
+)
+powerhouse$year <- as.character(powerhouse$year)
+
+# add location to the dataframe so we can compare it to the Lake Vaughan data
+powerhouse$location <- "Powerhouse"
+
+# get last date for plot
+pwr_last_date <-  make_datetime(
+  year = 2024,
+  month = tail(powerhouse$mon, 1),
+  day = tail(powerhouse$day, 1)
+)
+
+# get total count
+library(scales)
+pwr_total_count <- signif(sum(y$total), digits = 3)
+pwr_total_count_comma <- label_comma()(pwr_total_count)
 # Combine data-frames to show difference between the sites. We need to rename
 # some of the columns because they are labelled differently and drop a column
 # that is no longer useful
