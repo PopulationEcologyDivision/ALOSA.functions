@@ -107,10 +107,6 @@ kable(
 a # the escapement estimates
 ```
 
-$~$
-$~$
-$~$
-
 ```{r ratio, fig.height = 8, echo=FALSE, fig.cap="Figure 2. Daily escapement rates at Powerhouse as a percentage of those at Lake Vaughan"}
 b # the ratio between the two sites
 ```

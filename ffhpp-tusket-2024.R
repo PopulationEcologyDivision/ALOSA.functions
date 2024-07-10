@@ -67,6 +67,9 @@ escapement$date <- ymd(paste("2024", escapement$mon, escapement$day, sep = "-"))
 
 escapement$year <- as.character(escapement$year)
 
+# Remove the NAs and NaNs from clow and chigh so the plots show the confidence intervals for all points
+escapement[is.na(escapement)] <- 0
+
 # split the years into a panel for each
 
 # in the future six panels, with year on x, site y, with
@@ -109,8 +112,8 @@ escapement %>%
   )+
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
   scale_y_continuous(
-    limits = c(0, max(escapement$total)),
-    breaks = seq(0, max(escapement$total), by = 20000)
+    limits = c(0, max(escapement$chigh)),
+    breaks = seq(0, max(escapement$chigh), by = 20000)
   )+
   theme(
     legend.position = c(0.9, 0.925),
@@ -123,6 +126,7 @@ escapement %>%
 # same manner as the previous plot
 b <-
 escapement %>%
+  #replace_na(0) %>% 
   #filter(year == 2024) %>% 
   group_by(date, year) %>%
   filter(all(c("Lake Vaughan", "Powerhouse") %in% location)) %>%
