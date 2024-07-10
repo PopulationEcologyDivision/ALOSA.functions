@@ -38,7 +38,7 @@ random.sample.2way.5min<-function(seed,startmonth,endmonth,startday,filename,
   
   ###Tusket Counts
   ###2018 seed 676, 4 strata
-  previousseeds=c(676,889,999,357,123,676,345,456,253,654,163,543,112,113,112,741)
+  previousseeds=c(889,999,357,123,676,345,456,253,654,163,543,417,147,112,113,741,222,223)
   if (seed %in% previousseeds){
     stop("Seed has already been used (2013-2020). Pick a new one and try again")
   }
