@@ -1,4 +1,6 @@
 library(tidyverse)
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
 
 # Load in count data from Lake Vaughan and Powerhouse from 2022 - 2024
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River")

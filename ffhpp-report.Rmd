@@ -11,10 +11,12 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 library(kableExtra)
+library(leaflet)
+library(leafem)
 ```
 
 ```{r data, include = FALSE}
-#source("ffhpp-tusket-2024.R")
+source("~/git/ALOSA.functions/ffhpp-tusket-2024.R")
 ```
 
 ## Video coverage
@@ -43,9 +45,6 @@ kable(
 ```
 
 ```{r map, echo=FALSE, warning=FALSE, message=FALSE}
-library(leaflet)
-library(leafem)
-
 tusket_falls <- c(-65.9732, 43.8825)
 
 tusket_points <- data.frame(
