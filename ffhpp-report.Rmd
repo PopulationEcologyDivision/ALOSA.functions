@@ -1,0 +1,117 @@
+---
+title: "Summary of gaspereau escapement estimates for the Tusket River from 2022 to 2024"
+author: "Logan Gray"
+date: "`r format(Sys.Date(), '%B %Y')`"
+fig_caption: true
+output: html_document
+---
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(kableExtra)
+```
+
+```{r data, include = FALSE}
+#source("ffhpp-tusket-2024.R")
+```
+
+## Video coverage
+
+Video footage began to be recorded at each site near the beginning of spring except for the first year of collection at the Powerhouse (Table 1). This was the first year that video was collected from that ladder and it got started later than usual. Video footage stopped being recorded in late June for both sites. In 2024, instead of watching all the video footage for the earliest days of the run, only select strata (5 and 6) were observed until April 1st as the first gaspereau usually appear in mid-April. Gaps in the footage exist at the Powerhouse across all years sampled due to technical problems with the camera. At the Powerhouse in 2022 the first large gap in footage (April 29 until May 25) does not indicate a complete lack of footage. Rather, there were multiple small gaps in the footage throughout this period.
+
+```{r, echo = FALSE}
+raw_table <- 
+"Site | Year | Start | End | First ID | Gaps
+Powerhouse | 2022 | Apr 29 | Jun 20 | May 02 | Apr 29 - May 25; Jun 06 - Jun 10
+Powerhouse | 2023 | Mar 16 | Jun 19 | Apr 19 | Apr 07 - Apr 18; Apr 22 - Apr 24
+Powerhouse | 2024 | Apr 01 | Jun 20 | Apr 16 | Apr 19 - Apr 29
+Lake Vaughan | 2022 | Apr 01 | Jun 20 | Apr 08 | NA
+Lake Vaughan | 2023 | Mar 23 | Jun 26 | Apr 15 | NA
+Lake Vaughan | 2024 | Apr 01 | Jun 20 | Apr 14 | NA"
+
+footage <- read.table(text = raw_table, header = TRUE, sep = "|", strip.white = FALSE)
+kable(
+  footage,
+  caption = "Table 1. Footage coverage for the cameras at exit chutes at the Powerhouse and Lake Vaughan fish ladders") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+  )
+```
+
+```{r map, echo=FALSE, warning=FALSE, message=FALSE}
+library(leaflet)
+library(leafem)
+
+tusket_falls <- c(-65.9732, 43.8825)
+
+tusket_points <- data.frame(
+  lng = c(-65.9782, -65.9695),
+  lat = c(43.8824, 43.8867),
+  site = c("Powerhouse", "Lake Vaughan")
+  )
+
+tusket_map <- leaflet(tusket_points) %>% 
+  setView(lng = tusket_falls[1], lat = tusket_falls[2], zoom = 15) %>% 
+  addTiles() %>% 
+  addProviderTiles("Esri.WorldGrayCanvas") %>% 
+  addCircleMarkers(lng = ~lng, lat = ~lat) %>% 
+  addLabelOnlyMarkers(
+    lng = ~lng,
+    lat = ~lat,
+    label = ~site,
+    labelOptions = labelOptions(noHide = TRUE, direction = 'top', textOnly = TRUE)
+  )
+
+tusket_map             
+```
+
+---
+
+## Summary statistics
+
+The total estimated escapement at the Powerhouse ladder ranged from approximately 1 to 8 percent of the that observed at Lake Vaughan (Table 2). The maximum escapement rates per day at the Powerhouse ladder were one to two orders of magnitude lower than those at Lake Vaughan (Table 3).
+
+```{r ratios, echo = FALSE}
+kable(
+  result,
+  caption = "Table 2. Total escapement at Powerhouse ladder as a percentage of
+  total escapement at Lake Vaughan ladder") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+    )
+```
+
+
+
+```{r, echo = FALSE}
+kable(
+  summary,
+  caption = "Table 3. Maximum and everage escapement rate (fish per day) for each ladder") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+    )
+```
+
+---
+
+## Plots
+
+```{r daily, fig.height=8, echo=FALSE, fig.cap="Figure 1. Estimates of daily escapement at Powerhouse and Lake Vaughan fish ladders from 2022 to 2024. Shading represents 95% confidence intervals where available"}
+a # the escapement estimates
+```
+
+$~$
+$~$
+$~$
+
+```{r ratio, fig.height = 8, echo=FALSE, fig.cap="Figure 2. Daily escapement rates at Powerhouse as a percentage of those at Lake Vaughan"}
+b # the ratio between the two sites
+```
