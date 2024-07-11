@@ -113,7 +113,8 @@ escapement %>%
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
   scale_y_continuous(
     limits = c(0, max(escapement$chigh)),
-    breaks = seq(0, max(escapement$chigh), by = 20000)
+    breaks = seq(0, max(escapement$chigh), by = 20000),
+    labels = comma
   )+
   theme(
     legend.position = c(0.9, 0.925),
