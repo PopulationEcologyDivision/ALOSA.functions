@@ -9,14 +9,14 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
 library(kableExtra)
 library(leaflet)
 library(leafem)
 ```
 
 ```{r data, include = FALSE}
-source("~/git/ALOSA.functions/ffhpp-tusket-2024.R")
+source("~/git/ALOSA.functions/ffhpp-tusket-2024.R", local = knitr::knit_global())
 ```
 
 ## Video coverage
