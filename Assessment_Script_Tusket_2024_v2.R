@@ -20,11 +20,11 @@ accessory_data <- read.csv("tusket-2024-vaughan-accessory-data.csv")
 # The proportions of BBs on these days will be estimated using a GLM.
 # I did this spacing weird so that it lined up.
 extra_days <- data.frame(
-  day    = c(19, 20, 21, 22, 25, 27, 28, 1,  4,  5,  8,  11, 12, 18, 19, 25, 26, 1,  2,  8,  9),
-  mon    = c(4,  4,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  6,  6,  6,  6),
-  all    = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA),
-  BB     = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA),
-  BBprop = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+  day    = c(25, 26, 1,  2,  8,  9),
+  mon    = c(5,  5,  6,  6,  6,  6),
+  all    = c(NA, NA, NA, NA, NA, NA),
+  BB     = c(NA, NA, NA, NA, NA, NA),
+  BBprop = c(NA, NA, NA, NA, NA, NA)
   )
 
 species.split <- rbind(accessory_data, extra_days)
