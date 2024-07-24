@@ -106,8 +106,8 @@ checkers("White Rock 2024 biocharacteristics data.csv") # this file has the corr
 countdata<-daily.count<-x
 
 bio.data<-bio.data[,1:11]
-colnames(bio.data)<-c("SITE_ID", "YEAR", "DAY", "MON","FISH_ID", "SPECIES_ID",
-                                       "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
+# colnames(bio.data)<-c("SITE_ID", "YEAR", "DAY", "MON","FISH_ID", "SPECIES_ID",
+#                                        "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
 biodata<-bio.data
 missingdays<-missing.days(bio.data)
 mergedays<-missingdays-1 #in both cases the two previous days are most similar in count
@@ -119,7 +119,7 @@ mergedays<-missingdays-1 #in both cases the two previous days are most similar i
 
 
 #ran June 24th 2024 to get ages for student work      
-ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
+ageing.selection.test(daily.count,bio.data,weekly=FALSE,2024,missingdays,mergedays,seed,nsamples,"A")
 scale.age<-read.csv("to be aged_rename this file.csv")
 
 #### I forget what this stuff is####
