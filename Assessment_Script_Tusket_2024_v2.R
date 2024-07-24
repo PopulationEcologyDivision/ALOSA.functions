@@ -28,6 +28,7 @@ extra_days <- data.frame(
   )
 
 species.split <- rbind(accessory_data, extra_days)
+species.split<-species.split[order(species.split$mon,species.split$day),] #orders by date
 
 # This is from Assessment_Script_Tusket_2023.R
 # Here we use a GLM to fill in the missing days with BB proportions
