@@ -36,7 +36,7 @@ species.split$day.int <- 1:nrow(species.split)
 dat <- data.frame(x = species.split$day.int, y = species.split$BBprop)
 dat <- dat[complete.cases(dat), ]
 glmfit1 <- glm(BB ~ day.int, data = species.split, offset = log(all), family = "poisson")
-out <- data.frame(day.int = 1:32, all = rep(1,32)) #all set to 1 to give proportions
+out <- data.frame(day.int = 1:max(species.split$day.int), all = rep(1,max(species.split$day.int))) #all set to 1 to give proportions
 out.predci <- predict(glmfit1, newdata = out, type = "link", se.fit = T) #list of 3
 ginv <- glmfit1$family$linkinv
 out.pred <- ginv(out.predci[[1]])
