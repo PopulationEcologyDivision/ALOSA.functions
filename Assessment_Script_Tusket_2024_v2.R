@@ -75,15 +75,51 @@ va$dayofyear <- as.integer(va$dayofyear)
 vb$dayofyear <- as.integer(vb$dayofyear)
 
 # For Powerhouse
-# ph_esc <- onespecies.river.escapement(
-#   "Powerhouse 2024 count data.csv",
-#   fixtime = T,
-#   downstream.migration = F,
-#   database = F,
-#   2024,
-#   2,
-#   channel
-# )
-# 
-# ph_esc <- round(ph_esc)
-# write.csv(ph_esc, file = "ph_in_season_summary.csv", row.names = F)
+daily.count <- twospecies.river.escapement(
+  filename = "Powerhouse 2024 count data.csv",
+  fixtime = T,
+  downstream.migration = T,
+  database = F,
+  year = 2024,
+  site = 14,
+  channel = channel,
+  species.split = species.split1
+)
+
+pa <- daily.count[[1]] # estimates for alewives at VD
+pb <- daily.count[[2]] # estimates for BBs at VD
+
+pa$dayofyear <- as.integer(pa$dayofyear)
+pb$dayofyear <- as.integer(pb$dayofyear)
+
+# Add the data frames together into a single count object.
+# We want a column named total that = a sum from each Alewife data frame.
+# This new summary data frame will be used for ageing selection.
+# We won't be ageing Blueback as they were neglible this year.
+pa$site <- "powerhouse"
+va$site <- "vaughan"
+library(dplyr)
+
+both_a <- rbind(pa, va)
+countdata <- both_a |> 
+  group_by(dayofyear) |> 
+  mutate(new_total = sum(total)) |> 
+  filter(site == "vaughan") |> 
+  select(-c(site, total, sd, clow, chigh)) |> 
+  rename(total = new_total)
+
+# Load in the biodata collected for the year
+biodata <- read.csv("vaughan_morphometric_data.csv")
+
+# Run the ageing selection function to produce CSV with scales to age
+ageing.selection.test(
+  countdata = countdata,
+  biodata = biodata,
+  weekly = TRUE,
+  year = 2024,
+  missingdays = NA,
+  mergedays = NA,
+  seed = 42069,
+  nsamples = 500,
+  species = "A" # choose this for Alewives
+  )
