@@ -20,15 +20,14 @@ accessory_data <- read.csv("tusket-2024-vaughan-accessory-data.csv")
 # The proportions of BBs on these days will be estimated using a GLM.
 # I did this spacing weird so that it lined up.
 extra_days <- data.frame(
-  day    = c(25, 26, 1,  2,  8,  9),
-  mon    = c(5,  5,  6,  6,  6,  6),
-  all    = c(NA, NA, NA, NA, NA, NA),
-  BB     = c(NA, NA, NA, NA, NA, NA),
-  BBprop = c(NA, NA, NA, NA, NA, NA)
+  day    = c(19, 20, 21, 22, 25, 27, 28, 1,  4,  5,  8,  11, 12, 18, 19, 25, 26, 1,  2,  8,  9),
+  mon    = c(4,  4,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  6,  6,  6,  6),
+  all    = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA),
+  BB     = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA),
+  BBprop = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)
   )
 
 species.split <- rbind(accessory_data, extra_days)
-species.split<-species.split[order(species.split$mon,species.split$day),] #orders by date
 
 # This is from Assessment_Script_Tusket_2023.R
 # Here we use a GLM to fill in the missing days with BB proportions
@@ -36,7 +35,7 @@ species.split$day.int <- 1:nrow(species.split)
 dat <- data.frame(x = species.split$day.int, y = species.split$BBprop)
 dat <- dat[complete.cases(dat), ]
 glmfit1 <- glm(BB ~ day.int, data = species.split, offset = log(all), family = "poisson")
-out <- data.frame(day.int = 1:max(species.split$day.int), all = rep(1,max(species.split$day.int))) #all set to 1 to give proportions
+out <- data.frame(day.int = 1:32, all = rep(1,32)) #all set to 1 to give proportions
 out.predci <- predict(glmfit1, newdata = out, type = "link", se.fit = T) #list of 3
 ginv <- glmfit1$family$linkinv
 out.pred <- ginv(out.predci[[1]])
@@ -75,51 +74,15 @@ va$dayofyear <- as.integer(va$dayofyear)
 vb$dayofyear <- as.integer(vb$dayofyear)
 
 # For Powerhouse
-daily.count <- twospecies.river.escapement(
-  filename = "Powerhouse 2024 count data.csv",
-  fixtime = T,
-  downstream.migration = T,
-  database = F,
-  year = 2024,
-  site = 14,
-  channel = channel,
-  species.split = species.split1
-)
-
-pa <- daily.count[[1]] # estimates for alewives at VD
-pb <- daily.count[[2]] # estimates for BBs at VD
-
-pa$dayofyear <- as.integer(pa$dayofyear)
-pb$dayofyear <- as.integer(pb$dayofyear)
-
-# Add the data frames together into a single count object.
-# We want a column named total that = a sum from each Alewife data frame.
-# This new summary data frame will be used for ageing selection.
-# We won't be ageing Blueback as they were neglible this year.
-pa$site <- "powerhouse"
-va$site <- "vaughan"
-library(dplyr)
-
-both_a <- rbind(pa, va)
-countdata <- both_a |> 
-  group_by(dayofyear) |> 
-  mutate(new_total = sum(total)) |> 
-  filter(site == "vaughan") |> 
-  select(-c(site, total, sd, clow, chigh)) |> 
-  rename(total = new_total)
-
-# Load in the biodata collected for the year
-biodata <- read.csv("vaughan_morphometric_data.csv")
-
-# Run the ageing selection function to produce CSV with scales to age
-ageing.selection.test(
-  countdata = countdata,
-  biodata = biodata,
-  weekly = TRUE,
-  year = 2024,
-  missingdays = NA,
-  mergedays = NA,
-  seed = 42069,
-  nsamples = 500,
-  species = "A" # choose this for Alewives
-  )
+# ph_esc <- onespecies.river.escapement(
+#   "Powerhouse 2024 count data.csv",
+#   fixtime = T,
+#   downstream.migration = F,
+#   database = F,
+#   2024,
+#   2,
+#   channel
+# )
+# 
+# ph_esc <- round(ph_esc)
+# write.csv(ph_esc, file = "ph_in_season_summary.csv", row.names = F)
