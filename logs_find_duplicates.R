@@ -38,7 +38,8 @@ if (swtch == 1) {
 } else {
   
   # If just looking for duplicates in one location, enter it here
-  test_dir = "R:\\Science\\Population Ecology Division\\DFD\\Alosa\\Freshwater Fishing Logbooks\\Logbook Scans" 
+  #test_dir = "R:\\Science\\Population Ecology Division\\DFD\\Alosa\\Freshwater Fishing Logbooks\\Logbook Scans"
+  test_dir = choose.dir(default = "R:\\Science\\Population Ecology Division\\DFD\\Alosa\\Logbooks\\Logbook Scans\\", caption = "Navigate to DIRECTORY containing the pdfs you wish you check")
   
   # Get recursive file-list from each designated location. You can change the 
   # pattern = to whatever file type you wish to search for.

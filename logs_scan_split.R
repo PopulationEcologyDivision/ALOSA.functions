@@ -19,8 +19,8 @@ library(pdftools)
 # batches instead of a single .pdf per logbook.
 
 # There is a bug in R 4.3.2 that doesn't let choose.dir work without using 
-# choose.files first for some reason. Just choose a random file on your
-# system to get the choose.dir function to work. It is weird.
+# choose.files first for some reason. Just choose "cancel" to get the choose.dir
+# function to work. It is weird.
 choose.files()
 PATH2WD = choose.dir(caption = "Navigate to DIRECTORY containing the pdfs you wish you split")
 setwd(PATH2WD)
