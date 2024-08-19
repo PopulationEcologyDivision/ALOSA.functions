@@ -3,7 +3,7 @@ log.check <- function(
     years = NA
 ){
   setwd("R:/Science/Population Ecology Division/DFD/Alosa/Freshwater Fishing Logbooks/Logbook Scans")
-  if(length(years)>1){
+  if(length(years)>=1){
     prefix_df <- data.frame(LICENCE_ID = character(0), stringsAsFactors = FALSE)
     for (i in 1:length(years)){
     setwd(paste(as.character(years[i]), "_FFLR_Scans_Gaspereau", sep = ""))
