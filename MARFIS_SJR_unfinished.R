@@ -192,3 +192,28 @@ non.sj.tribs<-c("MAGAGUADAVIC","TANTRAMAR","SAINT CROIX","AULAC","MISSAQUASH",
 catch.problems<-catch.NB[catch.NB$RIVERNAME_CLEANED %in% problems,]
 
 
+
+####random code ####
+catch$YEAR<-as.integer(catch$YEAR)
+catch$MONTH<-as.integer(catch$MONTH)
+catch$DAY<-as.integer(catch$DAY)
+
+print.early.catch<-function(catch)
+{
+  lics<-unique(catch$LICENCE_ID)
+  lics<-lics[!is.na(lics)]
+  years<-2008:2024
+  out<-matrix(data=NA,nrow=length(years),ncol=length(lics))
+  out<-as.data.frame(out)
+  colnames(out)<-lics
+  out<- data.frame(lapply(out, as.Date))
+  for(year in 1:length(years))
+  {
+    for(lic in 1:length(lics))
+    {
+      out[year,lic]<-min(catch$date[catch$LICENCE_ID==lics[lic] & catch$YEAR==years[year]],na.rm=T)
+      if(out[year,lic]==Inf){out[year,lic]<-NA}
+    }
+  }
+  return(out)
+}
