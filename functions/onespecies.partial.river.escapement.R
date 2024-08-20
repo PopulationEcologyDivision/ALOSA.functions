@@ -174,13 +174,22 @@ onespecies.partial.river.escapement<-function(filename,
   days<-start.end[1]:start.end[2]
   count.days<-setdiff(days,no.count.days)
   butcher.ls<-list()
-  butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]
-  for(i in 2:length(no.count.days))
+  for(i in 1:length(no.count.days))
   {
-    butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
-                                    summary.data$dayofyear<no.count.days[i],]
+    if(i==1){butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]}
+    else {
+      butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
+                                      summary.data$dayofyear<no.count.days[i],]
+    }
   }
   butcher.ls[[length(no.count.days)+1]]<-summary.data[summary.data$dayofyear>max(no.count.days),]
+  # butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]
+  # for(i in 2:length(no.count.days))
+  # {
+  #   butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
+  #                                   summary.data$dayofyear<no.count.days[i],]
+  # }
+  # butcher.ls[[length(no.count.days)+1]]<-summary.data[summary.data$dayofyear>max(no.count.days),]
   
   
   # summary.data1<-summary.data[summary.data$dayofyear<min(no.count.days),]
