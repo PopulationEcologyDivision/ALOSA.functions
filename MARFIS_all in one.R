@@ -122,35 +122,7 @@ RIVER.summary("TUSKET",
 #write.csv(annualcatch.GAS,file="Gaspereau Catch in KGS.csv",na="",row.names=F)
 
 
-####Pull filenames from logbooks scans####
-directory<-"R:/Science/Population Ecology Division/DFD/Alosa/Freshwater Fishing Logbooks/Logbook Scans/2021_FFLR_Scans_Gaspereau"
-j<-check.for.missing.logbook.scans(directory = directory,
-                                   year=2021,
-                                   catch = catch,
-                                   DNF.file = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/DNF_confirmed.csv",
-                                   write=T)
 
-#2022, but not all logs have been checked over yet, or even scanned. 
-#just use the first output, logs with catch that weren't scanned
-directory<-"R:/Science/Population Ecology Division/DFD/Alosa/Freshwater Fishing Logbooks/Logbook Scans/2022_FFLR_Scans_Gaspereau"
-check.for.missing.logbook.scans(directory = directory,
-                                   year=2022,
-                                   catch = catch,
-                                   DNF.file = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/DNF_confirmed.csv")
-
-#2023, but not all logs have been checked over yet, or even scanned. 
-#just use the first output, logs with catch that weren't scanned
-directory<-"R:/Science/Population Ecology Division/DFD/Alosa/Freshwater Fishing Logbooks/Logbook Scans/2023_FFLR_Scans_Gaspereau"
-check.for.missing.logbook.scans(directory = directory,
-                                year=2023,
-                                catch = catch,
-                                DNF.file = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/DNF_confirmed.csv")
-##get logs that were scanned for each year
-#2022
-directory<-"R:/Science/Population Ecology Division/DFD/Alosa/Freshwater Fishing Logbooks/Logbook Scans/2023_FFLR_Scans_Gaspereau"
-x<-list.files(directory,recursive=T)
-log.scans<-gsub(".*/([0-9]{6}).*","\\1",x)
-log.scans<-unique(as.integer(log.scans)) #might give warnings, thats fine
 
 #---===---===---===---===---===---===---===---===---===---===---===---===---===
 #  ```````````````````````````````````````````````````````````````````````````` 
