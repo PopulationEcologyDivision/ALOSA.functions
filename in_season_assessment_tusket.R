@@ -30,11 +30,11 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 in_season_assessment_tusket <- function(
-    year = as.integer(format(Sys.Date(), "%Y")),
-    powerhouse = FALSE,
-    output_folder = path.expand("~"),
-    new_season = FALSE) {
-  
+  year = as.integer(format(Sys.Date(), "%Y")),
+  powerhouse = FALSE,
+  output_folder = path.expand("~")
+  ){
+
   # Setup ####
   library(tidyverse, quietly = TRUE)
   library(scales, quietly = TRUE)
@@ -52,68 +52,6 @@ in_season_assessment_tusket <- function(
     dbname = "PTRAN",
     believeNRows = FALSE
   )
-  
-  # New season ####
-  if (new_season == TRUE) {
-    message("Checking to see if data files already exist to preven overwriting.")
-    vaughan_file_check <-
-      paste0(output_folder, "/Vaughan ", year, " count data.csv")
-    powerhouse_file_check <-
-      paste0(output_folder, "/Powerhouse ", year, " count data.csv")
-    
-    if (file.exists(vaughan_file_check)) {
-      return("Files already exist in your output folder,
-             stopping here so as not to overwrite!")
-    }
-    
-    if (file.exists(powerhouse_file_check)) {
-      return("Files already exist in your output folder,
-             stopping here so as not to overwrite!")
-    }
-    
-    # Run at beginning of new season to create 
-    
-    project_dir <- getwd()
-    setwd(output_folder)
-    
-    message("Creating blank data sheet for Lake Vaughan")
-    
-    blank.datasheets(
-      seed = 112,
-      startmonth = 3,
-      endmonth = 6,
-      startday = 1,
-      rivername = "Vaughan",
-      year = year,
-      recordtime = T,
-      speciesID = T,
-      strata = 6,
-      samplesperstrata = 4
-    )
-    
-    message("Creating blank data sheet for Powerhouse")
-    
-    blank.datasheets(
-      seed = 113,
-      startmonth = 3,
-      endmonth = 6,
-      startday = 15,
-      rivername = "Powerhouse",
-      year = year,
-      recordtime = T,
-      speciesID = T,
-      strata = 6,
-      samplesperstrata = 4
-    )
-    
-    message(paste0(
-      "Blank data sheets for count saved to output folder: ",
-      output_folder
-    ))
-    
-    return("CSVs for counts created - exiting function \n")
-    
-  }
   
   # Estimate escapement ####
   
