@@ -516,43 +516,44 @@ post_season_assessment_tusket <-
     )
     
     ## Species escapement ####
-    species_escapement_plot <- counts_species |>
-      group_by(species) |>
-      ggplot(aes(date, total)) +
-      geom_path(aes(colour = species, fill = species), size = 1) +
-      theme_bw() +
-      labs(
-        title = paste0(
-          "Total daily escapement estimates for gaspereau by species \nfor ",
-          year
+    if (year >= 2022) {
+      species_escapement_plot <- counts_species |>
+        group_by(species) |>
+        ggplot(aes(date, total)) +
+        geom_path(aes(colour = species, fill = species), size = 1) +
+        theme_bw() +
+        labs(
+          title = paste0(
+            "Total daily escapement estimates for gaspereau by species \nfor ",
+            year
+          ),
+          x = "Date",
+          y = "fish / day",
+          colour = "species",
+          fill = "species"
+        ) +
+        scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+        scale_y_continuous(
+          limits = c(0, max(counts_species$total)),
+          breaks = seq(0, max(counts_species$total), by = 10000),
+          labels = scales::comma
+        ) +
+        theme(axis.text.x = element_text(
+          angle = 45,
+          vjust = 1,
+          hjust = 1
         ),
-        x = "Date",
-        y = "fish / day",
-        colour = "species",
-        fill = "species"
-      ) +
-      scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
-      scale_y_continuous(
-        limits = c(0, max(counts_species$total)),
-        breaks = seq(0, max(counts_species$total), by = 10000),
-        labels = scales::comma
-      ) +
-      theme(axis.text.x = element_text(
-        angle = 45,
-        vjust = 1,
-        hjust = 1
-      ),
-      axis.title.x = element_blank())
-    
-    # Obviously one has to tinker here to make this supremely beautiful
-    plot_path <-
-      paste0(output_folder, "/species_escapement_plot.png")
-    ggsave(
-      plot_path,
-      plot = species_escapement_plot,
-      width = 6,
-      height = 4,
-      dpi = 300
-    )
-    
+        axis.title.x = element_blank())
+      
+      # Obviously one has to tinker here to make this supremely beautiful
+      plot_path <-
+        paste0(output_folder, "/species_escapement_plot.png")
+      ggsave(
+        plot_path,
+        plot = species_escapement_plot,
+        width = 6,
+        height = 4,
+        dpi = 300
+      )
+    }
   }
