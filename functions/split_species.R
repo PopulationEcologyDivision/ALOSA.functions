@@ -13,7 +13,7 @@
 # 
 # biodata_file = character; file path for CSV of biodata
 # 
-# accessory_data = logical; are there accessory data (i.e. additional species 
+# accessory_data = logical; are there accessory data (i.e. additional species
 # IDs) that should be added to the biological data? This is only used when 
 # database is FALSE as the accessory data are automatically used from the 
 # database if the year is >= 2022.
@@ -31,21 +31,19 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 split_species <- function(
-    database = FALSE,
-    biodata_file = NA,
-    accessory_data = FALSE,
-    accessory_file = NA,
-    site_id = NA,
-    year = NA
-    ) {
+  database = FALSE,
+  biodata_file = NA,
+  accessory_data = FALSE,
+  accessory_file = NA,
+  site_id = NA,
+  year = NA
+) {
   
   library(tidyverse)
   
   # Database = FALSE ####
   if (database == FALSE) {
     biodata <- read.csv(biodata_file)
-    #cat("Select your bio-data file (should be CSV)\n")
-    #biodata <- read.csv(choose.files(caption = "Select your bio-data file (should be CSV)"))
     colnames(biodata) <- toupper(colnames(biodata))
     
     # These are some commonly used column names for the three main variables we
@@ -95,7 +93,7 @@ split_species <- function(
     # Database connection
     # These values should already entered in your .Rprofile
     library(ROracle)
-    channel = dbConnect(
+    channel <- dbConnect(
       DBI::dbDriver("Oracle"),
       oracle.username.GASP,
       oracle.password.GASP,
@@ -147,7 +145,8 @@ split_species <- function(
   biodata$SPECIES_ID[biodata$SPECIES_ID %in% blueback_names]  <- "B"
   
   # Proportions ####
-  # Calculate proportions
+  # Calculate the proportion of the escapement estimate for gaspereau that are
+  # bluebacks based on the proportions of bluebacks we observed on each date
   proportions <- biodata |>
     mutate(date = make_date(year, MON, DAY)) |>
     group_by(date) |>
@@ -157,11 +156,8 @@ split_species <- function(
       BB = sum(SPECIES_ID == "B"),
       BB_prop = BB / total
     ) |>
-    #select(date, total, A, BB, BB_prop)
     select(date, A, BB, BB_prop)
   
   return(proportions)
   
 }
-
-
