@@ -162,46 +162,54 @@ post_season_assessment_tusket <- function(
     channel = channel
   )
   
-  # If we are including PH estimates for escapement, combine them with the
-  # estimates for VD so we have a single estimate.
-  if (powerhouse == TRUE) {
-    counts_species <- counts |>
-      group_by(year, mon, day) |>
-      summarise(
-        total = sum(total),
-        sd = sum(sd),
-        clow = sum(clow),
-        chigh = sum(chigh)
-      ) |>
-      mutate(date = make_date(year, mon, day)) |>
-      ungroup() |>
-      select(date, total, clow, chigh) |>
-      inner_join(proportions, by = "date") |>
-      mutate(B = total * BB_prop, A = total - B) |>
-      select(date, A, B) |>
-      pivot_longer(cols = c(A, B),
-                   names_to = "species",
-                   values_to = "total") |>
-      mutate(species = str_replace(species, "A", "Alewives")) |>
-      mutate(species = str_replace(species, "B", "Bluebacks")) |>
-      ungroup()
+  # Use the species proportions calculated above to divide the escapement
+  # estimates into species A and B. If we are including PH, combine these 
+  # observations with VD estimates so we have a single estimate.
+  if (nrow(proportions) == 0) {
     
-  }
+    print(paste0("No proportions were able to be calculated for ", year))
   
-  if (powerhouse == FALSE) {
-    counts_species <- counts |>
-      mutate(date = make_date(year, mon, day)) |>
-      select(date, total, clow, chigh) |>
-      inner_join(proportions, by = "date") |>
-      mutate(B = total * BB_prop, A = total - B) |>
-      select(date, A, B) |>
-      pivot_longer(cols = c(A, B),
-                   names_to = "species",
-                   values_to = "total") |>
-      mutate(species = str_replace(species, "A", "Alewives")) |>
-      mutate(species = str_replace(species, "B", "Bluebacks")) |>
-      ungroup()
+  } else {
     
+    if (powerhouse == TRUE) {
+      counts_species <- counts |>
+        group_by(year, mon, day) |>
+        summarise(
+          total = sum(total),
+          sd = sum(sd),
+          clow = sum(clow),
+          chigh = sum(chigh)
+        ) |>
+        mutate(date = make_date(year, mon, day)) |>
+        ungroup() |>
+        select(date, total, clow, chigh) |>
+        inner_join(proportions, by = "date") |>
+        mutate(B = total * BB_prop, A = total - B) |>
+        select(date, A, B) |>
+        pivot_longer(cols = c(A, B),
+                     names_to = "species",
+                     values_to = "total") |>
+        mutate(species = str_replace(species, "A", "Alewives")) |>
+        mutate(species = str_replace(species, "B", "Bluebacks")) |>
+        ungroup()
+      
+    }
+    
+    if (powerhouse == FALSE) {
+      counts_species <- counts |>
+        mutate(date = make_date(year, mon, day)) |>
+        select(date, total, clow, chigh) |>
+        inner_join(proportions, by = "date") |>
+        mutate(B = total * BB_prop, A = total - B) |>
+        select(date, A, B) |>
+        pivot_longer(cols = c(A, B),
+                     names_to = "species",
+                     values_to = "total") |>
+        mutate(species = str_replace(species, "A", "Alewives")) |>
+        mutate(species = str_replace(species, "B", "Bluebacks")) |>
+        ungroup()
+      
+    }
   }
   
   # Plots ####
@@ -452,44 +460,53 @@ post_season_assessment_tusket <- function(
   )
   
   ## Species escapement ####
-  # if (year >= 2022) {
-  #   species_escapement_plot <- counts_species |>
-  #     group_by(species) |>
-  #     ggplot(aes(date, total)) +
-  #     geom_path(aes(colour = species, fill = species), size = 1) +
-  #     theme_bw() +
-  #     labs(
-  #       title = paste0(
-  #         "Total daily escapement estimates for gaspereau by species \nfor ",
-  #         year
-  #       ),
-  #       x = "Date",
-  #       y = "fish / day",
-  #       colour = "species",
-  #       fill = "species"
-  #     ) +
-  #     scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
-  #     scale_y_continuous(
-  #       limits = c(0, max(counts_species$total)),
-  #       breaks = seq(0, max(counts_species$total), by = 10000),
-  #       labels = scales::comma
-  #     ) +
-  #     theme(axis.text.x = element_text(
-  #       angle = 45,
-  #       vjust = 1,
-  #       hjust = 1
-  #     ),
-  #     axis.title.x = element_blank())
-  #   
-  #   # Obviously one has to tinker here to make this supremely beautiful
-  #   plot_path <-
-  #     paste0(output_folder, "/species_escapement_plot.png")
-  #   ggsave(
-  #     plot_path,
-  #     plot = species_escapement_plot,
-  #     width = 6,
-  #     height = 4,
-  #     dpi = 300
-  #   )
-  # }
+  if (nrow(proportions) == 0) {
+    
+    message("No species escapement plot created as the species were not split.")
+    return()
+  
+  } else {
+    
+    if (year >= 2022) {
+      species_escapement_plot <- counts_species |>
+        group_by(species) |>
+        ggplot(aes(date, total)) +
+        geom_path(aes(colour = species, fill = species), size = 1) +
+        theme_bw() +
+        labs(
+          title = paste0(
+            "Total daily escapement estimates for gaspereau by species \nfor ",
+            year
+          ),
+          x = "Date",
+          y = "fish / day",
+          colour = "species",
+          fill = "species"
+        ) +
+        scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+        scale_y_continuous(
+          limits = c(0, max(counts_species$total)),
+          breaks = seq(0, max(counts_species$total), by = 10000),
+          labels = scales::comma
+        ) +
+        theme(axis.text.x = element_text(
+          angle = 45,
+          vjust = 1,
+          hjust = 1
+        ),
+        axis.title.x = element_blank())
+      
+      # Obviously one has to tinker here to make this supremely beautiful
+      plot_path <-
+        paste0(output_folder, "/species_escapement_plot.png")
+      ggsave(
+        plot_path,
+        plot = species_escapement_plot,
+        width = 6,
+        height = 4,
+        dpi = 300
+      )
+    }
+  }
+  
 }
