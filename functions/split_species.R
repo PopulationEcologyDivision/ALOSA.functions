@@ -108,12 +108,10 @@ split_species <- function(year, siteID, channel, biodata_CSV = NULL) {
       total_fish = n(),
       A = sum(SPECIES_ID == "A"),
       BB = sum(SPECIES_ID == "B"),
-      BBprop = BB / total_fish,
-      MON = MON,
-      DAY = DAY
+      BBprop = BB / total_fish
     ) |>
-    select(date, total_fish, A, BB, BBprop, MON, DAY) |> 
-    rename(mon = MON, day = DAY)
+    select(date, total_fish, A, BB, BBprop) |>
+    mutate(mon = month(date), day = day(date))
   
   return(proportions)
   
