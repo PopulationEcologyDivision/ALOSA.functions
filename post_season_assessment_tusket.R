@@ -184,7 +184,7 @@ post_season_assessment_tusket <- function(
         ungroup() |>
         select(date, total, clow, chigh) |>
         inner_join(proportions, by = "date") |>
-        mutate(B = total * BB_prop, A = total - B) |>
+        mutate(B = total * BBprop, A = total - B) |>
         select(date, A, B) |>
         pivot_longer(cols = c(A, B),
                      names_to = "species",
@@ -200,7 +200,7 @@ post_season_assessment_tusket <- function(
         mutate(date = make_date(year, mon, day)) |>
         select(date, total, clow, chigh) |>
         inner_join(proportions, by = "date") |>
-        mutate(B = total * BB_prop, A = total - B) |>
+        mutate(B = total * BBprop, A = total - B) |>
         select(date, A, B) |>
         pivot_longer(cols = c(A, B),
                      names_to = "species",
