@@ -22,9 +22,6 @@
 # Created: 2024-08-27 by Logan Gray
 #
 # Current issues:  ¯\_(ツ)_/¯
-# - When year = 2023, the species plot has limited range of days - I think it is
-# something to do with the date where the calculation starts?
-# - When year = 2024, the data are not uploaded yet so it don-wanna-werk
 # - When powerhouse = TRUE, need to use local data as the db ones are impure
 #
 # To do:
@@ -39,6 +36,7 @@ post_season_assessment_tusket <- function(
 ) {
   
   # Libraries ####
+  suppressPackageStartupMessages(library(scales))
   library(tidyverse, quietly = TRUE)
   options(dplyr.summarise.inform = FALSE)
   library(scales, quietly = TRUE)
@@ -508,14 +506,18 @@ post_season_assessment_tusket <- function(
     }
   }
   
+  total_count_vd <- format(round(total_count_vd), big.mark = ",", scientific = FALSE)
+  total_count_ph <- format(round(total_count_ph), big.mark = ",", scientific = FALSE)
+  total_count <- format(round(total_count), big.mark = ",", scientific = FALSE)
+  
   # Print totals
   if (powerhouse == FALSE) {
-    message("Total escapement estimate for Lake Vaughan: ", round(total_count_vd))
+    message("Total escapement estimate for Lake Vaughan: ", total_count_vd)
   }
   
   if (powerhouse == TRUE) {
-    message("Total escapement estimate for Lake Vaughan: ", round(total_count_vd))
-    message("Total escapement estimate for Powerhouse:    ", round(total_count_ph))
-    message("Total escapement:                           ", round(total_count))
+    message("Total escapement estimate for Lake Vaughan: ", total_count_vd)
+    message("Total escapement estimate for Powerhouse:     ", total_count_ph)
+    message("Total escapement:                           ", total_count)
   }
 }
