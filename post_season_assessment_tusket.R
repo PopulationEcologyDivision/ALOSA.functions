@@ -47,15 +47,6 @@ post_season_assessment_tusket <- function(
   sourcery() # Load functions
 
   # Haul count data ####
-  message(paste0("Getting count data for Vaughan Dam for ", year))
-  
-  countdata <- dbReadTable(channel, "ALOSA_VIDEO_COUNT_DATA")
-  vd_file <- countdata |> filter(YEAR == year & SITE_ID == 2)
-  
-  if (powerhouse == TRUE) {
-    message(paste0("Getting count data for Powerhouse for ", year))
-    ph_file <- countdata |> filter(YEAR == year & SITE_ID == 14)
-  }
   
   ### Estimate escapement VD ####
   message("Estimating escapement at Vaughan Dam")
@@ -63,8 +54,9 @@ post_season_assessment_tusket <- function(
   while (sink.number() > 0) {sink()}
   sink(tempfile()) # this prevents info from being printed to console
   on.exit(sink(), add = TRUE)  # this prevents info from being printed to console
+  # You only need a value for the filename arugment here if you are using data
+  # from CSV, which we are not.
   counts <- onespecies.river.escapement(
-    vd_file,
     fixtime = TRUE,
     downstream.migration = FALSE,
     database = TRUE,
@@ -74,6 +66,7 @@ post_season_assessment_tusket <- function(
   )
   counts$year <- as.character(year)
   counts$location <- "Lake Vaughan"
+  total_count_vd <- sum(counts$total)
   
   ## Estimate escapement PH ####
   # The PH data are troublesome for the earlier years, so we need to tinker
@@ -102,6 +95,8 @@ post_season_assessment_tusket <- function(
       )
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
+      total_count_ph <- sum(ph_counts$total)
+      
     }
     
     if (year == 2023) {
@@ -119,6 +114,8 @@ post_season_assessment_tusket <- function(
       )
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
+      total_count_ph <- sum(ph_counts$total)
+      
     }
     
     if (year >= 2024) {
@@ -126,19 +123,21 @@ post_season_assessment_tusket <- function(
       sink(tempfile()) # this prevents info from being printed to console
       on.exit(sink(), add = TRUE)  # this prevents info from being printed to console
       ph_counts <- onespecies.river.escapement(
-        ph_file,
         fixtime = FALSE,
         downstream.migration = FALSE,
         database = TRUE,
         year = year,
-        site = 2,
+        site = 14,
         channel = channel
       )
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
+      total_count_ph <- sum(ph_counts$total)
+      
     }
     
     counts <- rbind(counts, ph_counts)
+    total_count <- sum(counts$total)
     
   }
   
@@ -509,4 +508,14 @@ post_season_assessment_tusket <- function(
     }
   }
   
+  # Print totals
+  if (powerhouse == FALSE) {
+    message("Total escapement estimate for Lake Vaughan: ", round(total_count_vd))
+  }
+  
+  if (powerhouse == TRUE) {
+    message("Total escapement estimate for Lake Vaughan: ", round(total_count_vd))
+    message("Total escapement estimate for Powerhouse:    ", round(total_count_ph))
+    message("Total escapement:                           ", round(total_count))
+  }
 }
