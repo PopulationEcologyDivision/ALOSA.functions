@@ -51,7 +51,7 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau Rive
 # channel=channel
 
 x<-onespecies.river.escapement("White Rock 2024 count data.csv",fixtime=T,database=F,downstream.migration = F,2024,3,channel)
-
+y<-onespecies.river.escapement("Lanes Mills 2024 count data.csv",fixtime=F,database=F,downstream.migration = F,2024,3,channel)
 # x<-onespecies.partial.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
 
 x<-round(x)
@@ -177,11 +177,31 @@ counts.sub1$camera.desc<-NA
 counts.sub1$minutes<-NA
 counts.sub1$seconds<-NA
 
-write.csv(counts.sub1,"White Rock 2024 RECOUNTS.csv",row.names=F,na="")
+# write.csv(counts.sub1,"White Rock 2024 RECOUNTS.csv",row.names=F,na="")
 
+#recounts are msotly complete, lets take a look
+wr.recounts<-read.csv("White Rock 2024 RECOUNTS.csv")
+#remove outlier
+wr.recounts<-wr.recounts[-148,]
+#make a key column for easy subsetting
+counts$dmt<-as.integer(paste0(paste0(counts$mon,counts$day,sep=""),counts$time,sep=""))
+wr.recounts$dmt<-as.integer(paste0(paste0(wr.recounts$mon,wr.recounts$day,sep=""),wr.recounts$time,sep=""))
+#get the original counts into the recount df
+for(i in 1:nrow(wr.recounts))
+{
+  wr.recounts$og.up[i]<-counts$count.upstream[counts$dmt==wr.recounts$dmt[i]]
+  wr.recounts$og.down[i]<-counts$count.downstream[counts$dmt==wr.recounts$dmt[i]]
+}
+
+
+wr.recounts$quot<-wr.recounts$count.upstream/wr.recounts$og.up
+wr.recounts$per.diff<-(wr.recounts$count.upstream-wr.recounts$og.up)/wr.recounts$og.up
+NSP.bias<-sum(wr.recounts$count.upstream,na.rm=T)/sum(wr.recounts$og.up,na.rm=T)
+
+plot(wr.recounts$per.diff)
 
 ##testing ageing selection
-names(scale.age)[names(scale.age)=='sample']<-'FISH_ID'
-scale.age1<-merge(scale.age,biodata.with.weights,by.x="FISH_ID")
-
-n.selected<-aggregate(scale.age1$weighting,by=list(scale.age1$weighting),FUN=function(x){length(x[!is.na(x)])})
+# names(scale.age)[names(scale.age)=='sample']<-'FISH_ID'
+# scale.age1<-merge(scale.age,biodata.with.weights,by.x="FISH_ID")
+# 
+# n.selected<-aggregate(scale.age1$weighting,by=list(scale.age1$weighting),FUN=function(x){length(x[!is.na(x)])})
