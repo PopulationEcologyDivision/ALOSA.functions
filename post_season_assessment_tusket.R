@@ -65,6 +65,8 @@ post_season_assessment_tusket <- function(
   counts$year <- as.character(year)
   counts$location <- "Lake Vaughan"
   total_count_vd <- sum(counts$total)
+  total_count_vd <- format(round(total_count_vd), big.mark = ",", scientific = FALSE)
+  
   
   ## Estimate escapement PH ####
   # The PH data are troublesome for the earlier years, so we need to tinker
@@ -94,6 +96,7 @@ post_season_assessment_tusket <- function(
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
       total_count_ph <- sum(ph_counts$total)
+      total_count_ph <- format(round(total_count_ph), big.mark = ",", scientific = FALSE)
       
     }
     
@@ -113,6 +116,7 @@ post_season_assessment_tusket <- function(
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
       total_count_ph <- sum(ph_counts$total)
+      total_count_ph <- format(round(total_count_ph), big.mark = ",", scientific = FALSE)
       
     }
     
@@ -131,11 +135,13 @@ post_season_assessment_tusket <- function(
       ph_counts$year <- as.character(year)
       ph_counts$location <- "Powerhouse"
       total_count_ph <- sum(ph_counts$total)
+      total_count_ph <- format(round(total_count_ph), big.mark = ",", scientific = FALSE)
       
     }
     
     counts <- rbind(counts, ph_counts)
     total_count <- sum(counts$total)
+    total_count <- format(round(total_count), big.mark = ",", scientific = FALSE)
     
   }
   
@@ -460,7 +466,6 @@ post_season_assessment_tusket <- function(
   if (nrow(proportions) == 0) {
     
     message("No species escapement plot created as the species were not split.")
-    return()
   
   } else {
     
@@ -505,10 +510,6 @@ post_season_assessment_tusket <- function(
       )
     }
   }
-  
-  total_count_vd <- format(round(total_count_vd), big.mark = ",", scientific = FALSE)
-  total_count_ph <- format(round(total_count_ph), big.mark = ",", scientific = FALSE)
-  total_count <- format(round(total_count), big.mark = ",", scientific = FALSE)
   
   # Print totals
   if (powerhouse == FALSE) {
