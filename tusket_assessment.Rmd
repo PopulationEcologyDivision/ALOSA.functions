@@ -1,0 +1,740 @@
+The purpose of this markdown file is to have a place where we can:
+- prep the data sheets pre-season
+- deal with data and do plots in-season for communications
+- do analysis and plots for communications post-season
+
+Ideally, this file can be used between years without much changing, where the
+year previous to the current one acts as a template. We can use the chunk option
+`include=FALSE` to turn a chunk on or off so that we can run the entire file
+by clicking the "Run" button at the top of the file in Rstudio.
+
+# Setup
+```{r library_and_connection}
+# Library
+library(tidyverse)
+library(padr) # for dates
+library(ROracle)
+library(imputeTS)
+
+# Constants
+current_year <- format(Sys.Date(), "%Y")
+```
+
+```{r source_ALOSA_functions, warning=FALSE}
+# Source necessary functions from the Alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+```
+
+```{r database_connection}
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+```
+
+# Pre-season
+
+Only run this at the beginning of the season to generate the files we will be
+filling out with data throughout the season. Set `include=TRUE` for when you
+want to create sheets, other wise it should always be set to FALSE.
+
+```{r create_data_sheets, include=FALSE}
+
+# Creates blank data sheets for counts and biodata for Lake Vaughan
+blank.datasheets(
+  seed = 112,
+  startmonth = 3,
+  endmonth = 6,
+  startday = 1,
+  rivername = "Vaughan",
+  year = 2023,
+  recordtime = T,
+  speciesID = T,
+  strata = 6,
+  samplesperstrata = 4
+)
+
+# Creates blank data sheets for counts and biodata for Powerhouse
+blank.datasheets(
+  seed = 113,
+  startmonth = 3,
+  endmonth = 6,
+  startday = 15,
+  rivername = "Powerhouse",
+  year = 2023,
+  recordtime = T,
+  speciesID = T,
+  strata = 6,
+  samplesperstrata = 4
+)
+
+```
+
+# In-season
+
+```{r escapement_vd, warning=FALSE, message=FALSE}
+# Locate your CSV for counts
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
+
+# Run escapement script
+# Note: arguments year, site, and channel don't matter when database = FALSE
+escapement_vd <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = current_year,
+  site = 2,
+  channel = channel
+)
+
+# We want to add where the data are from
+escapement_vd$location <- "Lake Vaughan"
+
+# Write these data to CSV so we can share them in emails
+# output_folder <- "your/output/folder/goes/here"
+# 
+# write.csv(
+#   escapement_vd,
+#   file = paste0(output_folder, "/vd_in_season_summary.csv"),
+#   row.names = FALSE
+# )
+
+vd <- escapement_vd %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+vd <- vd |> mutate(date = make_date(2024, mon, day))
+
+#in_season_vd_escapement_plot <-
+vd |>
+  ggplot(aes(date, total)) +
+  geom_path(
+    colour = "#7ECDBB",
+    alpha = 0.9,
+    linewidth = 1.25
+    ) +
+  geom_ribbon(
+    aes(ymin = clow, ymax = chigh),
+    fill = "#7ECDBB",
+    colour = "grey90",
+    alpha = 0.2
+  ) +
+  theme_bw() +
+  labs(
+    title = paste0("Gaspereau escapement for Lake Vaughan Dam for 2024"),
+    x = "Date",
+    y = "fish / day"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "3 days") +
+  scale_y_continuous(
+    limits = c(0, max(vd$chigh)),
+    breaks = seq(0, max(vd$chigh), by = 10000),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+      ),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank()
+    )
+
+# plot_path <- paste0(output_folder, "/in_season_vd_escapement_plot.png")
+#     
+#     ggsave(
+#       plot_path,
+#       plot = in_season_vd_escapement_plot,
+#       width = 6,
+#       height = 4,
+#       dpi = 300
+#     )
+```
+
+```{r escapement_ph, message=FALSE, warning=FALSE}
+# Locate your CSV for counts
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"
+
+# Run escapement script
+# Note: arguments year, site, and channel don't matter when database = FALSE
+escapement_ph <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = current_year,
+  site = 14,
+  channel = channel
+)
+
+# We want to add where the data are from
+escapement_ph$location <- "Powerhouse"
+
+# Write these data to CSV so we can share them in emails
+# output_folder <- "your/output/folder/goes/here"
+# 
+# write.csv(
+#   escapement_ph,
+#   file = paste0(output_folder, "/ph_in_season_summary.csv"),
+#   row.names = FALSE
+# )
+
+ph <- escapement_ph %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+ph <- ph |> mutate(date = make_date(2024, mon, day))
+
+#in_season_ph_escapement_plot <-
+ph |>
+  ggplot(aes(date, total)) +
+  geom_path(
+    colour = "#7ECDBB",
+    alpha = 0.9,
+    linewidth = 1.25
+    ) +
+  geom_ribbon(
+    aes(ymin = clow, ymax = chigh),
+    fill = "#7ECDBB",
+    colour = "grey90",
+    alpha = 0.2
+  ) +
+  theme_bw() +
+  labs(
+    title = paste0("Gaspereau escapement for Powerhouse for 2024"),
+    x = "Date",
+    y = "fish / day"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "2 days") +
+  scale_y_continuous(
+    limits = c(0, max(ph$chigh)),
+    breaks = seq(0, max(ph$chigh), by = 1000),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# plot_path <- paste0(output_folder, "/in_season_ph_escapement_plot.png")
+#     
+#     ggsave(
+#       plot_path,
+#       plot = in_season_ph_escapement_plot,
+#       width = 6,
+#       height = 4,
+#       dpi = 300
+#     )
+```
+
+```{r compare_vd}
+# Set up a function to haul data from the db for VD
+get_VD_multiple_years <- function() {
+  
+  counts_df <- data.frame()
+  
+  # You can change how many years you want here
+  get_years <- seq(as.integer(current_year) - 5, as.integer(current_year) - 1)
+  
+  for (i in get_years) {
+    tryCatch({
+      year_data <- onespecies.river.escapement(
+        filename = "dummy_file_name",
+        fixtime = TRUE,
+        downstream.migration = TRUE,
+        database = TRUE,
+        year = i,
+        site = 2,
+        channel = channel
+      )
+      
+      year_data$year <- i
+      
+      counts_df <- rbind(counts_df, year_data)
+      
+    }, error = function(e) {
+      
+      return(counts_df)
+      
+    })
+    
+  }
+  
+  return(counts_df)
+  
+}
+
+multi_year_counts <- get_VD_multiple_years()
+
+vd$year <- current_year
+vd <- vd |> select(-location, -date)
+
+multi_year_counts <- rbind(multi_year_counts, vd)
+
+# Make sure to filter before creating dates because this screws them up ¯\_(ツ)_/¯
+multi_year_counts <- multi_year_counts %>%
+  mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+# You make these all have the same year in their date so they plot nicely
+multi_year_counts <- multi_year_counts |>
+  mutate(date = make_date(as.character(current_year), mon, day))
+
+multi_year_counts$year <- as.character(multi_year_counts$year)
+
+# I use the %>% pipe here to use "." to filter data ¯\_(ツ)_/¯
+multi_year_counts %>%
+  group_by(year) %>%
+  ggplot(aes(date, total)) +
+  geom_path(
+    aes(colour = year),
+    alpha = if_else(multi_year_counts$year != current_year, 0.3, 0.8),
+    linewidth = if_else(multi_year_counts$year != current_year, 0.8, 1.2),
+    na.rm = TRUE
+  )+
+  geom_ribbon(
+    data = . %>% filter(year == 2024),
+    aes(ymin = clow, ymax = chigh),
+    fill = "#e76bf3",
+    colour = "#e76bf3",
+    alpha = 0.2
+  )+
+  theme_bw() +
+  labs(
+    title = "Gaspereau escapement for Lake Vaughan Dam for last five years",
+    x = "Date",
+    y = "Fish / day",
+    colour = "Year",
+    fill = "Year",
+    linetype = "Location"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, 120000),
+    breaks = seq(0, 120000, by = 10000),
+    labels = scales::comma
+  ) +    theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# plot_path <-
+#   paste0(output_folder, "/in_season_multi_year_counts_plot.png")
+# 
+# ggsave(
+#   plot_path,
+#   plot = in_season_multi_year_counts_plot,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+```
+```{r vd_vs_ph}
+
+vd$location <- "Lake Vaughan"
+vd$date <- make_date(vd$year, vd$mon, vd$day)
+ph$year <- current_year
+
+counts <- rbind(vd, ph)
+
+counts |>
+  ggplot(aes(date, total)) +
+  geom_path(
+    data = counts |> filter(location == "Lake Vaughan"),
+    aes(colour = location),
+    alpha = 0.9,
+    linewidth = 1.25
+  ) +
+  geom_ribbon(
+    data = counts |> filter(location == "Lake Vaughan"),
+    aes(ymin = clow,
+        ymax = chigh,
+        fill = location,
+        colour = location),
+    alpha = 0.2
+  ) +
+  geom_path(
+    data = counts |> filter(location == "Powerhouse"),
+    aes(colour = location),
+    alpha = 0.9,
+    linewidth = 1.25
+  ) +
+  geom_ribbon(
+    data = counts |> filter(location == "Powerhouse"),
+    aes(ymin = clow,
+        ymax = chigh,
+        fill = location,
+        colour = location),
+    alpha = 0.5
+  ) +
+  theme_bw() +
+  labs(
+    title = "Escapement estimates for gaspereau on the Tusket River",
+    x = "Date",
+    y = "fish / day",
+    colour = "Location",
+    fill = "Location"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(counts$chigh)),
+    breaks = seq(0, max(counts$chigh), by = 10000),
+    labels = scales::comma
+  ) +
+  theme(
+    legend.position = c(0.850, 0.870),
+    legend.background = element_blank(),
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+    ),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.background = element_blank()
+  )
+
+# plot_path <- paste0(output_folder, "/in_season_ph_vd_escapement_plot.png")
+# 
+# ggsave(
+#   plot_path,
+#   plot = in_season_ph_vd_escapement_plot,
+#   width = 6,
+#   height = 4,
+#   dpi = 300
+# )
+
+```
+
+```{r multi_year_ph}
+ph_counts_2022 <- onespecies.partial.river.escapement(
+  "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts/Powerhouse Count Sheet Cleaned 2022.csv",
+  fixtime = FALSE,
+  database = FALSE,
+  2022,
+  14,
+  channel
+  )
+ph_counts_2022$year <- as.character(2022)
+ph_counts_2022$location <- "Powerhouse"
+
+ph_counts_2023 <- onespecies.river.escapement(
+  "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets/Powerhouse 2023 count data1.csv",
+  fixtime = FALSE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  2023,
+  14,
+  channel
+  )
+ph_counts_2023$year <- as.character(2023)
+ph_counts_2023$location <- "Powerhouse"
+
+# Calculate the powerhouse estimate
+# Locate your CSV for counts
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"
+
+# Run escapement script
+# Note: arguments year, site, and channel don't matter when database = FALSE
+escapement_ph <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = 2024,
+  site = 14,
+  channel = channel
+)
+escapement_ph$location <- "Powerhouse"
+escapement_ph$year <- current_year
+
+ph <- escapement_ph %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+# Combine with counts dataframe that was previously created and which should
+# have the PH counts from the in season year. This can be probably be done a
+# better way, but where's the fun in that?
+counts_for_multi_ph <- rbind(ph, ph_counts_2022, ph_counts_2023)
+counts_for_multi_ph <- counts_for_multi_ph |> select(-location)
+
+# Make sure to filter before creating dates because this screws them up ¯\_(ツ)_/¯
+counts_for_multi_ph <- counts_for_multi_ph %>%
+  mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+# You make these all have the same year in their date so they plot nicely
+counts_for_multi_ph <- counts_for_multi_ph |> mutate(date = make_date(2024, mon, day))
+counts_for_multi_ph$year <- as.character(counts_for_multi_ph$year)
+
+counts_for_multi_ph %>%
+  group_by(year) %>% 
+  ggplot(aes(date, total)) +
+  geom_path(
+    aes(colour = year),
+    alpha = if_else(counts_for_multi_ph$year != current_year, 0.3, 0.8),
+    linewidth = if_else(counts_for_multi_ph$year != current_year, 1, 1.2),
+    na.rm = TRUE
+  )+
+  geom_ribbon(
+    data = . %>% filter(year == 2024),
+    aes(ymin = clow, ymax = chigh),
+    fill = "#7eadfc",
+    colour = "#7eadfc",
+    alpha = 0.2
+  )+
+  theme_bw() +
+  labs(
+    title = "Gaspereau escapement for the Powerhouse",
+    x = "Date",
+    y = "Fish / day",
+    colour = "Year"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "3 days") +
+  scale_y_continuous(
+    limits = c(0, max(counts_for_multi_ph$chigh)),
+    breaks = seq(0, max(counts_for_multi_ph$chigh), by = 1000),
+    labels = scales::comma
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.background = element_rect(fill = "grey95"),
+    legend.background = element_blank()
+  )
+
+```
+
+# Post-season
+
+The analyses here can only be done after uploading the data from the year to the
+database. Read the `Writing Annual Data to Oracle.R` script in the `Alosa.functions`
+folder to see the protocol for uploading data. There are methods in that script
+to prevent errors, check the data, etc.
+
+```{r species, warning=FALSE}
+proportions <- split_species(
+    year = current_year,
+    siteID = 2,
+    channel = channel
+  )
+
+counts_species <- counts |>
+      group_by(year, mon, day) |>
+      summarise(
+        total = sum(total),
+        sd = sum(sd),
+        clow = sum(clow),
+        chigh = sum(chigh)
+      ) |>
+      mutate(date = make_date(year, mon, day)) |>
+      ungroup() |>
+      select(date, total, clow, chigh) |>
+      inner_join(proportions, by = "date") |>
+      mutate(B = total * BBprop, A = total - B) |>
+      select(date, A, B) |>
+      pivot_longer(cols = c(A, B),
+                   names_to = "species",
+                   values_to = "total") |>
+      mutate(species = str_replace(species, "A", "Alewives")) |>
+      mutate(species = str_replace(species, "B", "Bluebacks")) |>
+      ungroup()
+
+# This plot will show where the gaps are in sampling days - the GLM plots in the
+# future chunks will fill these in, but this plot is just to help visualize our
+# situation.
+counts_species |>
+  group_by(species) |>
+  ggplot(aes(date, total)) +
+  geom_path(aes(colour = species), size = 1) +
+  geom_point(aes(fill = species), shape = 21, colour = "black", size = 2)+
+  theme_bw() +
+  labs(
+    title = paste0(
+      "Escapement estimates for gaspereau by species for ",
+      current_year
+    ),
+    y = "fish / day",
+    colour = "Species",
+    fill = "Species"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "3 days") +
+  scale_y_continuous(
+    limits = c(0, max(counts_species$total)),
+    breaks = seq(0, max(counts_species$total), by = 10000),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+      ),
+    plot.background = element_rect(fill = "grey95"),
+    legend.background = element_blank(),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+```{r GLM_approach}
+# Use this split_species function to get proportions of each species
+# from the biodata collected for that year
+proportions <- split_species(
+  year = current_year,
+  siteID = 2,
+  channel = channel
+  )
+
+# We often have days that we could not sample biodata for various reasons. We
+# can use padr::pad to identify which dates are missing and then fill with NAs.
+pp <- padr::pad(proportions, interval = "day")
+
+# To prevent trouble down the road, we create a column to store the "date" as 
+# an integer value. When date is used in the model, it really doesn't have to be
+# a date, it just has to be an integer. As dates can cause headaches with many
+# functions etc. it is safe to use an integer instead.
+pp$day_int <- 1:nrow(pp)
+
+# We use a Poisson GLM as we are dealing with count data. This model is imperfect
+# and we know this, but for our current requirements, it is fairly useful. We
+# wouldn't want to use this model to extrapolate very far out. We train the model
+# on the complete data set.
+model <- glm(BB ~ day_int, data = pp, offset = log(total_fish), family = "poisson")
+
+# We set the total_fish to 1 so that we get proportions when we predict the new
+# data. We usually try to get 100 fish sampled per day in the biodata, but that
+# doesn't always happen, especially at the tails of the season.
+out <- data.frame(day.int = 1:nrow(pp), total_fish = rep(1,nrow(pp)))
+out.pred <- predict(fit, newdata = out, type = "link", se.fit = T)
+
+# This is the inverse of the link function i.e. the inverse of the log i.e exp
+ginv <- fit$family$linkinv
+
+# We use the inverse of the link function to calculate the expected proportion.
+# Note, this is the same as doing exp(out.pred[[1]])
+out.pred <- ginv(out.pred[[1]])
+
+# Create a new column for the new predicted proportions of BBs
+pp$BBpropnew<-NA
+
+# Populate the dataframe with the predicted values
+for(i in 1:nrow(pp)) {
+  if (is.na(pp$BBprop[i]) == T) {
+    pp$BBpropnew[i] <- out.pred[i]
+    pp$BBprop[i] <- out.pred[i]
+  }
+}
+
+# We can flag which data were observed and which were modeled
+pp$observation <- is.na(pp$total_fish)
+pp <- pp |> mutate(observation = if_else(observation == TRUE, "Modeled", "Observed"))
+
+# Check the plot
+pp |> 
+  ggplot(aes(date, BBprop))+
+  geom_path(colour = "grey50", size = 0.5, linetype = "dashed")+
+  geom_point(aes(fill = observation), shape = 21, colour = "black", size = 2)+
+  theme_bw()+
+  labs(
+    title = "Proportion of blueback herring in biodata with values for missing dates from GLM",
+    y = "Proportion of fish",
+    fill = "Estimate"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = .1),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    plot.background = element_rect(fill = "grey95"),
+    axis.title.x = element_blank(),
+    legend.background = element_blank(),
+    legend.key = element_blank()
+  )
+
+```
+
+```{r blueback_escapement_vd}
+# Locate your CSV for counts
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
+
+# Run escapement script
+# Note: arguments year, site, and channel don't matter when database = FALSE
+escapement_vd <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = current_year,
+  site = 2,
+  channel = channel
+)
+
+# We want to add where the data are from
+escapement_vd$location <- "Lake Vaughan"
+
+vd <- escapement_vd %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+vd <- vd |> mutate(date = make_date(current_year, mon, day))
+
+# Combine the Lake Vaughan escapement estimates with the proportions dataframe
+# where we calculated the proportions of bluebacks for each date
+result <- left_join(pp, vd, by = "date")
+result <- result |> 
+  select(date, BBprop, total) |> 
+  mutate(
+    BB = BBprop * total,
+    A = total - BB
+    ) |>
+  select(-BBprop, -total) |> 
+  pivot_longer(
+    cols = c(A, BB),
+    names_to = "Species",
+    values_to = "Total"
+    )
+
+result |> 
+  ggplot(aes(date, Total))+
+  geom_path(aes(colour = Species), size = 1)+
+  geom_point(aes(fill = Species), shape = 21, colour = "black", size = 2)+
+  theme_bw()+
+  labs(
+    title = "Estimated escapement for alewives and bluebacks at Lake Vaughan for 2024",
+    y = "fish / day"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(result$Total)),
+    breaks = seq(0, max(result$Total), by = 10000),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    plot.background = element_rect(fill = "grey95"),
+    axis.title.x = element_blank(),
+    legend.background = element_blank(),
+    legend.key = element_blank()
+  )
+
+```
