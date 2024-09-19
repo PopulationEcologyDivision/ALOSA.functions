@@ -1,4 +1,11 @@
-The purpose of this markdown file is to have a place where we can:
+---
+title: "`r paste('Annual gaspereau escapement assessment for Tusket River for', format(Sys.Date(), '%Y'))`"
+output: html_document
+---
+
+# Purpose
+
+This markdown file is to have a place where we can:
 - prep the data sheets pre-season
 - deal with data and do plots in-season for communications
 - do analysis and plots for communications post-season
@@ -8,7 +15,15 @@ year previous to the current one acts as a template. We can use the chunk option
 `include=FALSE` to turn a chunk on or off so that we can run the entire file
 by clicking the "Run" button at the top of the file in Rstudio.
 
-# Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,    # Hide code
+  results = 'hide',# Hide results
+  warning = FALSE, # Hide warnings
+  message = FALSE  # Hide messages
+)
+```
+
 ```{r library_and_connection}
 # Library
 library(tidyverse)
@@ -20,7 +35,7 @@ library(imputeTS)
 current_year <- format(Sys.Date(), "%Y")
 ```
 
-```{r source_ALOSA_functions, warning=FALSE}
+```{r source_ALOSA_functions}
 # Source necessary functions from the Alosa functions
 source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
@@ -45,38 +60,42 @@ want to create sheets, other wise it should always be set to FALSE.
 ```{r create_data_sheets, include=FALSE}
 
 # Creates blank data sheets for counts and biodata for Lake Vaughan
-blank.datasheets(
-  seed = 112,
-  startmonth = 3,
-  endmonth = 6,
-  startday = 1,
-  rivername = "Vaughan",
-  year = 2023,
-  recordtime = T,
-  speciesID = T,
-  strata = 6,
-  samplesperstrata = 4
-)
-
-# Creates blank data sheets for counts and biodata for Powerhouse
-blank.datasheets(
-  seed = 113,
-  startmonth = 3,
-  endmonth = 6,
-  startday = 15,
-  rivername = "Powerhouse",
-  year = 2023,
-  recordtime = T,
-  speciesID = T,
-  strata = 6,
-  samplesperstrata = 4
-)
+# blank.datasheets(
+#   seed = 112,
+#   startmonth = 3,
+#   endmonth = 6,
+#   startday = 1,
+#   rivername = "Vaughan",
+#   year = 2023,
+#   recordtime = T,
+#   speciesID = T,
+#   strata = 6,
+#   samplesperstrata = 4
+# )
+# 
+# # Creates blank data sheets for counts and biodata for Powerhouse
+# blank.datasheets(
+#   seed = 113,
+#   startmonth = 3,
+#   endmonth = 6,
+#   startday = 15,
+#   rivername = "Powerhouse",
+#   year = 2023,
+#   recordtime = T,
+#   speciesID = T,
+#   strata = 6,
+#   samplesperstrata = 4
+# )
 
 ```
 
 # In-season
 
-```{r escapement_vd, warning=FALSE, message=FALSE}
+These are the counts of gaspereau in real time that we can use for internal
+communications. We may want to remove the last day if the counts for that day
+are not completed in the counts file, but I have left that out for now.
+
+```{r escapement_vd}
 # Locate your CSV for counts
 path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
 
@@ -128,7 +147,7 @@ vd |>
   labs(
     title = paste0("Gaspereau escapement for Lake Vaughan Dam for 2024"),
     x = "Date",
-    y = "fish / day"
+    y = "Fish / day"
   ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "3 days") +
   scale_y_continuous(
@@ -143,7 +162,9 @@ vd |>
       hjust = 1
       ),
     axis.title.x = element_blank(),
-    panel.grid.minor = element_blank()
+    panel.grid.minor = element_blank(),
+    #legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95")
     )
 
 # plot_path <- paste0(output_folder, "/in_season_vd_escapement_plot.png")
@@ -157,7 +178,7 @@ vd |>
 #     )
 ```
 
-```{r escapement_ph, message=FALSE, warning=FALSE}
+```{r escapement_ph}
 # Locate your CSV for counts
 path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"
 
@@ -209,7 +230,7 @@ ph |>
   labs(
     title = paste0("Gaspereau escapement for Powerhouse for 2024"),
     x = "Date",
-    y = "fish / day"
+    y = "Fish / day"
   ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "2 days") +
   scale_y_continuous(
@@ -223,7 +244,9 @@ ph |>
       vjust = 1,
       hjust = 1),
     axis.title.x = element_blank(),
-    panel.grid.minor = element_blank()
+    panel.grid.minor = element_blank(),
+    #legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95")
   )
 
 # plot_path <- paste0(output_folder, "/in_season_ph_escapement_plot.png")
@@ -323,11 +346,15 @@ multi_year_counts %>%
     limits = c(0, 120000),
     breaks = seq(0, 120000, by = 10000),
     labels = scales::comma
-  ) +    theme(
+  ) + 
+  theme(
     panel.grid.minor = element_blank(),
     axis.title = element_text(face = "bold"),
     axis.title.x = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.key = element_blank()
   )
 
 # plot_path <-
@@ -394,18 +421,17 @@ counts |>
     labels = scales::comma
   ) +
   theme(
-    legend.position = c(0.850, 0.870),
-    legend.background = element_blank(),
     axis.text.x = element_text(
       angle = 45,
       vjust = 1,
       hjust = 1
     ),
     axis.title.x = element_blank(),
+    legend.position = "right",
+    legend.background = element_blank(),
     panel.grid.minor = element_blank(),
-    plot.background = element_rect(fill = "grey95"),
-    legend.background = element_blank()
-  )
+    plot.background = element_rect(fill = "grey95")
+    )
 
 # plot_path <- paste0(output_folder, "/in_season_ph_vd_escapement_plot.png")
 # 
@@ -515,7 +541,8 @@ counts_for_multi_ph %>%
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.background = element_rect(fill = "grey95"),
-    legend.background = element_blank()
+    legend.background = element_blank(),
+    legend.key = element_blank()
   )
 
 ```
@@ -527,7 +554,7 @@ database. Read the `Writing Annual Data to Oracle.R` script in the `Alosa.functi
 folder to see the protocol for uploading data. There are methods in that script
 to prevent errors, check the data, etc.
 
-```{r species, warning=FALSE}
+```{r species}
 proportions <- split_species(
     year = current_year,
     siteID = 2,
@@ -569,7 +596,7 @@ counts_species |>
       "Escapement estimates for gaspereau by species for ",
       current_year
     ),
-    y = "fish / day",
+    y = "Fish / day",
     colour = "Species",
     fill = "Species"
   ) +
@@ -587,6 +614,7 @@ counts_species |>
       ),
     plot.background = element_rect(fill = "grey95"),
     legend.background = element_blank(),
+    legend.key = element_blank(),
     axis.title.x = element_blank(),
     panel.grid.minor = element_blank()
   )
@@ -621,11 +649,11 @@ model <- glm(BB ~ day_int, data = pp, offset = log(total_fish), family = "poisso
 # We set the total_fish to 1 so that we get proportions when we predict the new
 # data. We usually try to get 100 fish sampled per day in the biodata, but that
 # doesn't always happen, especially at the tails of the season.
-out <- data.frame(day.int = 1:nrow(pp), total_fish = rep(1,nrow(pp)))
-out.pred <- predict(fit, newdata = out, type = "link", se.fit = T)
+out <- data.frame(day_int = 1:nrow(pp), total_fish = rep(1,nrow(pp)))
+out.pred <- predict(model, newdata = out, type = "link", se.fit = T)
 
 # This is the inverse of the link function i.e. the inverse of the log i.e exp
-ginv <- fit$family$linkinv
+ginv <- model$family$linkinv
 
 # We use the inverse of the link function to calculate the expected proportion.
 # Note, this is the same as doing exp(out.pred[[1]])
@@ -649,7 +677,7 @@ pp <- pp |> mutate(observation = if_else(observation == TRUE, "Modeled", "Observ
 # Check the plot
 pp |> 
   ggplot(aes(date, BBprop))+
-  geom_path(colour = "grey50", size = 0.5, linetype = "dashed")+
+  geom_path(colour = "grey50", linewidth = 0.5, linetype = "dashed")+
   geom_point(aes(fill = observation), shape = 21, colour = "black", size = 2)+
   theme_bw()+
   labs(
@@ -721,7 +749,7 @@ result |>
   theme_bw()+
   labs(
     title = "Estimated escapement for alewives and bluebacks at Lake Vaughan for 2024",
-    y = "fish / day"
+    y = "Fish / day"
   ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
   scale_y_continuous(
