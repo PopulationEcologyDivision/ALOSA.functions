@@ -1,0 +1,239 @@
+---
+title: "Gaspereau_2024_Assessment"
+output: html_document
+---
+
+# Purpose
+
+This markdown file is to have a place where we can:
+- prep the data sheets pre-season
+- deal with data and do plots in-season for communications
+- do analysis and plots for communications post-season
+
+This Rmd file replaces the old "Assessment_Script_RIVER_YEAR.R" scripts
+
+Ideally, this file can be used between years and rivers without much changing, 
+where the
+year previous to the current one acts as a template. We can use the chunk option
+`include=FALSE` to turn a chunk on or off so that we can run the entire file
+by clicking the "Run" button at the top of the file in Rstudio.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,    # Hide code
+  results = 'hide',# Hide results
+  warning = FALSE, # Hide warnings
+  message = FALSE  # Hide messages
+)
+```
+
+```{r library_and_connection}
+# Library
+library(tidyverse)
+library(padr) # for dates
+library(ROracle)
+```
+
+```{r source_ALOSA_functions}
+# Source necessary functions from the Alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+```
+
+```{r database_connection}
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+```
+
+# Pre-season
+
+Only run this at the beginning of the season to generate the files we will be
+filling out with data throughout the season. Set `include=TRUE` for when you
+want to create sheets, other wise it should always be set to FALSE.
+
+```{r create_data_sheets, include=FALSE}
+
+# Creates blank data sheets for counts, biodata, and ages for specified sites
+blank.datasheets(seed=115,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
+                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+make.count.filename.textfile("White Rock 2024 count data.csv","WRock",2024)
+
+blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=15,rivername="Lanes Mills",
+                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+make.count.filename.textfile("Lanes Mills 2024 count data.csv","Lanes Mills",2024)
+
+blank.datasheets(seed=117,startmonth=4,endmonth=6,startday=15,rivername="Below Lanes Mills",
+                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+make.count.filename.textfile("Below Lanes Mills 2024 count data.csv","Below Lanes Mills",2024)
+
+```
+
+# In-season
+
+run count scripts to get count totals for in season updates
+make plots or tables to include in emails
+
+```{r in_season_counts}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+
+# filename="White Rock 2024 count data.csv"
+# fixtime=T
+# database=F
+# year=2024
+# site=3
+# channel=channel
+
+x<-onespecies.river.escapement("White Rock 2024 count data.csv",fixtime=T,database=F,downstream.migration = F,2024,3,channel)
+
+x<-round(x)
+n<-dim(x)[1]
+x<-x[1:n-1,]
+
+print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
+
+write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+```
+
+```{r in_season_plot}
+#plot for in season emails
+old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
+
+old.data$date=as.Date(paste(old.data$day,old.data$mon,2024,sep="-"),
+                      format="%d-%m-%Y")
+
+#dayofyear uses "strftime" to evaluate which day of the year each date aligns with
+old.data$dayofyear=as.numeric(strftime(old.data$date, format="%j"))
+
+plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,120000),lwd=2,
+     ylab="Number of Fish",xlab="Day of Year")
+# lines(old.data$dayofyear,old.data$Total2015,type="l",col="red")
+# lines(old.data$dayofyear,old.data$Total2016,type="l",col="orange")
+# lines(old.data$dayofyear,old.data$Total2017,type="l",col="yellow")
+# lines(old.data$dayofyear,old.data$Total2018,type="l",col="green")
+# lines(old.data$dayofyear,old.data$Total2019,type="l",col="blue")
+# lines(old.data$dayofyear,old.data$Total2021,type="l",col="purple")
+# lines(old.data$dayofyear,old.data$Total2022,type="l",col="brown")
+# lines(old.data$dayofyear,old.data$Total2023,type="l",col="brown")
+
+lines(old.data$dayofyear,old.data$Total2017,type="l",col="red")
+lines(old.data$dayofyear,old.data$Total2018,type="l",col="orange")
+lines(old.data$dayofyear,old.data$Total2019,type="l",col="yellow")
+lines(old.data$dayofyear,old.data$Total2021,type="l",col="green")
+lines(old.data$dayofyear,old.data$Total2022,type="l",col="blue")
+lines(old.data$dayofyear,old.data$Total2023,type="l",col="purple")
+
+legend(110, 100000, legend=c("2017", "2018", "2019", "2021", "2022", "2023", "2024"),
+       col=c("red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
+
+```
+
+# Post-Season
+
+clean and prep data for upload
+ageing selection
+recounts
+final versions of some plots
+
+```{r ageing_selection, include=FALSE}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+seed=667 #Seed used for scale selection. 
+nsamples=500  #Number of scale selected to be aged
+
+bio.data<-read.csv("White Rock 2024 biocharacteristics data.csv")
+
+#Check Bio data
+checkers("White Rock 2024 biocharacteristics data.csv") # this file has the correct column names, same data as WE 2023 bio data.csv
+
+countdata<-daily.count<-x
+
+bio.data<-bio.data[,1:11]
+# colnames(bio.data)<-c("SITE_ID", "YEAR", "DAY", "MON","FISH_ID", "SPECIES_ID",
+#                                        "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
+biodata<-bio.data
+missingdays<-missing.days(bio.data)
+mergedays<-missingdays-1 #in both cases the two previous days are most similar in count
+# For missing sample days, we merge the counts from two days
+# and use that in the weighting calculation. 
+# For example, ff day 112 is missing then decide if you want to merge the counts
+# with day 111 or 113. Do this for all the missing dates and provide the
+# replacement days in this vector. Length(mergedays)==Length(missingdays)
+
+
+#ran June 24th 2024 to get ages for student work      
+# ageing.selection(daily.count,bio.data,weekly=FALSE,2024,missingdays,mergedays,seed,nsamples,"A")
+# scale.age<-read.csv("to be aged_rename this file.csv")
+
+```
+
+```{r setup_WR_recounts, include=FALSE}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+#sim code
+set.seed(seed)
+counts<-read.csv("White Rock 2024 count data.csv")
+counts$number.up<-counts$count.upstream-counts$count.downstream
+counts$dev<-rnorm(nrow(counts),1,0.1)
+counts$recount<-round(counts$number.up*counts$dev,0)
+counts.sub<-counts[counts$number.up!=0,]
+counts.sub<-counts.sub[complete.cases(counts.sub),]
+counts.sample<-sample(1:nrow(counts.sub),200,replace=F) #this will draw 200 random counts to redo
+counts.sub<-counts.sub[counts.sample,]
+counts.sub$per.diff<-(counts.sub$number.up-counts.sub$recount)/((counts.sub$number.up+counts.sub$recount)/2)
+
+#we can use this to make a count sheet to redo these randomly selected counts
+counts.sub1<-counts.sub[,c(1:5,9)]
+names(counts.sub1)[6]<-"previous counter"
+counts.sub1<-counts.sub1[order(counts.sub1$mon,counts.sub1$day,counts.sub1$time),]
+counts.sub1$count.upstream<-NA
+counts.sub1$count.downstream<-NA
+counts.sub1$number.up<-NA
+counts.sub1$camera.desc<-NA
+counts.sub1$minutes<-NA
+counts.sub1$seconds<-NA
+
+# write.csv(counts.sub1,"White Rock 2024 RECOUNTS.csv",row.names=F,na="")
+```
+
+```{r analyze_WR_recounts}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+#recounts are msotly complete, lets take a look
+wr.recounts<-read.csv("White Rock 2024 RECOUNTS.csv")
+counts<-read.csv("White Rock 2024 count data.csv")
+#remove outlier
+wr.recounts<-wr.recounts[-148,]
+#make a key column for easy subsetting
+counts$dmt<-as.integer(paste0(paste0(counts$mon,counts$day,sep=""),counts$time,sep=""))
+wr.recounts$dmt<-as.integer(paste0(paste0(wr.recounts$mon,wr.recounts$day,sep=""),wr.recounts$time,sep=""))
+#get the original counts into the recount df
+for(i in 1:nrow(wr.recounts))
+{
+  wr.recounts$og.up[i]<-counts$count.upstream[counts$dmt==wr.recounts$dmt[i]]
+  wr.recounts$og.down[i]<-counts$count.downstream[counts$dmt==wr.recounts$dmt[i]]
+}
+
+
+wr.recounts$quot<-wr.recounts$count.upstream/wr.recounts$og.up
+wr.recounts$per.diff<-(wr.recounts$count.upstream-wr.recounts$og.up)/wr.recounts$og.up
+NSP.bias<-sum(wr.recounts$count.upstream,na.rm=T)/sum(wr.recounts$og.up,na.rm=T)
+
+plot(wr.recounts$per.diff)
+plot(wr.recounts$count.upstream,wr.recounts$per.diff)
+segments(0,0.05,max(wr.recounts$count.upstream,na.rm=T)*1.2,0.05,lty=3)
+segments(0,-0.05,max(wr.recounts$count.upstream,na.rm=T)*1.2,-0.05,lty=3)
+
+plot(wr.recounts$og.up,wr.recounts$count.upstream)
+
+```
+
+```{r plot_counts}
+countdata<-x
+countdata$date<-make_date(2024, countdata$mon, countdata$day)
+plot(countdata$date,countdata$chigh,type="l",lty=3)
+lines(countdata$date,countdata$clow,lty=3)
+lines(countdata$date,countdata$total,lty=1)
+segments(as.Date("2024-05-22"),0,as.Date("2024-05-22"),max(countdata$chigh,na.rm=T))
+```

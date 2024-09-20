@@ -20,7 +20,7 @@ sourcery()
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"White Rock 2023 biocharacteristics data.csv"
+filename.biodata<-"TUSKET_2023_VAUGHAN_sppid.csv"
 filename.agedata<-"to be aged_White Rock 2023 final.csv"
 filename.countdata<-"White Rock Counts - final.csv"
 
@@ -31,6 +31,9 @@ setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 
 speciesID.expand(data=read.csv(file.choose(),header=T,stringsAsFactors = F),
                  filename.biodata, "Tusket", 2022)
+# Alternatively, you can format the speciesID only data 
+# with format.IDfish.toBIODATA.R. this owrks similarly to the above function
+# but is most useful if you only have speciesID data
 
 # Double check for data entry errors in BIO and AGE data files:
 
