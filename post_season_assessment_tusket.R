@@ -510,15 +510,86 @@ post_season_assessment_tusket <- function(
       )
     }
   }
+
+# Calculate blueback totals from count_species
+
+  # can use padr::pad to identify which dates are missing and then fill with NAs.
+  pp <- padr::pad(proportions, interval = "day")
+  
+  # To prevent trouble down the road, we create a column to store the "date" as 
+  # an integer value. When date is used in the model, it really doesn't have to be
+  # a date, it just has to be an integer. As dates can cause headaches with many
+  # functions etc. it is safe to use an integer instead.
+  pp$day_int <- 1:nrow(pp)
+  
+  # We use a Poisson GLM as we are dealing with count data. This model is imperfect
+  # and we know this, but for our current requirements, it is fairly useful. We
+  # wouldn't want to use this model to extrapolate very far out. We train the model
+  # on the complete data set.
+  model <- glm(BB ~ day_int, data = pp, offset = log(total_fish), family = "poisson")
+  
+  # We set the total_fish to 1 so that we get proportions when we predict the new
+  # data. We usually try to get 100 fish sampled per day in the biodata, but that
+  # doesn't always happen, especially at the tails of the season.
+  out <- data.frame(day_int = 1:nrow(pp), total_fish = rep(1,nrow(pp)))
+  out.pred <- predict(model, newdata = out, type = "link", se.fit = T)
+  
+  # This is the inverse of the link function i.e. the inverse of the log i.e exp
+  ginv <- model$family$linkinv
+  
+  # We use the inverse of the link function to calculate the expected proportion.
+  # Note, this is the same as doing exp(out.pred[[1]])
+  out.pred <- ginv(out.pred[[1]])
+  
+  # Create a new column for the new predicted proportions of BBs
+  pp$BBpropnew<-NA
+  
+  # Populate the dataframe with the predicted values
+  for(i in 1:nrow(pp)) {
+    if (is.na(pp$BBprop[i]) == T) {
+      pp$BBpropnew[i] <- out.pred[i]
+      pp$BBprop[i] <- out.pred[i]
+    }
+  }
+  
+  # Select only observations from where you sampled BBs
+  if (powerhouse == TRUE){
+    counts <- counts |> filter(location == "Lake Vaughan")
+  }
+
+  result <- left_join(pp, counts, by = "date")
+  
+  result <- result |> 
+    select(date, BBprop, total) |> 
+    mutate(
+      BB = BBprop * total,
+      A = total - BB
+    ) |>
+    select(-BBprop, -total) |> 
+    pivot_longer(
+      cols = c(A, BB),
+      names_to = "Species",
+      values_to = "Total"
+    )
+  
+  blueback_total <- result |> 
+    group_by(Species) |> 
+    summarise(
+      sum = sum(Total)
+      )
+
+# Print totals for the season
   
   # Print totals
   if (powerhouse == FALSE) {
-    message("Total escapement estimate for Lake Vaughan: ", total_count_vd)
+    message("Total escapement for Vaughan: ", total_count_vd)
+    message("Total BB escapement for Vaughan: ", format(round(blueback_total[[2, 2]]), big.mark = ",", scientific = FALSE))
   }
   
   if (powerhouse == TRUE) {
-    message("Total escapement estimate for Lake Vaughan: ", total_count_vd)
-    message("Total escapement estimate for Powerhouse:     ", total_count_ph)
-    message("Total escapement:                           ", total_count)
+    message("Total escapement for Vaughan:     ", total_count_vd)
+    message("Total escapement for Powerhouse:    ", total_count_ph)
+    message("Total escapement for Tusket:      ", total_count)
+    message("Total BB escapement for Vaughan:     ", format(round(blueback_total[[2, 2]]), big.mark = ",", scientific = FALSE))
   }
 }
