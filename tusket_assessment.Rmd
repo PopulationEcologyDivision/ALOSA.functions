@@ -766,3 +766,68 @@ result |>
   )
 
 ```
+
+# Bluebacks
+
+## Inspection porportion
+```{r}
+library(readxl)
+inspection <- readxl::read_xlsx(
+  "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/2022 Yarmouth County Catch Inspection.xlsx",
+  sheet = "Sheet1"
+  )
+inspection <- inspection |> mutate(date = make_date(year = year, month = mon, day = day))
+may13_prop <- inspection |> 
+  filter(date >= "2022-05-13" & date <= "2022-05-15" & method == "gill" & river == "Tusket") |> 
+  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
+
+may20_prop <- inspection |> 
+  filter(date >= "2022-05-20" & date <= "2022-05-22" & method == "gill" & river == "Tusket") |> 
+  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
+
+```
+
+## Blueback catch
+
+These numbers are required for the `Tusket River Annual Summary` document that is
+made every year. They are estimates of the number of bluebacks caught in the Tusket.
+The numbers here are used to fill in data in `river summaries all years.csv` that
+from which `Tusket River Annual Summary Document_Script.Rmd` pulls its data when writing
+the document.
+
+```{r blueback_catch}
+load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+catch <- convert.KGS(catch)
+
+# Total tusket catch
+tusket_total_catch <- catch |>
+  filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET") |> 
+  # We divide by the conversion factor to convert mass to count
+  summarise(total_catch = sum(KGS) / .240)
+
+# I checked the logbooks for the Tusket licences from the filtered data above, and they all look good for 2024. There were a few small mistakes that I won't correct here.
+tusket_gill <- catch |> filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
+tusket_gill <- as.tibble(tusket_gill)
+
+# Get landings per week for last two weeks
+may_17_2024 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-17" & FV_DATE_FISHED <= "2024-05-20") |> summarise(total_kg = sum(KGS))
+may_24_2024 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-24") |> summarise(total_kg = sum(KGS))
+
+# Convert landings to individual fish using 0.240 kilograms per fish (i.e. a fish has a mass of 240 g)
+may_17_bb_count <- may_17_2024$total_kg * may13_prop$BBprop / .240
+may_24_bb_count <- may_24_2024$total_kg * may20_prop$BBprop / .240
+
+# Make tibble of all estimates
+bb_catch_2024 <- tibble(
+  may_17 = may_17_bb_count,
+  may_24 = may_24_bb_count
+  )
+
+bb_catch_2024 <- bb_catch_2024 |> 
+  mutate(
+    may_17 = round(may_17),
+    may_24 = round(may_24)
+    )
+
+```
