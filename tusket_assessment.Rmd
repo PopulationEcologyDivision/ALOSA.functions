@@ -15,6 +15,7 @@ year previous to the current one acts as a template. We can use the chunk option
 `include=FALSE` to turn a chunk on or off so that we can run the entire file
 by clicking the "Run" button at the top of the file in Rstudio.
 
+# Set-up
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE,    # Hide code
@@ -44,8 +45,8 @@ sourcery()
 ```{r database_connection}
 channel <- dbConnect(
   DBI::dbDriver("Oracle"),
-  oracle.username.GASP,
-  oracle.password.GASP,
+  username = "GASPEREA",
+  password = "_REMOVED",
   "PTRAN",
   believeNRows = FALSE
   )
@@ -368,6 +369,7 @@ multi_year_counts %>%
 #   dpi = 300
 # )
 ```
+
 ```{r vd_vs_ph}
 
 vd$location <- "Lake Vaughan"
@@ -554,7 +556,39 @@ database. Read the `Writing Annual Data to Oracle.R` script in the `Alosa.functi
 folder to see the protocol for uploading data. There are methods in that script
 to prevent errors, check the data, etc.
 
+Since we only have info about species distributions at the Lake Vaughan ladder,
+I have written the following code to use our observations there to calculate 
+proportions for bluebacks. These proportions will be used to estimate the catch
+that can be considered bluebacks as well. You could change this code to include
+the powerhouse data easily by adding it to the `counts` data frame produced
+below by running `onespecies.river.escapement` on your Powerhouse data and then
+using `rbind` to add it to the counts data frame.
+
+## Species proportions VD
 ```{r species}
+# Get the counts for the year for Lake Vaughan
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
+
+counts <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = current_year,
+  site = 2,
+  channel = channel
+)
+
+counts <- counts %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+
+counts <- counts |> mutate(date = make_date(2024, mon, day))
+
+counts$year <- current_year
+
+# This calculates the proportions of alewives and BBs in the escapement estimates
+# based on the biodata where we took information on species proportions.
 proportions <- split_species(
     year = current_year,
     siteID = 2,
@@ -621,15 +655,8 @@ counts_species |>
 
 ```
 
+## Species proportions GLM
 ```{r GLM_approach}
-# Use this split_species function to get proportions of each species
-# from the biodata collected for that year
-proportions <- split_species(
-  year = current_year,
-  siteID = 2,
-  channel = channel
-  )
-
 # We often have days that we could not sample biodata for various reasons. We
 # can use padr::pad to identify which dates are missing and then fill with NAs.
 pp <- padr::pad(proportions, interval = "day")
@@ -700,35 +727,11 @@ pp |>
   )
 
 ```
-
+## Species escapement VD
 ```{r blueback_escapement_vd}
-# Locate your CSV for counts
-path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
-
-# Run escapement script
-# Note: arguments year, site, and channel don't matter when database = FALSE
-escapement_vd <- onespecies.river.escapement(
-  path_to_counts_CSV,
-  fixtime = TRUE,
-  downstream.migration = FALSE,
-  database = FALSE,
-  year = current_year,
-  site = 2,
-  channel = channel
-)
-
-# We want to add where the data are from
-escapement_vd$location <- "Lake Vaughan"
-
-vd <- escapement_vd %>%
-    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
-    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
-
-vd <- vd |> mutate(date = make_date(current_year, mon, day))
-
 # Combine the Lake Vaughan escapement estimates with the proportions dataframe
 # where we calculated the proportions of bluebacks for each date
-result <- left_join(pp, vd, by = "date")
+result <- left_join(pp, counts, by = "date")
 result <- result |> 
   select(date, BBprop, total) |> 
   mutate(
@@ -767,27 +770,7 @@ result |>
 
 ```
 
-# Bluebacks
-
-## Inspection porportion
-```{r}
-library(readxl)
-inspection <- readxl::read_xlsx(
-  "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/2022 Yarmouth County Catch Inspection.xlsx",
-  sheet = "Sheet1"
-  )
-inspection <- inspection |> mutate(date = make_date(year = year, month = mon, day = day))
-may13_prop <- inspection |> 
-  filter(date >= "2022-05-13" & date <= "2022-05-15" & method == "gill" & river == "Tusket") |> 
-  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
-
-may20_prop <- inspection |> 
-  filter(date >= "2022-05-20" & date <= "2022-05-22" & method == "gill" & river == "Tusket") |> 
-  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
-
-```
-
-## Blueback catch
+## Species catch
 
 These numbers are required for the `Tusket River Annual Summary` document that is
 made every year. They are estimates of the number of bluebacks caught in the Tusket.
@@ -795,7 +778,30 @@ The numbers here are used to fill in data in `river summaries all years.csv` tha
 from which `Tusket River Annual Summary Document_Script.Rmd` pulls its data when writing
 the document.
 
+```{r catch_data}
+inspection <- readxl::read_xlsx(
+  "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/2022 Yarmouth County Catch Inspection.xlsx",
+  sheet = "Sheet1"
+  )
+
+inspection <- inspection |> mutate(date = make_date(year = year, month = mon, day = day))
+may_13_2022_prop <- inspection |> 
+  filter(date >= "2022-05-13" & date <= "2022-05-15" & method == "gill" & river == "Tusket") |> 
+  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
+
+may_20_2022_prop <- inspection |> 
+  filter(date >= "2022-05-20" & date <= "2022-05-22" & method == "gill" & river == "Tusket") |> 
+  summarize(BBprop = sum(n.blueback) / sum(n.alewife))
+
+```
+
 ```{r blueback_catch}
+# This section will need to be edited for each year. The way this is currently
+# set up requires you to identify which of the last weeks of May you want to
+# calculate blueback catch for. This will be based on when bluebacks were
+# detected. In the example below, we only used gill net data as there were no
+# bluebacks found at the dipping stands when George and Mark sampled their
+# catches in 2022.
 load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
 source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
 catch <- convert.KGS(catch)
@@ -807,27 +813,87 @@ tusket_total_catch <- catch |>
   summarise(total_catch = sum(KGS) / .240)
 
 # I checked the logbooks for the Tusket licences from the filtered data above, and they all look good for 2024. There were a few small mistakes that I won't correct here.
-tusket_gill <- catch |> filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
+tusket_gill <- catch |>
+  filter(YEAR == 2024
+         & RIVERNAME_CLEANED == "TUSKET"
+         & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
+
 tusket_gill <- as.tibble(tusket_gill)
 
-# Get landings per week for last two weeks
-may_17_2024 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-17" & FV_DATE_FISHED <= "2024-05-20") |> summarise(total_kg = sum(KGS))
-may_24_2024 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-24") |> summarise(total_kg = sum(KGS))
+# Get landings per week for last two weeks for gill netters only
+week_1 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-17" & FV_DATE_FISHED <= "2024-05-20") |> summarise(total_kg = sum(KGS))
+week_2 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-24") |> summarise(total_kg = sum(KGS))
 
-# Convert landings to individual fish using 0.240 kilograms per fish (i.e. a fish has a mass of 240 g)
-may_17_bb_count <- may_17_2024$total_kg * may13_prop$BBprop / .240
-may_24_bb_count <- may_24_2024$total_kg * may20_prop$BBprop / .240
-
-# Make tibble of all estimates
-bb_catch_2024 <- tibble(
-  may_17 = may_17_bb_count,
-  may_24 = may_24_bb_count
+# Convert landings to individual fish using 0.240 kilograms per fish 
+# (i.e. a fish has a mass of 240 g) and make tibble of all estimates
+bb_catch <- tibble(
+  week1 = round(week_1$total_kg * may_13_2022_prop$BBprop / .240),
+  week2 = round(week_2$total_kg * may_20_2022_prop$BBprop / .240)
   )
 
-bb_catch_2024 <- bb_catch_2024 |> 
-  mutate(
-    may_17 = round(may_17),
-    may_24 = round(may_24)
-    )
+bb_catch <- bb_catch |> mutate(total_bb_catch = rowSums(across(everything())))
 
+bb_catch <- bb_catch$total_bb_catch
+```
+
+```{r blueback_exploitation}
+result <- left_join(pp, counts, by = "date")
+
+result <- result |> 
+  select(date, BBprop, total) |> 
+  mutate(
+    BB = BBprop * total,
+    A = total - BB
+  ) |>
+  select(-BBprop, -total) |> 
+  pivot_longer(
+    cols = c(A, BB),
+    names_to = "Species",
+    values_to = "Total"
+  )
+
+bb_total <- result |> 
+  group_by(Species) |> 
+  summarise(sum = sum(Total))
+
+# Exploitation rate
+bb_exploitation <- bb_catch / (bb_total$sum[2] + bb_catch)
+```
+
+```{r summary_table}
+# Label counts from Lake Vaughan
+counts$location <- "Lake Vaughan"
+counts <- counts |> select(total, location)
+total_count_vd <- sum(counts$total)
+
+# PH counts
+ph_counts <- onespecies.river.escapement(
+  fixtime = FALSE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = current_year,
+  site = 14,
+  channel = channel
+)
+ph_counts$location <- "Powerhouse"
+ph_counts <- ph_counts |> select(total, location)
+total_count_ph <- sum(ph_counts$total)
+
+# Combine counts from both sites
+counts <- rbind(counts, ph_counts)
+total_count <- sum(counts$total)
+
+df <- tibble(
+  tusket_escapement = total_count,
+  VD_escapement = total_count_vd,
+  PH_escapement = total_count_ph,
+  VD_bb_escapement = bb_total$sum[2],
+  tusket_catch = round(tusket_total_catch$total_catch),
+  tusket_catch_bb = bb_catch
+)
+
+df <- df |> pivot_longer(cols = everything(), names_to = "variable", values_to = "count")
+df <- df |> mutate(count = round(count))
+df <- df |> mutate(count = scales::comma(count))
+df
 ```
