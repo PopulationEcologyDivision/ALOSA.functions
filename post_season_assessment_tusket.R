@@ -52,7 +52,7 @@ post_season_assessment_tusket <- function(
   while (sink.number() > 0) {sink()}
   sink(tempfile()) # this prevents info from being printed to console
   on.exit(sink(), add = TRUE)  # this prevents info from being printed to console
-  # You only need a value for the filename arugment here if you are using data
+  # You only need a value for the filename argument here if you are using data
   # from CSV, which we are not.
   counts <- onespecies.river.escapement(
     fixtime = TRUE,
@@ -62,11 +62,12 @@ post_season_assessment_tusket <- function(
     site = 2,
     channel = channel
   )
+  write_csv(counts, file = paste0(output_folder, "/", "vd_counts.csv"))
   counts$year <- as.character(year)
   counts$location <- "Lake Vaughan"
+  
   total_count_vd <- sum(counts$total)
   total_count_vd <- format(round(total_count_vd), big.mark = ",", scientific = FALSE)
-  
   
   ## Estimate escapement PH ####
   # The PH data are troublesome for the earlier years, so we need to tinker
@@ -140,6 +141,8 @@ post_season_assessment_tusket <- function(
     }
     
     counts <- rbind(counts, ph_counts)
+    write_csv(counts, file = paste0(output_folder, "/", "vd_and_ph_counts.csv"))
+    
     total_count <- sum(counts$total)
     total_count <- format(round(total_count), big.mark = ",", scientific = FALSE)
     
