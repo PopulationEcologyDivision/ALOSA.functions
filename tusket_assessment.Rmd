@@ -596,13 +596,6 @@ proportions <- split_species(
   )
 
 counts_species <- counts |>
-      group_by(year, mon, day) |>
-      summarise(
-        total = sum(total),
-        sd = sum(sd),
-        clow = sum(clow),
-        chigh = sum(chigh)
-      ) |>
       mutate(date = make_date(year, mon, day)) |>
       ungroup() |>
       select(date, total, clow, chigh) |>
@@ -727,6 +720,7 @@ pp |>
   )
 
 ```
+
 ## Species escapement VD
 ```{r blueback_escapement_vd}
 # Combine the Lake Vaughan escapement estimates with the proportions dataframe
@@ -767,6 +761,105 @@ result |>
     legend.background = element_blank(),
     legend.key = element_blank()
   )
+
+```
+
+## Total counts VD + PH
+```{r total_counts}
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
+
+counts_vd <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = FALSE,
+  year = current_year,
+  site = 2,
+  channel = channel
+)
+counts_vd$location <- "Lake Vaughan"
+#write_csv(counts, file = paste0(path.expand("~"), "/", "counts_vd.csv"))
+  
+path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"
+
+counts_ph <- onespecies.river.escapement(
+  fixtime = FALSE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = current_year,
+  site = 14,
+  channel = channel
+  )
+counts_ph$location <- "Powerhouse"
+#write_csv(counts, file = paste0(path.expand("~"), "/", "counts_ph.csv"))
+
+# Join these counts into a single dataframe so we can add them
+counts_joined <- counts_vd |> left_join(counts_ph, by = "dayofyear")
+counts_joined <- counts_joined |> select(-location.x, -location.y)
+
+counts_joined <- counts_joined %>%
+  mutate(
+    across(
+      everything(), ~ replace_na(., 0)
+      )
+    )
+
+# Totals from PH and VD combined
+counts <- counts_joined |> 
+  mutate(
+    total = total.x + total.y,
+    sd = sd.x + sd.y,
+    clow = clow.x + clow.y,
+    chigh = chigh.x + chigh.y,
+    mon = mon.x,
+    day = day.x
+  ) |> 
+  select(mon, day, dayofyear, total, sd, clow, chigh)
+
+# We could do proportions on these counts for species, but we didn't actually
+# measure bluebacks at PH, so we need to think about it.
+proportions <- split_species(
+    year = current_year,
+    siteID = 2,
+    channel = channel
+  )
+counts$year <- current_year
+
+counts_species <- counts |>
+      mutate(date = make_date(year, mon, day)) |>
+      ungroup() |>
+      select(date, total, clow, chigh) |>
+      inner_join(pp, by = "date") |>
+      mutate(B = total * BBprop, A = total - B) |>
+      select(date, A, B) |>
+      pivot_longer(cols = c(A, B),
+                   names_to = "species",
+                   values_to = "total") |> 
+      ungroup()
+
+# Convert species counts to a format that we can copy into the 
+# "daily_counts_all_years_all_rivers.csv" file for the plots in the 
+# Tusket River Annual Summary Document.
+
+# Create new rows for 'All' species that sum totals for A and B
+counts_species_all <- counts_species |> 
+  group_by(date) %>%
+  summarise(species = "All", total = sum(total), .groups = 'drop')
+
+# Append the new rows to the original dataframe
+counts_combined <- bind_rows(counts_species, counts_species_all) |>
+  mutate(species = factor(species, levels = c("All", "A", "B"))) |> 
+  arrange(species, date) |> 
+  mutate(
+    mon = month(date),
+    day = day(date),
+    year = year(date),
+    total = round(total),
+    river = "tusket"
+    ) |> 
+  select(mon, day, year, species, total, river)
+
+write_csv(counts_combined, file = paste0(path.expand("~"), "/", "counts_combined.csv"))
 
 ```
 
@@ -837,6 +930,8 @@ bb_catch <- bb_catch$total_bb_catch
 ```
 
 ```{r blueback_exploitation}
+pp$date <- ymd(pp$date)
+counts <- counts |> mutate(date = make_date(year = year, month = mon, day = day))
 result <- left_join(pp, counts, by = "date")
 
 result <- result |> 
@@ -895,5 +990,20 @@ df <- tibble(
 df <- df |> pivot_longer(cols = everything(), names_to = "variable", values_to = "count")
 df <- df |> mutate(count = round(count))
 df <- df |> mutate(count = scales::comma(count))
-df
 ```
+
+```{r summary_table2, results='asis'}
+library(gt)
+
+gt_table <-
+  df |> 
+  gt() |> 
+  tab_header(title = "Season summary") |>
+  cols_label(
+    variable = "Observation",
+    count = "Count"
+  )
+
+gt_table
+```
+
