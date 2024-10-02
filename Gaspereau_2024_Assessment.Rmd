@@ -59,17 +59,17 @@ want to create sheets, other wise it should always be set to FALSE.
 ```{r create_data_sheets, include=FALSE}
 
 # Creates blank data sheets for counts, biodata, and ages for specified sites
-blank.datasheets(seed=115,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
-                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-make.count.filename.textfile("White Rock 2024 count data.csv","WRock",2024)
-
-blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=15,rivername="Lanes Mills",
-                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-make.count.filename.textfile("Lanes Mills 2024 count data.csv","Lanes Mills",2024)
-
-blank.datasheets(seed=117,startmonth=4,endmonth=6,startday=15,rivername="Below Lanes Mills",
-                 year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-make.count.filename.textfile("Below Lanes Mills 2024 count data.csv","Below Lanes Mills",2024)
+# blank.datasheets(seed=115,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
+#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("White Rock 2024 count data.csv","WRock",2024)
+# 
+# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=15,rivername="Lanes Mills",
+#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("Lanes Mills 2024 count data.csv","Lanes Mills",2024)
+# 
+# blank.datasheets(seed=117,startmonth=4,endmonth=6,startday=15,rivername="Below Lanes Mills",
+#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("Below Lanes Mills 2024 count data.csv","Below Lanes Mills",2024)
 
 ```
 
@@ -96,7 +96,7 @@ x<-x[1:n-1,]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
 ```{r in_season_plot}
@@ -203,18 +203,14 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau Rive
 #recounts are msotly complete, lets take a look
 wr.recounts<-read.csv("White Rock 2024 RECOUNTS.csv")
 counts<-read.csv("White Rock 2024 count data.csv")
-#remove outlier
-wr.recounts<-wr.recounts[-148,]
-#make a key column for easy subsetting
-counts$dmt<-as.integer(paste0(paste0(counts$mon,counts$day,sep=""),counts$time,sep=""))
-wr.recounts$dmt<-as.integer(paste0(paste0(wr.recounts$mon,wr.recounts$day,sep=""),wr.recounts$time,sep=""))
-#get the original counts into the recount df
-for(i in 1:nrow(wr.recounts))
-{
-  wr.recounts$og.up[i]<-counts$count.upstream[counts$dmt==wr.recounts$dmt[i]]
-  wr.recounts$og.down[i]<-counts$count.downstream[counts$dmt==wr.recounts$dmt[i]]
-}
 
+wr.recounts<-merge(wr.recounts,counts,by=c("year","day","mon","time","strata"))
+#get only desired columns for tidiness
+wr.recounts<-wr.recounts[,c(1:10,14:17)]
+colnames(wr.recounts)<-c("year","day","mon","time","strata","previous.counter","count.upstream","count.downstream","number.up",  "new.counter","og.up","og.down","og.number.up","notes")
+
+#remove outlier
+wr.recounts<-wr.recounts[-78,]
 
 wr.recounts$quot<-wr.recounts$count.upstream/wr.recounts$og.up
 wr.recounts$per.diff<-(wr.recounts$count.upstream-wr.recounts$og.up)/wr.recounts$og.up
@@ -237,3 +233,14 @@ lines(countdata$date,countdata$clow,lty=3)
 lines(countdata$date,countdata$total,lty=1)
 segments(as.Date("2024-05-22"),0,as.Date("2024-05-22"),max(countdata$chigh,na.rm=T))
 ```
+```{r post_season_counts}
+count.data<-onespecies.river.escapement(fixtime = T,
+                                        downstream.migration = F,
+                                        year = 2024,
+                                        database = T,
+                                        site = 3,
+                                        channel = channel
+                                        )
+#yay it works
+```
+
