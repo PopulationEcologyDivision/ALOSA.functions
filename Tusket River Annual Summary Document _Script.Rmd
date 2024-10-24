@@ -16,6 +16,130 @@ editor_options:
 ```{r load-packages, include=FALSE}
 library(ROracle)
 library(tinytex)
+library(tidyverse)
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+```
+
+```{r hardcode_escapement, include=FALSE, eval = FALSE}
+#2015
+temp <- read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/Combined_final_counts.csv")
+
+# We need to clean up the data from this year so that the escapement function
+# will run
+temp <- temp |> 
+  select(-1, -study.day) |> 
+  rename(count.upstream = count)
+
+temp$year <- 2015
+temp$count.downstream <- 0
+
+temp <- temp |> relocate(year)
+
+write_csv(temp, "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/counts_for_2024_assessment.csv")
+
+temp <- onespecies.partial.river.escapement(
+  filename = "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/counts_for_2024_assessment.csv",
+  database = FALSE,
+  fixtime = FALSE,
+  year = 2015,
+  site = 2,
+  channel = channel)
+
+total_2015 <- sum(temp$total)
+clow_2015 <- sum(temp$clow)
+chigh_2015 <- sum(temp$chigh)
+ci_2015 <- chigh_2015 - clow_2015
+
+# #2019
+# temp <- onespecies.river.escapement(
+#   filename = "file",
+#   year = 2019,
+#   site = 2,
+#   channel = channel)
+# 
+# total_2019 <- sum(temp$total)
+# clow_2019 <- sum(temp$clow)
+# chigh_2019 <- sum(temp$chigh)
+# ci_2019 <- chigh_2019 - clow_2019
+
+# #2021
+# temp <- onespecies.river.escapement(
+#   filename = "file",
+#   year = 2021,
+#   site = 2,
+#   channel = channel)
+# 
+# total_2021 <- sum(temp$total)
+# clow_2021 <- sum(temp$clow)
+# chigh_2021 <- sum(temp$chigh)
+# ci_2021 <- chigh_2021 - clow_2021
+
+#2022
+temp <- onespecies.river.escapement(
+  filename = "file",
+  downstream.migration = FALSE,
+  fixtime = FALSE,
+  year = 2022,
+  site = 2,
+  channel = channel)
+
+total_2022 <- sum(temp$total)
+clow_2022 <- sum(temp$clow)
+chigh_2022 <- sum(temp$chigh)
+ci_2022 <- chigh_2022 - clow_2022
+
+# #2023
+# temp <- onespecies.river.escapement(
+#   filename = "file",
+#   year = 2023,
+#   site = 2,
+#   channel = channel)
+# 
+# total_2023 <- sum(temp$total)
+# clow_2023 <- sum(temp$clow)
+# chigh_2023 <- sum(temp$chigh)
+# 
+# temp <- onespecies.river.escapement(
+#   "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets/Powerhouse 2023 count data1.csv",
+#   fixtime = FALSE,
+#   downstream.migration = FALSE,
+#   database = FALSE,
+#   2023,
+#   14,
+#   channel
+#   )
+# 
+# total_2023 <- total_2023 + sum(temp$total)
+# clow_2023 <- clow_2023 + sum(temp$clow)
+# chigh_2023 <- chigh_2023 + sum(temp$chigh)
+# ci_2023 <- chigh_2023 - clow_2023
+
+# #2024
+# onespecies.river.escapement(
+#   filename = "file",
+#   year = 2024,
+#   site = 2,
+#   channel = channel)
+# 
+# onespecies.river.escapement(
+#   filename = "file",
+#   year = 2024,
+#   site = 14,
+#   channel = channel)
+
+# These are the confidence intervals for the total escapement that we should add
+# to the daily escapement plots. The CI were obtained by running the script
+# onspecies.river.escapement, taking the CI and dividing it by two since we are
+# going to be displaying this as a +/- value instead of a range. For years
+# >= 2022, the CI includes that from the Powerhouse data as well
+TR2014 <- ""; TRCI2015 <- ""
+TR2015 <- as.character(round(total_2015)); TRCI2014 <- as.character(round(ci_2015 / 2))
+TR2019 <- as.character(round(total_2019)); TRCI2019 <- as.character(round(ci_2019 / 2))
+TR2021 <- as.character(round(total_2021)); TRCI2021 <- as.character(round(ci_2021 / 2))
+TR2022 <- ""; TRCI2022 <- ""
+TR2023 <- ""; TRCI2023 <- ""
+TR2024 <- "2142665"; TRCI2024 <- "66084.5"
 ```
 
 \newpage
@@ -25,6 +149,7 @@ Alewife and Blueback Herring on the Tusket River, NS.
 
 Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring escapement estimate| Alewife exploitation rate estimate| Blueback Herring exploitation rate estimate
 -----|---------|----------|----------|--------|--------|
+2024| 2,261,465| 2,249,947| 11,518| 0.34| 0.14
 2023| 2,119,723| 2,101,735| 17,988| 0.43| 0.16
 2022| 1,670,471| 1,662,008| 8,463| 0.4404^g^| 0.25^h^ 
 2021| 1,956,804| 1,941,411| 15,394| 0.38^f^| 0.44^f^ 
@@ -60,33 +185,49 @@ Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring e
 \newpage
 
 ```{r escapeplot, echo=FALSE, fig.width = 8.5,fig.height = 10, fig.align='center'}
-multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
-                   header=T,stringsAsFactors = F)
+multiyear = read.csv(
+  "//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
+  header = TRUE,
+  stringsAsFactors = FALSE
+  )
 
-TR=multiyear[multiyear$river=="Tusket" & multiyear$species=="A",1:9] ##only bring in rows 1:9 to avoid NAs
-TR<-TR[complete.cases(TR),] ##remove NA rows
+TR = multiyear[multiyear$river == "Tusket" & multiyear$species == "A", 1:9] ##only bring in rows 1:9 to avoid NAs
+TR <- TR[complete.cases(TR),] ##remove NA rows
 
 # windows(8.5,11)
-par(mfrow=c(2,1),oma=c(3,0,0,0))
-par(mar=c(4,4,3,2))
-barplot(TR$escape[TR$species=="A"]/1000000, axes=0, names.arg=as.character(TR$year[TR$species=="A"]), 
-        las=3, cex.names=1.2, ylim=c(0,max(TR$escape[TR$species=="A"],na.rm=T)*1.5/1000000))
+par(mfrow = c(2, 1), oma = c(3, 0, 0, 0))
+par(mar = c(4, 4, 3, 2))
 
-axis(2, las=1, cex.axis=1.2)
+barplot(
+  TR$escape[TR$species == "A"] / 1000000,
+  axes = 0,
+  names.arg = as.character(TR$year[TR$species == "A"]),
+  las = 3,
+  cex.names = 1.2,
+  ylim = c(0, max(TR$escape[TR$species == "A"], na.rm = TRUE) * 1.5 / 1000000)
+  )
+
+axis(2, las = 1, cex.axis = 1.2)
 box()
-mtext("Escapement (millions of fish)",2,cex=1.2,adj=.15,line=2.5,las=3)
-abline(h=c(2.086,3.099),lty=5)
-mtext("Healthy zone",2,line=-16,las=1,cex=1,adj=.05, at=3.3)
-mtext("Cautious zone",2,line=-16,las=1,cex=1,adj=.05, at=2.6)
-mtext("Critical zone",2,line=-16,las=1,cex=1,adj=.05, at=1.75)
+mtext("Escapement (millions of fish)", 2, cex = 1.2, adj = .15, line = 2.5, las = 3)
+abline(h = c(2.086, 3.099), lty = 5)
+mtext("Healthy zone",  2, line = -16, las = 1, cex = 1, adj = .05, at = 3.3)
+mtext("Cautious zone", 2, line = -16, las = 1, cex = 1, adj = .05, at = 2.6)
+mtext("Critical zone", 2, line = -16, las = 1, cex = 1, adj = .05, at = 1.75)
 
-barplot(TR$total[TR$species=="A"]/1000000, axes=0, names.arg=as.character(TR$year[TR$species=="A"]), 
-        las=3, cex.names=1.2, ylim=c(0,max(TR$total[TR$species=="A"],na.rm=T)*1.5/1000000))
+barplot(
+  TR$total[TR$species == "A"] / 1000000,
+  axes = 0,
+  names.arg = as.character(TR$year[TR$species == "A"]),
+  las = 3,
+  cex.names = 1.2,
+  ylim = c(0, max(TR$total[TR$species == "A"], na.rm = TRUE) * 1.5 / 1000000)
+  )
 
-axis(2, las=1, cex.axis=1.2)
+axis(2, las = 1, cex.axis = 1.2)
 box()
-mtext("Total abundance (millions of fish)",2,cex=1.2,adj=.15,line=2.5,las=3)
-mtext("Year",1,cex=1.2, line=5)
+mtext("Total abundance (millions of fish)", 2, cex = 1.2, adj = .15, line = 2.5, las = 3)
+mtext("Year", 1, cex = 1.2, line = 5)
 ```
 
 **Figure 1.** Spawning escapement (the number of Alewife ascending the Vaughan fish ladder) and total abundance (the reported landings + escapement) for Alewife in the Tusket River for years in which estimates of the total escapement and species ID are available. Values are provided in Table 1.
@@ -94,93 +235,143 @@ mtext("Year",1,cex=1.2, line=5)
 \newpage
 
 ```{r reference plot,echo=FALSE, fig.width = 7.5,fig.height = 9}
-reference.point.plot<-function(ssnmsy,
-                               ssn10,
-                               Fupper,
-                               Ffully,
-                               pointsX,
-                               pointsY,
-                               label,
-                               pospoints=1,
-                               rivername,
-                               speciesname="Alewife",
-                               plotchar=19){
+# Create function for plotting the reference points
+reference.point.plot<-function(
+    ssnmsy,
+    ssn10,
+    Fupper,
+    Ffully,
+    pointsX,
+    pointsY,
+    label,
+    pospoints = 1,
+    rivername,
+    speciesname = "Alewife",
+    plotchar = 19){
   
-  pointsX=pointsX/ssnmsy
-  pointsY=pointsY/Fupper
+  pointsX = pointsX / ssnmsy
+  pointsY = pointsY / Fupper
   
+  # Set plot parameters
+  par(
+    omi = c(2, 1, 1, 1),
+    mfrow = c(1, 1),
+    mar = c(1, 2, 0, 2),
+    las = 1
+    )
   
-  par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,2),las=1)
-  plot(1,1,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,1.5))
+  # Initiate empty plot
+  plot(
+    x = 1,
+    y = 1,
+    type = "n",
+    axes = 0,
+    xlab = "",
+    ylab = "", 
+    ylim = c(0, 2),
+    xlim = c(0, 1.5)
+    )
+  
   axis(1)
   axis(2)
-  box(lwd=2)
-  crit.caus.boundary=ssn10/ssnmsy
-  fully.partial.boundary=Ffully/Fupper
-  abline(v=c(1,crit.caus.boundary),lty=5)
-  abline(h=c(1,fully.partial.boundary),lty=5)
+  box(lwd = 2)
   
-  mtext(expression(paste("Esc/Esc"["USR"])),1,line=2.25,cex=1.25)
-  mtext(expression(paste("U/U"["RLL"])),2,line=2.25,cex=1.25,las=0)
+  # Create boundaries between critical, cautious, and healthy zones
+  crit.caus.boundary = ssn10 / ssnmsy
+  fully.partial.boundary = Ffully / Fupper
+  abline(v = c(1, crit.caus.boundary),lty = 5)
+  abline(h = c(1, fully.partial.boundary),lty = 5)
   
-  mtext("Spawning escapement",3,line=2.5,cex=1.5)
-  mtext("critical",3,line=.5,cex=1.15,at=((-0.2+crit.caus.boundary)/2),adj=0.5)
-  mtext("cautious",3,line=.5,cex=1.15,at=((1+crit.caus.boundary)/2),adj=0.5)
-  mtext("healthy",3,line=.5,cex=1.15,at=1.25,adj=0.5)
+  # Add axes titles
+  mtext(expression(paste("Esc / Esc"["USR"])), 1, line = 2.25, cex = 1.25)
+  #mtext(expression(paste("U/U"["RLL"])),     2, line = 2.25, cex = 1.25, las = 0)
+  mtext(expression(paste("µ / µ"["RR"])),     2, line = 2.25, cex = 1.25, las = 0)
+
   
+  # Add text to top x-axis
+  mtext("Spawning escapement", 3, line = 2.5, cex = 1.50)
+  mtext("critical",            3, line = 0.5, cex = 1.15, at = ((-0.2 + crit.caus.boundary) / 2), adj = 0.5)
+  mtext("cautious",            3, line = 0.5, cex = 1.15, at = ((1 + crit.caus.boundary) / 2), adj = 0.5)
+  mtext("healthy",             3, line = 0.5, cex = 1.15, at = 1.25, adj = 0.5)
   
-  mtext("Exploitation rate",4,line=4,cex=1.5,las=0)
-  mtext("over",4,line=.5,cex=1.25,adj=.75,las=0)
-  mtext("exploited",4,line=1.5,cex=1.25,adj=.8,las=0)
-  mtext("fully",4,line=.5,cex=1.25,adj=.42,las=0)
-  mtext("exploited",4,line=1.5,cex=1.25,adj=.4,las=0)
-  mtext("partially",4,line=.5,cex=1.25,adj=.14,las=0)
-  mtext("exploited",4,line=1.5,cex=1.25,adj=.13,las=0)
+  # Add text to right y-axis
+  mtext("Exploitation rate", 4, line = 4.0, cex = 1.50, las = 0)
+  mtext("over",              4, line = 0.5, cex = 1.25, adj = 0.75, las = 0)
+  mtext("exploited",         4, line = 1.5, cex = 1.25, adj = 0.80, las = 0)
+  mtext("fully",             4, line = 0.5, cex = 1.25, adj = 0.42, las = 0)
+  mtext("exploited",         4, line = 1.5, cex = 1.25, adj = 0.40, las = 0)
+  mtext("partially",         4, line = 0.5, cex = 1.25, adj = 0.14, las = 0)
+  mtext("exploited",         4, line = 1.5, cex = 1.25, adj = 0.13, las = 0)
   
-  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=1.5,las=0,adj=1)
-  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=1.5,las=0,adj=1)
-  mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=1.5,las=0,adj=1)
-  mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=1.5,las=0,adj=1)
+  # Add labels in bottom right
+  mtext(paste("µ URR =", Fupper,   sep = ""), 1, line = 4, at = 1.5, las = 0, adj = 1)
+  mtext(paste("µ fully =", Ffully, sep = ""), 1, line = 5, at = 1.5, las = 0, adj = 1)
+  mtext(paste("Esc URP =", ssnmsy, sep = ""), 1, line = 6, at = 1.5, las = 0, adj = 1)
+  mtext(paste("Esc LRP =", ssn10,  sep = ""), 1, line = 7, at = 1.5, las = 0, adj = 1)
   
-  mtext(rivername,1,line=5, at=0,las=0,adj=0, cex=2)
-  mtext(speciesname,1,line=7, at=0,las=0,adj=0,cex=2)
+  # Add text to bottom left
+  mtext(rivername,   1, line = 5, at = 0, las = 0, adj = 0, cex = 2)
+  mtext(speciesname, 1, line = 7, at = 0, las = 0, adj = 0, cex = 2)
   
-  points(pointsX[!is.na(pointsX)& !is.na(pointsY)],pointsY[!is.na(pointsX)&!is.na(pointsY)], pch=plotchar)
-  text(pointsX,pointsY,col="red",pos=pospoints,labels=label)
+  # Plot points
+  points(
+    pointsX[!is.na(pointsX) & !is.na(pointsY)],
+    pointsY[!is.na(pointsX) & !is.na(pointsY)],
+    pch = plotchar
+    )
+  
+  text(pointsX, pointsY, col = "red", pos = pospoints, labels = label)
   
 }
 
-reference.point.plot(3098547,2086068,0.53,0.35,rivername="Tusket River",
-                     pointsX=TR$escape,pointsY=TR$er,
-                     label="",plotchar = "")
+reference.point.plot(
+  ssnmsy = 3098547,
+  ssn10 = 2086068,
+  Fupper = 0.53,
+  Ffully = 0.35,
+  rivername = "Tusket River",
+  pointsX = TR$escape,
+  pointsY =TR$er,
+  label = "",
+  plotchar = ""
+  )
 
-ssnmsy=3098547
-Fupper=0.53
+# Get these variables outside of the scope of the plotting function to use
+ssnmsy = 3098547
+Fupper = 0.53
 
+# Get the points for the different seasons from the TR data
+series14.15 = TR[TR$year >= 2014 & TR$year <= 2015, ]
+series19    = TR[TR$year == 2019, ]
+series21.23 = TR[TR$year >= 2021 & TR$year <= 2023, ]
+series23.24 = TR[TR$year >= 2023 & TR$year <= 2024, ]
+series24    = TR[TR$year == 2024, ]
 
-series14.15=TR[TR$year>=2014 & TR$year<=2015,]
-series19=TR[TR$year==2019,]
-series21.23=TR[TR$year>=2021 & TR$year<=2023,]
-series23.present=TR[TR$year==2023,]
+# Add points and lines for each season to the plot
+points(series14.15$escape / ssnmsy, series14.15$er / Fupper, pch = 1)
+lines(series14.15$escape / ssnmsy, series14.15$er / Fupper)
 
-points(series14.15$escape/ssnmsy,series14.15$er/Fupper,pch=1)
-lines(series14.15$escape/ssnmsy,series14.15$er/Fupper)
+points(series19$escape / ssnmsy, series19$er / Fupper, pch = 1)
+lines(series19$escape / ssnmsy, series19$er / Fupper)
 
-points(series19$escape/ssnmsy,series19$er/Fupper,pch=1)
-lines(series19$escape/ssnmsy,series19$er/Fupper)
+points(series21.23$escape / ssnmsy, series21.23$er / Fupper, pch = 1)
+lines(series21.23$escape / ssnmsy, series21.23$er / Fupper)
 
-points(series21.23$escape/ssnmsy,series21.23$er/Fupper,pch=1)
-lines(series21.23$escape/ssnmsy,series21.23$er/Fupper)
+points(series23.24$escape / ssnmsy, series23.24$er / Fupper, pch = 1)
+lines(series23.24$escape / ssnmsy, series23.24$er / Fupper)
 
-points(series23.present$escape/ssnmsy,series23.present$er/Fupper,pch=19)
-lines(series23.present$escape/ssnmsy,series23.present$er/Fupper)
+points(series24$escape / ssnmsy, series24$er / Fupper, pch = 19) # colored point
+lines(series24$escape / ssnmsy, series24$er / Fupper)
 
-text(0.57,1.13,"2014",pos=2,col="gray35",cex=0.85)
-text(0.75,0.92,"2015",pos=4,col="gray35",cex=0.85)
-text(0.12,0.9,"2019",pos=2,col="gray35",cex=0.85)
-text(0.65,0.7,"2021",pos=4,col="gray35",cex=0.85)
-text(0.53,0.82,"2022",pos=2,col="gray35",cex=0.85)
-text(0.7,0.82,"2023",pos=4,col="gray35",cex=0.85)
+# Add labels to the points for each season
+text(0.57, 1.13, "2014", pos=2, col = "gray35", cex = 0.85)
+text(0.75, 0.92, "2015", pos=4, col = "gray35", cex = 0.85)
+text(0.12, 0.90, "2019", pos=2, col = "gray35", cex = 0.85)
+text(0.47, 0.70, "2021", pos=4, col = "gray35", cex = 0.85)
+text(0.53, 0.82, "2022", pos=2, col = "gray35", cex = 0.85)
+text(0.69, 0.82, "2023", pos=4, col = "gray35", cex = 0.85)
+text(0.73, 0.62, "2024", pos=4, col = "gray35", cex = 0.85)
+
 ```
 
 **Figure 2.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status for 2014, 2015, 2019, and 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
@@ -188,11 +379,14 @@ text(0.7,0.82,"2023",pos=4,col="gray35",cex=0.85)
 \newpage
 
 ```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
-data=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
-              header=T,stringsAsFactors = F)
-data$doy=as.Date(paste(data$day,data$mon,data$year,sep="-"),format="%d-%m-%Y")
-data$doy=as.numeric(strftime(data$doy, format="%j"))
-TRdata=data[data$river=="tusket",]
+data = read.csv(
+  "//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
+  header=T,stringsAsFactors = F
+  )
+
+data$doy = as.Date(paste(data$day, data$mon, data$year, sep = "-"), format = "%d-%m-%Y")
+data$doy = as.numeric(strftime(data$doy, format = "%j"))
+TRdata = data[data$river == "tusket", ]
 
 ###gotta reassign this to get blueback numbers in
 TR=multiyear[multiyear$river=="Tusket",1:9]
@@ -287,7 +481,218 @@ mtext("Number of Fish (1000's)",2, outer=T,cex=1.5,las=3)
 
 \newpage
 
-![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure5.png) **Figure 5.** The relationship between juvenile (left column) and adult (right column) and fishery reference points for Gaspereau River Alewife. F^msy^, S^msy^ and C^msy^ are the equilibrium fishing mortality rate, spawner biomass and catch at MSY. F^col^ is the fishing mortality rate that will drive the population to extinction. Juvenile turbine mortality was assumed to occur after compensatory mortality. Adult turbine mortality occurs after spawning (from Gibson et al. 2017).
+```{r dailyplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
+
+data = read.csv(
+  "//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
+  header = TRUE,
+  stringsAsFactors = FALSE
+  )
+
+data$doy = as.Date(paste(data$day, data$mon, data$year, sep = "-"), format = "%d-%m-%Y")
+data$doy = as.numeric(strftime(data$doy, format = "%j"))
+TRdata = data[data$river == "tusket", ]
+
+###gotta reassign this to get blueback numbers in
+TR = multiyear[multiyear$river == "Tusket", 1:9]
+
+plotyears = c(2023, 2024)
+par(oma = c(7, 3, 3, 0.5), mfrow = c(3, 1))
+par(mar = c(0, 5, 0, 3))
+
+for(i in plotyears){
+  
+  plotyear = i
+  
+  if (length(TRdata$number[TRdata$year == plotyear]) > 0) {
+    
+    plot(
+      x = 1,
+      y = 1,
+      pch = " ",
+      xlab = "",
+      ylab = "",
+      ylim = c(0, (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000)),
+      xlim = c(94, 177),
+      xaxt = "n",
+      yaxt = 'n',
+      cex.axis = 2
+      )
+    
+    rect(
+      xleft = 91,
+      ybottom = -5,
+      xright = 121,
+      ytop = (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000) + 5,
+      border = NA,
+      col = "gray90"
+      )
+    
+    rect(
+      xleft = 152,
+      ybottom = -5,
+      xright = 182,
+      ytop = (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000) + 5,
+      border = NA,
+      col = "gray90"
+      )
+    
+    text(
+      x = 171, 
+      y = max(TRdata$number[TRdata$year == plotyear] / 1000), 
+      plotyear,
+      cex = 2
+      )
+    
+    text(
+      x = 92,
+      y = max(TRdata$number[TRdata$year == plotyear] / 1000),
+      paste(
+        "Total     =",
+        TR$escape[!is.na(TR$year == plotyear)
+                  & TR$year == plotyear
+                  & TR$species == "All"],
+        sep = " "
+        ),
+      cex = 1.5,
+      pos = 4
+      )
+    
+    text(
+      x = 92,
+      y = max(TRdata$number[TRdata$year == plotyear] / 1000) * 0.8,
+      paste(
+        "Total A =",
+        TR$escape[!is.na(TR$year == plotyear)
+                  & TR$year == plotyear
+                  & TR$species == "A"],
+        sep = " "
+        ),
+      cex = 1.5,
+      pos = 4
+      )
+    
+    text(
+      x = 92,
+      y = max(TRdata$number[TRdata$year == plotyear] / 1000) * 0.6,
+      paste(
+        "Total B =",
+        TR$escape[!is.na(TR$year == plotyear)
+                  & TR$year == plotyear
+                  & TR$species == "B"],
+        sep = " "
+        ),
+      cex = 1.5,
+      pos = 4
+      )
+    
+  } else {
+    
+    plot(
+      x = 1,
+      y = 1,
+      pch = " ",
+      xlab = "",
+      ylab = "",
+      ylim = c(0, 50),
+      xlim = c(0, 68),
+      xaxt = "n",
+      yaxt = 'n',
+      cex.axis = 2
+      )
+    
+    rect(-5, -5, 12, 55, border = NA, col = "gray90")
+    rect(43, -5, 73, 55, border = NA, col = "gray90")
+    text(63, 41.5, plotyear, cex = 2)
+    text(-2, 41.5, "Total = NA ", cex = 1.5, pos = 4)
+    
+  }
+  
+  box()
+  
+  lines(
+    TRdata$doy[TRdata$year == plotyear & TRdata$species == "All"],
+    TRdata$number[TRdata$year == plotyear & TRdata$species == "All"] / 1000,
+    lty = 1,
+    lwd = 1.5
+    )
+  
+  lines(
+    TRdata$doy[TRdata$year == plotyear & TRdata$species == "A"],
+    TRdata$number[TRdata$year == plotyear & TRdata$species == "A"] / 1000,
+    lty = 3,
+    lwd = 1.5
+    )
+  
+  lines(
+    TRdata$doy[TRdata$year == plotyear & TRdata$species == "B"],
+    TRdata$number[TRdata$year == plotyear & TRdata$species == "B"] / 1000,
+    lty = 2,
+    lwd = 1.5
+    )
+  
+  axis(
+    side = 2,
+    cex.axis = 1.5,
+    at = c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120)
+    )
+  
+}
+
+axis(
+  side = 1,
+  cex.axis = 1.5,
+  at = c(91, 100, 110, 121, 130, 140, 152, 161, 171),
+  labels = c("1", "10", "20", "1", "10", "20", "1", "10", "20")
+  )
+
+mtext(
+  text = "April",
+  side = 1,
+  at = 105,
+  cex = 1.5,
+  line = 3
+  )
+
+mtext(
+  text = "May",
+  side = 1,
+  at = 135,
+  cex = 1.5,
+  line = 3
+  )
+
+mtext(
+  text = "June",
+  side = 1,
+  at = 166,
+  cex = 1.5,
+  line = 3
+  )
+
+mtext(
+  text = "Date",
+  side = 1,
+  at = 135,
+  cex = 1.5,
+  line = 5.5
+  )
+
+mtext(
+  text = "Number of Fish (1000's)",
+  side = 2,
+  outer = TRUE,
+  cex = 1.5,
+  las = 3
+)
+
+```
+
+**Figure 5.** Estimated number of Alewife and Blueback Herring ascending the Lake Vaughan fish ladder in 2023 and 2024. The solid line represents the total daily count, the dotted line represents the daily Alewife count, and the dotted line represents the daily Blueback Herring Count. Note that scales differ among plots.
+
+\newpage
+
+![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure5.png) **Figure 6.** The relationship between juvenile (left column) and adult (right column) and fishery reference points for Gaspereau River Alewife. F^msy^, S^msy^ and C^msy^ are the equilibrium fishing mortality rate, spawner biomass and catch at MSY. F^col^ is the fishing mortality rate that will drive the population to extinction. Juvenile turbine mortality was assumed to occur after compensatory mortality. Adult turbine mortality occurs after spawning (from Gibson et al. 2017).
 
 \newpage
 
@@ -380,7 +785,7 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 6.** Estimated proportion of Alewife and Blueback Herring by age and spawning history ascending the Lake Vaughan fish ladder in 2019.
+**Figure 7.** Estimated proportion of Alewife and Blueback Herring by age and spawning history ascending the Lake Vaughan fish ladder in 2019.
 
 \newpage
 
@@ -440,9 +845,9 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 7.** Estimated proportion of Alewife by age and spawning history ascending the Lake Vaughan fish ladder in 2021 and 2022. \newpage ![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure9.png)
+**Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the Lake Vaughan fish ladder in 2021 and 2022. \newpage ![](//ent.dfo-mpo.ca/atlshares/Science/Population%20Ecology%20Division/DFD/Alosa/Assessment%20Results/Figure9.png)
 
-**Figure 8.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
+**Figure 9.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
 
  
 
