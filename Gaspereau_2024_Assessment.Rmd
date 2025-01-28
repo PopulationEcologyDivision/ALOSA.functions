@@ -78,7 +78,7 @@ want to create sheets, other wise it should always be set to FALSE.
 run count scripts to get count totals for in season updates
 make plots or tables to include in emails
 
-```{r in_season_counts}
+```{r in_season_counts,include=FALSE}
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
 
 # filename="White Rock 2024 count data.csv"
@@ -99,7 +99,7 @@ print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total)
 # write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
-```{r in_season_plot}
+```{r in_season_plot,include=FALSE}
 #plot for in season emails
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
@@ -155,8 +155,8 @@ bio.data<-bio.data[,1:11]
 # colnames(bio.data)<-c("SITE_ID", "YEAR", "DAY", "MON","FISH_ID", "SPECIES_ID",
 #                                        "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
 biodata<-bio.data
-missingdays<-missing.days(bio.data)
-mergedays<-missingdays-1 #in both cases the two previous days are most similar in count
+# missingdays<-missing.days(bio.data)
+# mergedays<-missingdays-1 #in both cases the two previous days are most similar in count
 # For missing sample days, we merge the counts from two days
 # and use that in the weighting calculation. 
 # For example, ff day 112 is missing then decide if you want to merge the counts
@@ -198,7 +198,7 @@ counts.sub1$seconds<-NA
 # write.csv(counts.sub1,"White Rock 2024 RECOUNTS.csv",row.names=F,na="")
 ```
 
-```{r analyze_WR_recounts}
+```{r analyze_WR_recounts,include=FALSE}
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
 #recounts are msotly complete, lets take a look
 wr.recounts<-read.csv("White Rock 2024 RECOUNTS.csv")
@@ -228,10 +228,12 @@ plot(wr.recounts$og.up,wr.recounts$count.upstream)
 ```{r plot_counts}
 countdata<-x
 countdata$date<-make_date(2024, countdata$mon, countdata$day)
-plot(countdata$date,countdata$chigh,type="l",lty=3)
+plot(countdata$date,countdata$chigh,type="l",lty=3,xlab="",ylab="")
 lines(countdata$date,countdata$clow,lty=3)
 lines(countdata$date,countdata$total,lty=1)
 segments(as.Date("2024-05-22"),0,as.Date("2024-05-22"),max(countdata$chigh,na.rm=T))
+mtext("Date",1,line=3)
+mtext("Number of Fish",2,line=3)
 ```
 ```{r post_season_counts}
 count.data<-onespecies.river.escapement(fixtime = T,
@@ -242,5 +244,7 @@ count.data<-onespecies.river.escapement(fixtime = T,
                                         channel = channel
                                         )
 #yay it works
+count.data<-round(count.data,0)
+write.csv(count.data,file="Gaspereau River 2024 daily counts.csv",row.names=F)
 ```
 

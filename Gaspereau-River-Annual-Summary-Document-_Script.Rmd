@@ -17,8 +17,9 @@ output:
 library(ROracle)
 library(tinytex)
 ```
-\newpage
 
+\newpage
+Please note that all 2024 values related to catch are interim as of October 21 2024 while an updated 2024 catch estimate is being determined.
 ```{r hardcode_escapement, include=FALSE}
 GR2024<-"588,540"; GRCI2024<-"31,210"
 GR2023<-"1,312,700"; GRCI2023<-"52,246"
@@ -32,11 +33,11 @@ GR2015<-"438,874"; GRCI2015<-"24,070"
 #no CI available for 2013 due to method used
 ```
 
-**Table 1.** Summary of catch data, estimated escapement, estimated run size, and exploitation rate for Alewife on the Gaspereau River, NS. 
+**Table 1.** Summary of catch data, estimated escapement, estimated run size, and exploitation rate for Alewife on the Gaspereau River, NS. Italicized values for 2024 are placeholders while an updated 2024 catch estimate is being determined.
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
-2024| *1,200,000*| `r GR2024`+/-`r GRCI2024` |*1,788,540* |*67.1*
+2024| 1,265,348| `r GR2024`+/-`r GRCI2024` |1,853,888 |68.2
 2023| 1,431,500| `r GR2023`+/-`r GRCI2023` |2,744,200 |52.2
 2022| 1,562,900| `r GR2022`+/-`r GRCI2022` |2,437,762 |64.1
 2021| 1,231,005| `r GR2021`+/-`r GRCI2021` |2,215,099 |55.6
@@ -80,9 +81,9 @@ Upper Stock Reference Point|	USR|	Spawning stock biomass or number of spawners a
 | | | 
 Lower Stock Reference Point|	LRP|	Spawning stock biomass or numbers of spawners below which the stock is in the critical zone|	235,000 fish
 | | | 
-Exploitation Rate Removal Reference Level|	URR|	Exploitation rate above which the stock is over exploited|	0.53
+Exploitation Rate Removal Reference Level|	µRR|	Exploitation rate above which the stock is over exploited|	0.53
 | | | 
-Exploitation Rate Lower Removal Reference Level|	ULRR|	Exploitation rate above which stock is fully exploited, below which stock is under exploited|	0.35
+Exploitation Rate Lower Removal Reference Level|	µLRR|	Exploitation rate above which stock is fully exploited, below which stock is under exploited|	0.35
 
 \newpage
 ```{r escapeplot, echo=FALSE, fig.width = 8.5,fig.height = 10, fig.align='center'}
@@ -169,7 +170,7 @@ reference.point.plot<-function(ssnmsy,
   abline(h=c(1,fully.partial.boundary),lty=5)
   
   mtext(expression(paste("Esc/Esc"["USR"])),1,line=2.25,cex=1.25)
-  mtext(expression(paste("U/U"["RLL"])),2,line=2.25,cex=1.25,las=0)
+  mtext(expression(paste("µ/µ"["RR"])),2,line=2.25,cex=1.25,las=0)
   
   mtext("Spawning escapement",3,line=2.5,cex=1.5)
   mtext("critical",3,line=.5,cex=1.15,at=((-0.2+crit.caus.boundary)/2),adj=0.5)
@@ -185,8 +186,8 @@ reference.point.plot<-function(ssnmsy,
   mtext("partially",4,line=.5,cex=1.25,adj=.14,las=0)
   mtext("exploited",4,line=1.5,cex=1.25,adj=.13,las=0)
   
-  mtext(paste("µ URR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
-  mtext(paste("µ fully =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("µ RR =",Fupper,sep=""),1,line=4,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
+  mtext(paste("µ LRR =",Ffully,sep=""),1,line=5,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   mtext(paste("Esc URP =",ssnmsy,sep=""),1,line=6,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   mtext(paste("Esc LRP =",ssn10,sep=""),1,line=7,at=(max(pointsX,na.rm=T)*1.1),las=0,adj=1)
   
@@ -243,7 +244,7 @@ text(1.3,1.25,"2024",pos=3,col="red",cex=0.85)
 arrows(0.65,1.45,0.43,1.37,length=0.1,col="gray35",cex=0.85)
 ```
 
-**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021-2022 using closed circles. The plot is updated from Gibson et al. 2017.
+**Figure 3.** Stock status plot for the Gaspereau River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status from 1982-1984 are show using open circles, status from 1997-2006 are shown using an X, and for 2013-19 and 2021-2024 using closed circles. The plot is updated from Gibson et al. 2017.
 
 \newpage
 ```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
@@ -530,7 +531,7 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 10.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2022.
+**Figure 10.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2022 and 2023.
 
 \newpage
 <!-- ![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure9.png)  -->
