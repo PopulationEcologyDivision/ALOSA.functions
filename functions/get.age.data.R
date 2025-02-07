@@ -10,9 +10,10 @@
 
 # This functions uses:
 
-get.age.data<-function(year, siteID, sppID, AgeStructure, channel){
+get.age.data<-function(year, siteID, sppID, AgeStructure, PrimaryAger, channel){
  
   if(missing(AgeStructure)){AgeStructure<-T}
+  if(missing(PrimaryAger)){PrimaryAger<-"Y"}
   
   sql <- "SELECT * FROM ALOSA_FISH_AGE_DATA
                    LEFT JOIN ALOSA_FISH_BIO_DATA ON
@@ -22,15 +23,17 @@ get.age.data<-function(year, siteID, sppID, AgeStructure, channel){
                    
                    WHERE ALOSA_FISH_BIO_DATA.SITE_ID=?site AND
                          ALOSA_FISH_BIO_DATA.YEAR=?year AND
-                         ALOSA_FISH_BIO_DATA.SPECIES_ID=?spp"
+                         ALOSA_FISH_BIO_DATA.SPECIES_ID=?spp AND
+                         ALOSA_FISH_AGE_DATA.PRIMARY_AGE_RECORD=?primager"
   
-  agequery=sqlInterpolate(ANSI(), sql, year = year, site=siteID, spp = sppID)
+  agequery=sqlInterpolate(ANSI(), sql, year = year, site=siteID, spp = sppID,
+                          primager = PrimaryAger)
   
   agedata=dbGetQuery(channel, agequery)
   
   if(AgeStructure==T)
   {
-    agedata=agedata[agedata$AGE_STRUCTURE_SAMPLE=="Y" |agedata$AGE_STRUCTURE_SAMPLE==1,]
+    agedata=agedata[agedata$AGE_STRUCTURE_SAMPLE=="Y",]
   }
 
   return(agedata)
