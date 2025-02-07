@@ -21,127 +21,6 @@ source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 ```
 
-```{r hardcode_escapement, include=FALSE, eval = FALSE}
-#2015
-temp <- read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/Combined_final_counts.csv")
-
-# We need to clean up the data from this year so that the escapement function
-# will run
-temp <- temp |> 
-  select(-1, -study.day) |> 
-  rename(count.upstream = count)
-
-temp$year <- 2015
-temp$count.downstream <- 0
-
-temp <- temp |> relocate(year)
-
-write_csv(temp, "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/counts_for_2024_assessment.csv")
-
-temp <- onespecies.partial.river.escapement(
-  filename = "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2015/Counts/counts_for_2024_assessment.csv",
-  database = FALSE,
-  fixtime = FALSE,
-  year = 2015,
-  site = 2,
-  channel = channel)
-
-total_2015 <- sum(temp$total)
-clow_2015 <- sum(temp$clow)
-chigh_2015 <- sum(temp$chigh)
-ci_2015 <- chigh_2015 - clow_2015
-
-# #2019
-# temp <- onespecies.river.escapement(
-#   filename = "file",
-#   year = 2019,
-#   site = 2,
-#   channel = channel)
-# 
-# total_2019 <- sum(temp$total)
-# clow_2019 <- sum(temp$clow)
-# chigh_2019 <- sum(temp$chigh)
-# ci_2019 <- chigh_2019 - clow_2019
-
-# #2021
-# temp <- onespecies.river.escapement(
-#   filename = "file",
-#   year = 2021,
-#   site = 2,
-#   channel = channel)
-# 
-# total_2021 <- sum(temp$total)
-# clow_2021 <- sum(temp$clow)
-# chigh_2021 <- sum(temp$chigh)
-# ci_2021 <- chigh_2021 - clow_2021
-
-#2022
-temp <- onespecies.river.escapement(
-  filename = "file",
-  downstream.migration = FALSE,
-  fixtime = FALSE,
-  year = 2022,
-  site = 2,
-  channel = channel)
-
-total_2022 <- sum(temp$total)
-clow_2022 <- sum(temp$clow)
-chigh_2022 <- sum(temp$chigh)
-ci_2022 <- chigh_2022 - clow_2022
-
-# #2023
-# temp <- onespecies.river.escapement(
-#   filename = "file",
-#   year = 2023,
-#   site = 2,
-#   channel = channel)
-# 
-# total_2023 <- sum(temp$total)
-# clow_2023 <- sum(temp$clow)
-# chigh_2023 <- sum(temp$chigh)
-# 
-# temp <- onespecies.river.escapement(
-#   "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets/Powerhouse 2023 count data1.csv",
-#   fixtime = FALSE,
-#   downstream.migration = FALSE,
-#   database = FALSE,
-#   2023,
-#   14,
-#   channel
-#   )
-# 
-# total_2023 <- total_2023 + sum(temp$total)
-# clow_2023 <- clow_2023 + sum(temp$clow)
-# chigh_2023 <- chigh_2023 + sum(temp$chigh)
-# ci_2023 <- chigh_2023 - clow_2023
-
-# #2024
-# onespecies.river.escapement(
-#   filename = "file",
-#   year = 2024,
-#   site = 2,
-#   channel = channel)
-# 
-# onespecies.river.escapement(
-#   filename = "file",
-#   year = 2024,
-#   site = 14,
-#   channel = channel)
-
-# These are the confidence intervals for the total escapement that we should add
-# to the daily escapement plots. The CI were obtained by running the script
-# onspecies.river.escapement, taking the CI and dividing it by two since we are
-# going to be displaying this as a +/- value instead of a range. For years
-# >= 2022, the CI includes that from the Powerhouse data as well
-TR2014 <- ""; TRCI2015 <- ""
-TR2015 <- as.character(round(total_2015)); TRCI2014 <- as.character(round(ci_2015 / 2))
-TR2019 <- as.character(round(total_2019)); TRCI2019 <- as.character(round(ci_2019 / 2))
-TR2021 <- as.character(round(total_2021)); TRCI2021 <- as.character(round(ci_2021 / 2))
-TR2022 <- ""; TRCI2022 <- ""
-TR2023 <- ""; TRCI2023 <- ""
-TR2024 <- "2142665"; TRCI2024 <- "66084.5"
-```
-
 \newpage
 
 **Table 1.** Summary of catch data, estimated escapement, estimated run size, and exploitation rate for
@@ -381,48 +260,128 @@ text(0.73, 0.62, "2024", pos=4, col = "gray35", cex = 0.85)
 ```{r dailyplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
 data = read.csv(
   "//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/daily_counts_all years_all rivers.csv",
-  header=T,stringsAsFactors = F
-  )
+  header = T,
+  stringsAsFactors = F
+)
 
 data$doy = as.Date(paste(data$day, data$mon, data$year, sep = "-"), format = "%d-%m-%Y")
 data$doy = as.numeric(strftime(data$doy, format = "%j"))
-TRdata = data[data$river == "tusket", ]
+TRdata = data[data$river == "tusket",]
 
 ###gotta reassign this to get blueback numbers in
-TR=multiyear[multiyear$river=="Tusket",1:9]
+TR = multiyear[multiyear$river == "Tusket", 1:9]
 
-plotyears=c(2014,2015,2018)
+plotyears = c(2014, 2015, 2018)
 #windows(8.5,11)
-par(oma=c(7,3,3,0.5),mfrow=c(3,1))
-par(mar=c(0,5,0,3))
+par(oma = c(7, 3, 3, 0.5), mfrow = c(3, 1))
+par(mar = c(0, 5, 0, 3))
 
-for(plotyear in plotyears){
-plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,(max(TRdata$number[TRdata$year==plotyear])*1.2/1000)),xlim=c(96,177),
-     xaxt="n",yaxt='n',cex.axis=2)
-rect(91, -5, 121, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-rect(152, -5, 182, (max(TRdata$number[TRdata$year==plotyear])*1.2/1000)+5, border = NA,col="gray90")
-box()
-lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="All"],
-      TRdata$number[TRdata$year==plotyear & TRdata$species=="All"]/1000,lty=1,lwd=1.5)
-lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="A"],
-      TRdata$number[TRdata$year==plotyear & TRdata$species=="A"]/1000,lty=3,lwd=1.5)
-lines(TRdata$doy[TRdata$year==plotyear & TRdata$species=="B"],
-      TRdata$number[TRdata$year==plotyear & TRdata$species=="B"]/1000,lty=2,lwd=1.5)
-text(171,max(TRdata$number[TRdata$year==plotyear]/1000),plotyear,cex=2)
-text(94,max(TRdata$number[TRdata$year==plotyear]/1000),paste("Total     =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="All"],sep=" "),cex=1.5,pos=4)
-text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.8,paste("Total A =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="A"],sep=" "),cex=1.5,pos=4)
-text(94,max(TRdata$number[TRdata$year==plotyear]/1000)*0.6,paste("Total B =", TR$escape[!is.na(TR$year==plotyear)& TR$year==plotyear & TR$species=="B"],sep=" "),cex=1.5,pos=4)
-axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+for (plotyear in plotyears) {
+  plot(
+    1,
+    1,
+    pch = " ",
+    xlab = "",
+    ylab = "",
+    ylim = c(0, (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000)),
+    xlim = c(96, 177),
+    xaxt = "n",
+    yaxt = 'n',
+    cex.axis = 2
+  )
+  rect(91,
+       -5,
+       121,
+       (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000) + 5,
+       border = NA,
+       col = "gray90")
+  rect(152,
+       -5,
+       182,
+       (max(TRdata$number[TRdata$year == plotyear]) * 1.2 / 1000) + 5,
+       border = NA,
+       col = "gray90")
+  box()
+  lines(TRdata$doy[TRdata$year == plotyear & TRdata$species == "All"],
+        TRdata$number[TRdata$year == plotyear &
+                        TRdata$species == "All"] / 1000,
+        lty = 1,
+        lwd = 1.5)
+  lines(TRdata$doy[TRdata$year == plotyear & TRdata$species == "A"],
+        TRdata$number[TRdata$year == plotyear &
+                        TRdata$species == "A"] / 1000,
+        lty = 3,
+        lwd = 1.5)
+  lines(TRdata$doy[TRdata$year == plotyear & TRdata$species == "B"],
+        TRdata$number[TRdata$year == plotyear &
+                        TRdata$species == "B"] / 1000,
+        lty = 2,
+        lwd = 1.5)
+  text(171, max(TRdata$number[TRdata$year == plotyear] / 1000), plotyear, cex =
+         2)
+  text(
+    94,
+    max(TRdata$number[TRdata$year == plotyear] / 1000),
+    paste("Total     =", TR$escape[!is.na(TR$year == plotyear) &
+                                     TR$year == plotyear & TR$species == "All"], sep = " "),
+    cex = 1.5,
+    pos = 4
+  )
+  text(
+    94,
+    max(TRdata$number[TRdata$year == plotyear] / 1000) * 0.8,
+    paste("Total A =", TR$escape[!is.na(TR$year == plotyear) &
+                                   TR$year == plotyear & TR$species == "A"], sep = " "),
+    cex = 1.5,
+    pos = 4
+  )
+  text(
+    94,
+    max(TRdata$number[TRdata$year == plotyear] / 1000) * 0.6,
+    paste("Total B =", TR$escape[!is.na(TR$year == plotyear) &
+                                   TR$year == plotyear & TR$species == "B"], sep = " "),
+    cex = 1.5,
+    pos = 4
+  )
+  axis(2,
+       cex.axis = 1.5,
+       at = c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120))
 }
 
-axis(1,cex.axis=1.5, at=c(91,100,110,121,130,140,152,161,171), 
-     labels=c("1","10","20","1","10","20","1","10","20"))
+axis(
+  1,
+  cex.axis = 1.5,
+  at = c(91, 100, 110, 121, 130, 140, 152, 161, 171),
+  labels = c("1", "10", "20", "1", "10", "20", "1", "10", "20")
+)
 
-mtext("April",1,at=105,cex=1.5,line=3)
-mtext("May",1,at=135,cex=1.5,line=3)
-mtext("June",1,at=166,cex=1.5,line=3)
-mtext("Date",1,at=135,cex=1.5,line=5.5)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5,las=3)
+mtext("April",
+      1,
+      at = 105,
+      cex = 1.5,
+      line = 3)
+mtext("May",
+      1,
+      at = 135,
+      cex = 1.5,
+      line = 3)
+mtext("June",
+      1,
+      at = 166,
+      cex = 1.5,
+      line = 3)
+mtext("Date",
+      1,
+      at = 135,
+      cex = 1.5,
+      line = 5.5)
+mtext(
+  "Number of Fish (1000's)",
+  2,
+  outer = T,
+  cex = 1.5,
+  las = 3
+)
 
 
 ```

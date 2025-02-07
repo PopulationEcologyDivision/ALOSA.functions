@@ -33,7 +33,9 @@ library(ROracle)
 library(imputeTS)
 
 # Constants
-current_year <- format(Sys.Date(), "%Y")
+#current_year <- format(Sys.Date(), "%Y")
+current_year <- 2024
+
 ```
 
 ```{r source_ALOSA_functions}
@@ -629,8 +631,8 @@ counts_species |>
   ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "3 days") +
   scale_y_continuous(
-    limits = c(0, max(counts_species$total)),
-    breaks = seq(0, max(counts_species$total), by = 10000),
+    limits = c(0, max(counts_species$total, na.rm = TRUE)),
+    breaks = seq(0, max(counts_species$total, na.rm = TRUE), by = 10000),
     labels = scales::comma
   ) +
   theme(
@@ -766,100 +768,86 @@ result |>
 
 ## Total counts VD + PH
 ```{r total_counts}
+# I use the CSVs for counts here because I can only get 2024 data to run from
+# the database without throwing an error, 2022 and 2023 do not work
 path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"
 
-counts_vd <- onespecies.river.escapement(
+vd_split <- split_species(
+  year = current_year,
+  siteID = 2,
+  channel = channel,
+  biodata_CSV = NULL
+  )
+
+counts_vd <- twospecies.river.escapement(
   path_to_counts_CSV,
   fixtime = TRUE,
   downstream.migration = FALSE,
   database = FALSE,
   year = current_year,
   site = 2,
-  channel = channel
+  channel = channel,
+  species.split = vd_split
 )
+
+# Got to grab each of the lists within counts_vd which get created by 
+# twospecies.river.escapement and then add a column to each indicating which
+# species they represent (A = Alewives, B = Bluebacks)
+vd_alewives <- as_tibble(counts_vd[[1]])
+vd_alewives$species = "A"
+
+vd_bluebacks <- as_tibble(counts_vd[[2]])
+vd_bluebacks$species = "B"
+
+counts_vd <- rbind(vd_alewives, vd_bluebacks)
 counts_vd$location <- "Lake Vaughan"
-#write_csv(counts, file = paste0(path.expand("~"), "/", "counts_vd.csv"))
-  
+
+# We use the split for Vaughan Dam here because there are no counts made at PH
 path_to_counts_CSV <- "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"
 
-counts_ph <- onespecies.river.escapement(
-  fixtime = FALSE,
+counts_ph <- twospecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
   downstream.migration = FALSE,
-  database = TRUE,
+  database = FALSE,
   year = current_year,
   site = 14,
-  channel = channel
-  )
+  channel = channel,
+  species.split = vd_split
+)
+
+ph_alewives <- as_tibble(counts_ph[[1]])
+ph_alewives$species = "A"
+
+ph_bluebacks <- as_tibble(counts_ph[[2]])
+ph_bluebacks$species = "B"
+
+counts_ph <- rbind(ph_alewives, ph_bluebacks)
 counts_ph$location <- "Powerhouse"
-#write_csv(counts, file = paste0(path.expand("~"), "/", "counts_ph.csv"))
 
 # Join these counts into a single dataframe so we can add them
-counts_joined <- counts_vd |> left_join(counts_ph, by = "dayofyear")
-counts_joined <- counts_joined |> select(-location.x, -location.y)
+counts_joined <- rbind(counts_vd, counts_ph)
 
-counts_joined <- counts_joined %>%
+counts <- counts_joined %>%
   mutate(
     across(
       everything(), ~ replace_na(., 0)
       )
     )
 
-# Totals from PH and VD combined
-counts <- counts_joined |> 
-  mutate(
-    total = total.x + total.y,
-    sd = sd.x + sd.y,
-    clow = clow.x + clow.y,
-    chigh = chigh.x + chigh.y,
-    mon = mon.x,
-    day = day.x
-  ) |> 
-  select(mon, day, dayofyear, total, sd, clow, chigh)
-
-# We could do proportions on these counts for species, but we didn't actually
-# measure bluebacks at PH, so we need to think about it.
-proportions <- split_species(
-    year = current_year,
-    siteID = 2,
-    channel = channel
-  )
-counts$year <- current_year
-
-counts_species <- counts |>
-      mutate(date = make_date(year, mon, day)) |>
-      ungroup() |>
-      select(date, total, clow, chigh) |>
-      inner_join(pp, by = "date") |>
-      mutate(B = total * BBprop, A = total - B) |>
-      select(date, A, B) |>
-      pivot_longer(cols = c(A, B),
-                   names_to = "species",
-                   values_to = "total") |> 
-      ungroup()
-
-# Convert species counts to a format that we can copy into the 
+# Convert species counts to a format that we can easily copy into the 
 # "daily_counts_all_years_all_rivers.csv" file for the plots in the 
 # Tusket River Annual Summary Document.
+counts_for_csv <- counts |>
+  group_by(species) |>
+  summarise(total_escapement = sum(total))
 
-# Create new rows for 'All' species that sum totals for A and B
-counts_species_all <- counts_species |> 
-  group_by(date) %>%
-  summarise(species = "All", total = sum(total), .groups = 'drop')
-
-# Append the new rows to the original dataframe
-counts_combined <- bind_rows(counts_species, counts_species_all) |>
-  mutate(species = factor(species, levels = c("All", "A", "B"))) |> 
-  arrange(species, date) |> 
-  mutate(
-    mon = month(date),
-    day = day(date),
-    year = year(date),
-    total = round(total),
-    river = "tusket"
-    ) |> 
-  select(mon, day, year, species, total, river)
-
-write_csv(counts_combined, file = paste0(path.expand("~"), "/", "counts_combined.csv"))
+counts_for_csv <- counts_for_csv |> 
+  bind_rows(
+    counts_for_csv |>
+      summarise(total_escapement = sum(total_escapement)) |> 
+      mutate(species = "All")
+  )
 
 ```
 
@@ -889,6 +877,13 @@ may_20_2022_prop <- inspection |>
 ```
 
 ```{r blueback_catch}
+# I THINK I NEED TO REDO THIS WHOLE SECTION AND USE OFFSETS OF 7 AND 3 DAYS LIKE 
+# I HAVE DONE FOR OTHER ANALYSES
+# 
+# HOW MANY WEEKS SHOULD WE CONSIDER THE DIPPERS AS HAVING ACCESS TO BB?
+# 
+# 
+# 
 # This section will need to be edited for each year. The way this is currently
 # set up requires you to identify which of the last weeks of May you want to
 # calculate blueback catch for. This will be based on when bluebacks were
@@ -907,11 +902,13 @@ tusket_total_catch <- catch |>
 
 # I checked the logbooks for the Tusket licences from the filtered data above, and they all look good for 2024. There were a few small mistakes that I won't correct here.
 tusket_gill <- catch |>
-  filter(YEAR == 2024
-         & RIVERNAME_CLEANED == "TUSKET"
-         & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
+  filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
 
-tusket_gill <- as.tibble(tusket_gill)
+# Now for the dippers
+tusket_gill <- catch |>
+  filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)")
+
+tusket_gill <- as_tibble(tusket_gill)
 
 # Get landings per week for last two weeks for gill netters only
 week_1 <- tusket_gill |> filter(FV_DATE_FISHED >= "2024-05-17" & FV_DATE_FISHED <= "2024-05-20") |> summarise(total_kg = sum(KGS))

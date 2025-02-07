@@ -1,0 +1,424 @@
+# SETUP
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,     # Suppress warnings
+  message = FALSE     # Suppress messages
+)
+```
+
+```{r libraries_et_al}
+library(tidyverse)
+
+# Source all the functions so we can use them
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+```
+
+# LOAD DATA
+```{r load_MARFIS_data, include=FALSE, warning=FALSE}
+# Do a new MARFIS pull
+#source("~/git/ALOSA.functions/MARFIS_all in one.R")
+#save(catch, didnotfish, licencerenewals, file = "C:/Users/graylo/Documents/data/marfis_pull.Rdata")
+
+# Load in the data
+load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
+
+# Clean the data
+# source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+source("~/MARFIS.error.cleaner.R")
+
+# Convert weights to kilograms
+catch <- convert.KGS(catch)
+catch <- subset(catch, select = -FV_WEIGHT)
+catch <- catch |> rename(FV_WEIGHT = KGS)
+
+# Get the licence data provided by RM
+licences <- readxl::read_excel("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx")
+
+# We can use this to grab data for what licences are not reporting
+licences |> 
+  select(
+    LICENCE_ID = `Licence Id`,
+    LICENCE_TYPE = `Licence Type Description (English)`,
+    COUNTY = `County Name 1`,
+    PROVINCE = `Province Abbrev (English)`,
+    GEAR_DESCRIPTION = `Gear Description (English)`,
+    RIVERNAME = `RIVER CONFIRMED`
+    ) |> 
+  filter(LICENCE_TYPE == "NON-VESSEL BASED LIMITED" | LICENCE_TYPE == "CC NON-VESSEL BASED LIMITED") |> 
+  distinct(LICENCE_ID, COUNTY) |> 
+  arrange(LICENCE_ID)
+
+```
+
+# LANDINGS
+
+Get some information about where the catch reports are coming from
+```{r}
+
+catch |> 
+  filter(YEAR == 2024) |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(LICENCE_ID %in% nb_licences_2023$LICENCE_ID) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  select(LICENCE_ID, RIVERNAME, COUNTY) -> nb_licences_catch_2024_info
+
+nb_lic_df |> 
+  left_join(nb_licences_catch_2024_info) |> 
+  filter(status == "Catch") |> 
+  count(COUNTY) |> 
+  arrange(desc(n))
+  
+```
+
+Get the actual landings data
+```{r}
+catch |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR == 2023 & PROVINCE == "NB") |>
+  #filter(YEAR == 2024 & PROVINCE == "NB") |>
+  group_by(YEAR, COUNTY) |> 
+  mutate(COUNTY = str_remove(COUNTY, " COUNTY")) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000, 1)) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  arrange(desc(FV_WEIGHT_MT))
+
+```
+
+Plot them
+```{r, fig.height=8, fig.width=15}
+# This is the break down of all the SWNB landings for each year since 2019
+nb_catch <- catch|> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  group_by(YEAR) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000)) |> 
+  mutate(YEAR = as.factor(YEAR))
+
+nb_catch |> 
+  ggplot(aes(YEAR, FV_WEIGHT_MT)) +
+  geom_col(colour = "#2F4F4F", fill = "#66CDAA") +
+  labs(
+    title = "Total annual reported landings of gaspereau for SW-NB",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 3e3),
+    breaks = seq(0, 3e3, 200),
+    labels = scales::label_comma()
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("")
+
+#ggsave("landings_swnb.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+
+```
+
+```{r}
+nb_catch_county <- catch |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  group_by(YEAR, COUNTY) |> 
+  mutate(COUNTY = str_remove(COUNTY, " COUNTY")) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000, 1)) |> 
+  mutate(YEAR = as.factor(YEAR))
+
+nb_catch_county |> 
+  filter(COUNTY != "WESTMORLAND") |> # very few landings here
+  ggplot(aes(YEAR, FV_WEIGHT_MT, fill = COUNTY)) +
+  geom_col(colour = "grey20") +
+  #facet_wrap(~YEAR, ncol =6)+
+  labs(
+    title = "Total annual reported landings of gaspereau for SW-NB",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 3e3),
+    breaks = seq(0, 3e3, 500),
+    labels = scales::label_comma()
+  ) +
+  #scale_fill_viridis_d() +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("")
+
+ggsave("landings_county_swnb.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+```
+
+```{r}
+nb_catch_county |> 
+  filter(YEAR == 2024) |> 
+  arrange(desc(FV_WEIGHT_MT))
+```
+
+```{r}
+
+SJ_tribs <- c("SAINT JOHN","WASHADEMOAK LAKE","BELYEAS POINT","BELLEISLE BAY","DARLING'S ISLAND","DARLING'S LAKE","MORRELL RD","GRAND LAKE","KINGSTON CREEK","MILKISH CREEK","OROMOCTO","DOUGLAS HARBOUR","FRENCH LAKE","THE KEYHOLE","KEYHOLE LAKE","KENNEBECASIS","MAQUAPIT LAKE","INDIAN","GREY ROCK","CAP-PELE")
+
+non_SJ <-c("MAGAGUADAVIC", "TANTRAMAR", "SAINT CROIX", "AULAC", "MISSAQUASH", "SWAN LAKE", "PETITCODIAC")
+
+nb_catch_river <- catch |>
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |>
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  mutate(
+    RIVERNAME = case_when(
+      RIVERNAME %in% SJ_tribs ~ "SAINT JOHN RIVER",
+      #RIVERNAME %in% non_SJ ~ "OTHER",
+      TRUE ~ RIVERNAME)
+    ) |> 
+  group_by(YEAR, RIVERNAME) |>
+  mutate(COUNTY = str_remove(COUNTY, " COUNTY")) |>
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |>
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000, 1)) |>
+  mutate(YEAR = as.factor(YEAR))
+
+nb_catch_river |> 
+filter(RIVERNAME != "UNKNOWN") |> 
+mutate(RIVERNAME = factor(RIVERNAME, levels = c("TANTRAMAR", "SAINT CROIX", "MAGAGUADAVIC", "SAINT JOHN RIVER"))) |> 
+ggplot(aes(YEAR, FV_WEIGHT_MT, fill = RIVERNAME)) +
+  geom_col(colour = "grey20") +
+  #facet_wrap(~YEAR, ncol =6)+
+  labs(
+    title = "Total annual reported landings of gaspereau for SW-NB",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 3e3),
+    breaks = seq(0, 3e3, 500),
+    labels = scales::label_comma()
+  ) +
+  #scale_fill_viridis_d(direction = -1) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("") -> catch_plot
+
+catch_plot
+
+ggsave("landings_river_swnb.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+
+```
+
+```{r}
+catch |>
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |>
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  filter(RIVERNAME != "UNKNOWN") |> 
+  mutate(
+    RIVERNAME = case_when(
+      RIVERNAME %in% SJ_tribs ~ "SAINT JOHN RIVER",
+      #RIVERNAME %in% non_SJ ~ "OTHER",
+      TRUE ~ RIVERNAME)
+    ) |> 
+  distinct(YEAR, RIVERNAME, LICENCE_ID) |> 
+  count(YEAR, RIVERNAME) |> 
+  complete(YEAR, RIVERNAME, fill = list(count = 0)) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  mutate(RIVERNAME = factor(RIVERNAME, levels = c("TANTRAMAR", "SAINT CROIX", "MAGAGUADAVIC", "SAINT JOHN RIVER"))) |> 
+  ggplot(aes(YEAR, n, fill = RIVERNAME, fill = RIVERNAME)) +
+  geom_col(position = position_dodge(), colour = "grey20")+
+  labs(
+    title = "Total licences reporting landings for SW-NB",
+    y = "Count"
+    ) +
+  theme_bw() +
+  scale_y_continuous(breaks = seq(0, 40, 5)) +
+  theme(
+    legend.position = "top",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("") -> lic_plot
+  
+```
+
+```{r, fig.height=8, fig.width=16}
+cowplot::plot_grid(catch_plot, lic_plot, ncol = 2, align = "h")
+```
+
+```{r}
+catch |>
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |>
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  filter(RIVERNAME %in% c("OROMOCTO", "SAINT JOHN", "MAQUAPIT LAKE", "FRENCH LAKE", "WASHADEMOAK LAKE", "DOUGLAS HARBOUR", "MAQUAPIT LAKE", "THE KEYHOLE", "GRAND LAKE")) |>
+  group_by(YEAR, RIVERNAME) |>
+  summarise(FV_WEIGHT = sum(FV_WEIGHT), .groups = "drop") |>
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000, 1)) |>
+  mutate(YEAR = as.factor(YEAR)) |> 
+  mutate(RIVERNAME = fct_reorder(RIVERNAME, FV_WEIGHT_MT, .fun = mean, .desc = TRUE)) |> 
+  ggplot(aes(YEAR, FV_WEIGHT_MT, fill = RIVERNAME)) +
+  geom_col(position = position_dodge(), colour = "grey20") +
+  #facet_wrap(~YEAR, ncol =6)+
+  labs(
+    title = "Total annual reported landings of gaspereau for Saint John River and tributaries",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 1e3),
+    breaks = seq(0, 1e3, 100),
+    labels = scales::label_comma()
+  ) +
+  scale_fill_viridis_d(direction = -1) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("") -> sjr_catch
+```
+
+```{r}
+
+catch |>
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |>
+  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  filter(RIVERNAME %in% c("OROMOCTO", "SAINT JOHN", "MAQUAPIT LAKE", "FRENCH LAKE", "WASHADEMOAK LAKE", "DOUGLAS HARBOUR", "MAQUAPIT LAKE", "THE KEYHOLE", "GRAND LAKE")) |>
+  group_by(YEAR, RIVERNAME) |>
+  distinct(YEAR, RIVERNAME, LICENCE_ID) |> 
+  count(YEAR, RIVERNAME) |> 
+  mutate(YEAR = as.factor(YEAR)) |>
+  mutate(RIVERNAME = factor(RIVERNAME, levels = c("OROMOCTO", "SAINT JOHN", "FRENCH LAKE", "MAQUAPIT LAKE", "WASHADEMOAK LAKE", "GRAND LAKE", "DOUGLAS HARBOUR", "THE KEYHOLE"))) |> 
+  ggplot(aes(YEAR, n, fill = RIVERNAME, fill = RIVERNAME)) +
+  geom_col(position = position_dodge(), colour = "grey20")+
+  labs(
+    title = "Total licences reporting landings for Saint John River and tributaries",
+    y = "Count"
+    ) +
+  theme_bw() +
+  scale_y_continuous(breaks = seq(0, 35, 5)) +
+  scale_fill_viridis_d(direction = -1) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("") -> sjr_lic
+  
+
+```
+
+```{r, fig.height=6, fig.width=9}
+cowplot::plot_grid(sjr_catch, sjr_lic, ncol = 1, align = "hv", axis = "l")
+ggsave("sjr_landings_lic_swnb.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+
+```
+
+# REPORTING RATE NB
+
+I need to do a few things:
+1. Figure out how many licences exist in NB via RM CSV
+
+```{r reporting_rate}
+# Total licences renewed in 2023 for NB
+licences |> 
+  select(LICENCE_ID = `Licence Id`, RENEWED = Renewed, COUNTY = `County Name 1`, PROVINCE = `Province Abbrev (English)`, LICENCE_TYPE = `Licence Type Description (English)`) |> 
+  filter(RENEWED == 2023 & PROVINCE == "NB") |> 
+  distinct(LICENCE_ID) |> 
+  arrange(LICENCE_ID) |> 
+  mutate(LICENCE_ID = as.factor(LICENCE_ID)) -> nb_licences_2023
+
+# Based on some sleuthing, the following licences should be removed from the
+# list of active licences.
+nb_licences_2023 |> 
+  filter(!(LICENCE_ID %in% c(343928, 344030, 366653))) -> nb_licences_2023
+```
+
+2. See which of these submitted catch records in 2024 (i.e. subset catch)
+
+```{r}
+# This is a list of the licences that reported catch in 2024
+catch |> 
+  filter(YEAR == 2024) |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(LICENCE_ID %in% nb_licences_2023$LICENCE_ID) |> 
+  distinct(LICENCE_ID) -> nb_licences_catch_2024
+
+nb_licences_catch_2024$status <- "Catch"
+
+nb_licences_catch_2024
+```
+
+3. See which of these submitted DNF (i.e. subset didnotfish)
+
+```{r}
+didnotfish |> 
+  filter(YEAR == 2024 & NIL_REPORT_FLAG == "Y") |> 
+  arrange(LICENCE_ID) |> 
+  select(LICENCE_ID) -> dnf
+
+# Get a summary of how many licences reported dnf
+nb_licences_2023 |> filter(LICENCE_ID %in% dnf$LICENCE_ID) -> nb_licences_dnf
+
+nb_licences_dnf$status <- "DNF"
+
+nb_licences_dnf
+```
+
+4. Assume the remainder are DNR
+
+```{r}
+nb_licences_catch_2024 |> 
+  full_join(nb_licences_dnf) -> nb_licences_reported
+
+nb_licences_reported
+```
+
+```{r}
+nb_licences_2023 |> 
+  anti_join(nb_licences_reported, by = "LICENCE_ID") |> 
+  distinct() |> 
+  mutate(status = "DNR") -> nb_licences_DNR
+
+nb_licences_DNR
+```
+
+```{r}
+nb_licences_reported |> 
+  full_join(nb_licences_DNR) -> nb_lic_df
+
+nb_lic_df |> 
+  count(status) |> 
+  mutate(proportion = n / sum(n)) |>  
+  arrange(desc(proportion))
+```
