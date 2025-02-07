@@ -36,6 +36,9 @@ MARFIS_queries=function(local.csv=F,catch,didnotfish,licencerenewals){
   #areainfo=read.csv(choose.files(caption="Select AREA CSV"),header=T,stringsAsFactors = F)
   #licenceinfo=read.csv(choose.files(caption="Select LICENCE CSV"),header=T,stringsAsFactors = F)
   
+  # Change the date times to just dates
+  catch$FV_DATE_FISHED <- date(catch$FV_DATE_FISHED)
+  
   #Remove instances when weight is NA. This happened at some point 
   # during the MARFIS data query
   catch=catch[!is.na(catch$FV_WEIGHT),]
