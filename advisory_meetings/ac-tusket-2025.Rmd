@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r libraries_et_al}
+```{r channel}
 library(tidyverse)
 library(DBI)
 library(ROracle)
@@ -95,6 +95,23 @@ ys_licences_catch_2024$status <- "Catch"
 ys_licences_catch_2024
 ```
 
+```{r}
+# These licences are down as having catch but not in our CSV from RM
+catch |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY == "SHELBURNE COUNTY" | COUNTY == "YARMOUTH COUNTY") |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  distinct(LICENCE_ID) -> MARFIS_licences
+
+unlisted <- anti_join(MARFIS_licences, ys_licences_catch_2024, by = "LICENCE_ID")
+
+catch |> 
+  filter(YEAR == 2024) |> 
+  filter(LICENCE_ID %in% unlisted$LICENCE_ID) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT / 1000))
+
+```
+
 Where were the licences that reported catch fishing?
 ```{r}
 catch |> 
@@ -142,7 +159,7 @@ catch |>
   arrange(desc(n))
 ```
 
-See which of these submitted DNF (i.e. subset didnotfish)
+See which of these submitted DNF (i.e. subset did-not-fish)
 ```{r}
 didnotfish |> 
   filter(YEAR == 2024 & NIL_REPORT_FLAG == "Y") |> 
@@ -171,7 +188,6 @@ ys_licences_catch_2024 |>
 ys_licences_reported
 ```
 
-
 Assume the remainder of the licences Did Not Report (DNR)
 ```{r}
 ys_licences_2023 |> 
@@ -181,6 +197,7 @@ ys_licences_2023 |>
 
 ys_licences_DNR
 ```
+
 See DNR by county
 ```{r}
 ys_licences_DNR |> count(COUNTY)
@@ -199,7 +216,7 @@ ys_lic_df |>
 
 # ESCAPEMENT
 
-```{r escapement plot}
+```{r one_species_escapement}
 # These data show historic escapement estimates at the Lake Vaughan Dam. These
 # values are taken from the values hard coded into the Annual Tusket Assessment
 # Rmd script in the ALOSA functions folder
@@ -241,44 +258,100 @@ esc |>
   ) +
   xlab("")
 
-ggsave(
-  "escapement.png",
-  plot = last_plot(),
-  width = 9,
-  height = 6,
-  units = c("in"),
-  bg = "transparent"
-  )
+# ggsave(
+#   "escapement.png",
+#   plot = last_plot(),
+#   width = 9,
+#   height = 6,
+#   units = c("in"),
+#   bg = "transparent"
+#   )
 ```
-```{r two_species_escapement}
-# Split species - impute data for missing days
-proportions <- split_species(year = 2024, siteID = 2, channel = channel)
- 
+
+```{r bluebacks_glm}
+# We use this to get the 
+# We us a linear interpolation to inform the species split function how to 
+# partition the observations of escapement into each species.
+
+proportions <- split_species(
+    year = 2024,
+    siteID = 2,
+    channel = channel
+  )
+
+# NOTE: the following commented code was how I did this before using the GLM
 # Use padr to "pad" the data set with NAs where we are missing observations. 
+# We can flag which data were observed and which were modeled
+
 pp <- padr::pad(proportions, interval = "day")
-pp <- pp |> select(date, BBprop)
-pp <- imputeTS::na_interpolation(pp |> select(date, BBprop)) # Linear interpolation
-pp$mon<-month(pp$date)
-pp$day<-day(pp$date)
- 
-# Get escapement data for VD and PH
+pp$observation <- is.na(pp$total_fish)
+pp <- pp |> mutate(observation = if_else(observation == TRUE, "Modeled", "Observed"))
+pp <- pp |> select(date, BBprop, observation)
+pp <- imputeTS::na_interpolation(pp |> select(date, BBprop, observation)) # Linear interpolation
+pp$mon <- month(pp$date) # this column is needed by twospecies.river.escapement
+pp$day <- day(pp$date) # this column is needed by twospecies.river.escapement
+
+# Check the plot
+
+pp |> 
+  ggplot(aes(date, BBprop))+
+  geom_path(colour = "grey50", linewidth = 0.5, linetype = "dashed")+
+  geom_point(aes(fill = observation), shape = 21, colour = "black", size = 2)+
+  theme_bw()+
+  labs(
+    title = "Proportion of blueback herring in biodata with values for missing dates from GLM",
+    y = "Proportion of fish",
+    fill = "Estimate"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = .1),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    plot.background = element_rect(fill = "grey95"),
+    axis.title.x = element_blank(),
+    legend.background = element_blank(),
+    legend.key = element_blank()
+  )
+
+```
+
+```{r daily_escapement_species_split}
+# For some reason which I cannot figure out the two.species.river.escapement
+# function is now loading in the counts csv with a mislabelled year column. It
+# has an X.. infront of the year and the function does not like it. So I am
+# making a local copy of the counts and then using that for the function call.
+# The X.. does not appear when I use the tidyverse read_csv function, it only
+# appears with the base R read.csv for some reason.
+
+# write_csv(read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Vaughan 2024 count data.csv"), "~/git/ALOSA.functions/advisory_meetings/data/Vaughan 2024 count data.csv")
+#path_to_counts_CSV <- "C:/Users/graylo/Documents/git/ALOSA.functions/advisory_meetings/data/Vaughan 2024 count data.csv"
+
+# Get escapement data for Lake Vaughan
 vd_2024 <- twospecies.river.escapement(
-  "dummy",
+  path_to_counts_CSV,
   fixtime = TRUE,
   downstream.migration = FALSE,
   database = TRUE,
   year = 2024,
   site = 2,
-  species.split=pp,
+  species.split = pp,
   channel = channel
 )
 
 vd_2024_ale <- as.data.frame(vd_2024[1])
 vd_2024_bb <- as.data.frame(vd_2024[2])
 
+# Powerhouse
+# write_csv(read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv"), "~/git/ALOSA.functions/advisory_meetings/data/Powerhouse 2024 count data.csv")
+#path_to_counts_CSV <- "C:/Users/graylo/Documents/git/ALOSA.functions/advisory_meetings/data/Powerhouse 2024 count data.csv"
+
 ph_2024 <- twospecies.river.escapement(
-  "dummy",
-  fixtime = FALSE,
+  path_to_counts_CSV,
+  fixtime = TRUE,
   downstream.migration = FALSE,
   database = TRUE,
   year = 2024,
@@ -291,11 +364,11 @@ ph_2024_ale <- as.data.frame(ph_2024[1])
 ph_2024_bb <- as.data.frame(ph_2024[2])
 
 # Make a data frame containing the totals
-totals <- data.frame(
-  site = c("Lake Vaughan", "Powerhouse"),
-  total_a = c(sum(vd_2024_ale$total), sum(ph_2024_ale$total)),
-  total_bb = c(sum(vd_2024_bb$total), sum(ph_2024_bb$total))
-)
+# totals <- data.frame(
+#   site = c("Lake Vaughan", "Powerhouse"),
+#   total_a = c(sum(vd_2024_ale$total), sum(ph_2024_ale$total)),
+#   total_bb = c(sum(vd_2024_bb$total), sum(ph_2024_bb$total))
+# )
 
 # Add info and combine data
 vd_2024_ale$species <- "Alewife"
@@ -308,42 +381,42 @@ vd_2024_bb$location <- "Lake Vaughan"
 ph_2024_bb$species <- "Blueback"
 ph_2024_bb$location <- "Powerhouse"
 
-all <- rbind(vd_2024_ale, vd_2024_bb, ph_2024_ale, ph_2024_bb)
+counts <- rbind(vd_2024_ale, vd_2024_bb, ph_2024_ale, ph_2024_bb)
 
 # Remove NAs and NaNs in the clow and chigh
-all <- all %>% 
+counts <- counts %>% 
   mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
   mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
 
 # Add dates so we can plot the thing
-all <- all |> 
+counts <- counts |> 
   mutate(date = make_date(year = 2024, month = mon, day = day)) |> 
   select(date, location, species, total, clow, chigh)
 
 # Plot it
-all |>
+counts |>
   group_by(location) |>
   ggplot(aes(date, total, colour = species, fill = species))+
   facet_wrap(~location, scales = "fixed", ncol = 1)+
   geom_path(
-    data = all |> filter(location == "Lake Vaughan"),
+    data = counts |> filter(location == "Lake Vaughan"),
     #aes(colour = location),
     alpha = 0.7,
     linewidth = 1.25
   )+
   geom_ribbon(
-    data = all |> filter(location == "Lake Vaughan"),
+    data = counts |> filter(location == "Lake Vaughan"),
     aes(ymin = clow, ymax = chigh),
     alpha = 0.5
   )+
   geom_path(
-    data = all |> filter(location == "Powerhouse"),
+    data = counts |> filter(location == "Powerhouse"),
     #aes(colour = location),
     alpha = 0.7,
     linewidth = 1.25
   )+
   geom_ribbon(
-    data = all |> filter(location == "Powerhouse"),
+    data = counts |> filter(location == "Powerhouse"),
     aes(ymin = clow, ymax = chigh),
     alpha = 0.5
   )+
@@ -356,8 +429,8 @@ all |>
     )+
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
   scale_y_continuous(
-    limits = c(0, max(all$chigh)),
-    breaks = seq(0, max(all$chigh), by = 2e4),
+    limits = c(0, max(counts$chigh)),
+    breaks = seq(0, max(counts$chigh), by = 2e4),
     labels = scales::comma
   )+
   theme(
@@ -368,9 +441,70 @@ all |>
   )
   #+ coord_cartesian(xlim = as.Date(c("2024-05-20", "2024-06-17")), ylim = c(0, 1e4))
 
-ggsave("daily_tusket_zoomed_2024.png", plot = last_plot(), width = 10, height = 6, units = "in", dpi = 300, bg = "transparent")
+#ggsave("daily_tusket_zoomed_2024.png", plot = last_plot(), width = 10, height = 6, units = "in", dpi = 300, bg = "transparent")
+```
 
+```{r escapement_table}
+counts |> 
+  group_by(species, location) |> 
+  summarise(total = sum(total))
+```
 
+```{r blueback_exploitation}
+
+# I am creating two new dataframes from the proportions data frame, one for
+# each of the gear types. The bluebacks arrive seven days prior to our first
+# observation at the gill netters and three days prior to the dippers. To make 
+# the catches use the correct proportion I offset the dates for each gear type.
+
+gill_bb_props <- pp |> 
+  select(date, BBprop) |> 
+  mutate(date = date - 7) |> 
+  rename(FV_DATE_FISHED = date)
+
+dip_bb_props <- pp |> 
+  select(date, BBprop) |> 
+  mutate(date = date - 3) |> 
+  rename(FV_DATE_FISHED = date)
+
+# The date of our first blueback observation was on May 23, so catches one week
+# prior to this onward need to be considered for blueback catches for gill
+# netters and three days prior for dippers
+tusket_gill <- catch |>
+  filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "GILL NET (SET OR FIXED)") |> 
+  filter(FV_DATE_FISHED >= date("2024-05-23") - 7) |> # 7 days for gill nets
+  left_join(gill_bb_props, by = "FV_DATE_FISHED") |> 
+  select(FV_DATE_FISHED, FV_WEIGHT, BBprop) |>
+  mutate(
+    CATCH_FISH = FV_WEIGHT / 0.24, 
+    BB_CATCH_FISH = CATCH_FISH * BBprop
+    ) |> 
+  summarise(BB_CATCH_FISH = sum(BB_CATCH_FISH))
+  
+
+tusket_dip <- catch |>
+  filter(YEAR == 2024 & RIVERNAME_CLEANED == "TUSKET" & GEAR_DESCRIPTION == "DIP NET") |> 
+  filter(FV_DATE_FISHED >= date("2024-05-23") - 3) |> # 3 days for dip nets
+  left_join(gill_bb_props, by = "FV_DATE_FISHED") |> 
+  select(FV_DATE_FISHED, FV_WEIGHT, BBprop) |> 
+  mutate(
+    CATCH_FISH = FV_WEIGHT / 0.24, 
+    BB_CATCH_FISH = CATCH_FISH * BBprop
+    ) |> 
+  summarise(BB_CATCH_FISH = sum(BB_CATCH_FISH))
+
+# Add the two figures together to get the estimate of total bluebacks caught
+blueback_catch <- tusket_dip$BB_CATCH_FISH + tusket_gill$BB_CATCH_FISH
+
+# Get the exploitation rate for bluebacks by using the estimate for total catch
+# divided by the total amount of bluebacks (caught + escaped)
+blueback_escaped <- counts |> 
+  filter(species == "Blueback") |> 
+  summarise(total_escaped = sum(total))
+
+blueback_ER <- blueback_catch / (blueback_catch + blueback_escaped$total_escaped)
+
+blueback_ER
 ```
 
 # STOCK STATUS
@@ -385,8 +519,7 @@ ggsave("daily_tusket_zoomed_2024.png", plot = last_plot(), width = 10, height = 
 # catch <- subset(catch, select = -FV_WEIGHT)
 # catch <- catch |> rename(FV_WEIGHT = KGS)
 
-# Get landings for tusket by day, figure out the singletons, and then get them into
-# a dataframe for years >= 2021
+# Get landings for tusket for years >= 2021
 tusket <- catch |> 
   filter(YEAR >= 2021) |>
   filter(RIVERNAME_CLEANED == "TUSKET") |> 
@@ -461,7 +594,7 @@ ph_2024 <- onespecies.river.escapement(
   "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv",
   fixtime = TRUE,
   downstream.migration = FALSE,
-  database = FALSE,
+  database = TRUE,
   2024,
   14,
   channel
@@ -529,8 +662,9 @@ status |>
     legend.text = element_text(size = 12)
   )
 
-ggsave("status.png", plot = last_plot(), width = 9, height = 6, units = c("in"))
+#ggsave("status.png", plot = last_plot(), width = 9, height = 6, units = c("in"))
 ```
+
 # LANDINGS
 
 ```{r}
@@ -694,6 +828,6 @@ ys_catch_county |>
     ) +
   xlab("")
 
-ggsave("landings_ys.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+#ggsave("landings_ys.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
 
 ```
