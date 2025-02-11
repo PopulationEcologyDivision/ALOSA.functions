@@ -28,7 +28,7 @@ Alewife and Blueback Herring on the Tusket River, NS.
 
 Year| Total escapement estimate| Alewife escapement estimate| Blueback Herring escapement estimate| Alewife exploitation rate estimate| Blueback Herring exploitation rate estimate
 -----|---------|----------|----------|--------|--------|
-2024| 2,261,770| 2,251,658| 10,112| 0.34| 0.14
+2024| 2,226,181| 2,252,147| 10,034| 0.37| 0.29
 2023| 2,119,723| 2,101,735| 17,988| 0.43| 0.16
 2022| 1,670,471| 1,662,008| 8,463| 0.4404^g^| 0.25^h^ 
 2021| 1,956,804| 1,941,411| 15,394| 0.38^f^| 0.44^f^ 
