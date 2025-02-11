@@ -102,12 +102,12 @@ loaddata(datasource = 1)
 
 #Run the summary code for the River for a summary of the annual catch 
 
-RIVER.summary("TUSKET",
-              plot=T,
-              writeplot = F,
-              CATCHdata=catch,
-              DNFdata=didnotfish,
-              RENEWdata=licencerenewals)
+# RIVER.summary("TUSKET",
+#               plot=T,
+#               writeplot = F,
+#               CATCHdata=catch,
+#               DNFdata=didnotfish,
+#               RENEWdata=licencerenewals)
 
 # sub<-present.MARFIS.data(licence = 120423,
 #                          year = 2019,
@@ -141,47 +141,47 @@ RIVER.summary("TUSKET",
 #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##Pull yearly summary or X years and a given river
-catch$YEAR<-as.numeric(catch$YEAR)
-catch.t<-catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR>2018,]
-##NAs get introduced during subsetting for some reason
-catch.t<-catch.t[complete.cases(catch.t[,'LICENCE_ID']),] 
-catch.t<-convert.KGS(catch.t)
-
-x1=aggregate(catch.t$KGS[is.na(catch.t$GEAR_DESCRIPTION)],
-             by=list(LICENCE_ID=catch.t$LICENCE_ID[is.na(catch.t$GEAR_DESCRIPTION)]),
-             FUN=sum)
-
-x1=aggregate(catch.t$KGS, by=list(YEAR=catch.t$YEAR),FUN=sum)
-
-
-
-TUSKET.2021=function(){
-
-## PULL all Tusket records for 2021.
-catch.TUS2021=catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR==2021,]
-catch.TUS2021<-convert.KGS(catch.TUS2021)
-#List gears
-table(catch.TUS2021$LICENCE_ID,catch.TUS2021$GEAR_DESCRIPTION,useNA = "ifany")
-licenceswithnogear=unique(catch.TUS2021$LICENCE_ID[is.na(catch.TUS2021$GEAR_DESCRIPTION)])
-
-
-x0=aggregate(catch.TUS2021$KGS,by=list(GEAR=catch.TUS2021$GEAR_DESCRIPTION),
-             FUN=sum)
-x1=aggregate(catch.TUS2021$KGS[is.na(catch.TUS2021$GEAR_DESCRIPTION)],
-             by=list(LICENCE_ID=catch.TUS2021$LICENCE_ID[is.na(catch.TUS2021$GEAR_DESCRIPTION)]),
-             FUN=sum)
-licencelist=unique(licencereportsummary.TUS$LICENCE_ID)
-
-licenceswithnogear=unique(x1$LICENCE_ID)
-
-}
-
-
-myfunction<-function(ilovecats){
-  temp<-ilovecats*2
-  temp1<-rep(temp,5)
-  return(temp1)
-}
+# catch$YEAR<-as.numeric(catch$YEAR)
+# catch.t<-catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR>2018,]
+# ##NAs get introduced during subsetting for some reason
+# catch.t<-catch.t[complete.cases(catch.t[,'LICENCE_ID']),] 
+# catch.t<-convert.KGS(catch.t)
+# 
+# x1=aggregate(catch.t$KGS[is.na(catch.t$GEAR_DESCRIPTION)],
+#              by=list(LICENCE_ID=catch.t$LICENCE_ID[is.na(catch.t$GEAR_DESCRIPTION)]),
+#              FUN=sum)
+# 
+# x1=aggregate(catch.t$KGS, by=list(YEAR=catch.t$YEAR),FUN=sum)
+# 
+# 
+# 
+# TUSKET.2021=function(){
+# 
+# ## PULL all Tusket records for 2021.
+# catch.TUS2021=catch[catch$RIVERNAME_CLEANED=="TUSKET" & catch$YEAR==2021,]
+# catch.TUS2021<-convert.KGS(catch.TUS2021)
+# #List gears
+# table(catch.TUS2021$LICENCE_ID,catch.TUS2021$GEAR_DESCRIPTION,useNA = "ifany")
+# licenceswithnogear=unique(catch.TUS2021$LICENCE_ID[is.na(catch.TUS2021$GEAR_DESCRIPTION)])
+# 
+# 
+# x0=aggregate(catch.TUS2021$KGS,by=list(GEAR=catch.TUS2021$GEAR_DESCRIPTION),
+#              FUN=sum)
+# x1=aggregate(catch.TUS2021$KGS[is.na(catch.TUS2021$GEAR_DESCRIPTION)],
+#              by=list(LICENCE_ID=catch.TUS2021$LICENCE_ID[is.na(catch.TUS2021$GEAR_DESCRIPTION)]),
+#              FUN=sum)
+# licencelist=unique(licencereportsummary.TUS$LICENCE_ID)
+# 
+# licenceswithnogear=unique(x1$LICENCE_ID)
+# 
+# }
+# 
+# 
+# myfunction<-function(ilovecats){
+#   temp<-ilovecats*2
+#   temp1<-rep(temp,5)
+#   return(temp1)
+# }
 
 
 
