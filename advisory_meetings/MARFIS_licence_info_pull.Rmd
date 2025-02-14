@@ -1,0 +1,87 @@
+```{r}
+licences <- readxl::read_xlsx("C:/Users/graylo/Documents/data/RM_licencing_info.xlsx")
+
+licences |>
+  select(LICENCE_ID, LOCATION_DESC) |> 
+  arrange(LICENCE_ID) -> df
+
+keywords <- c("COUNTY", "COUNTIES")
+
+# Function to extract the first word before the keyword
+extract_previous_word <- function(text, keywords) {
+  
+  # Construct regex pattern to capture the word before the keyword
+  pattern <- paste0("\\b(\\w+)\\s+(?=", paste(keywords, collapse = "|"), ")")
+  
+  # Extract the match
+  match <- str_match(text, pattern)
+  
+  # Return the first capture group (previous word), or NA if no match
+  ifelse(!is.na(match[, 2]), match[, 2], NA)
+  
+}
+
+df |> 
+  mutate(previous_word = sapply(LOCATION_DESC, extract_previous_word, keywords = keywords)) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  select(LICENCE_ID, COUNTY = previous_word) |> 
+  arrange(COUNTY) -> lics
+
+#write_csv(licences_to_clarify, "C:/Users/graylo/Documents/licences_to_clarify.csv")
+
+```
+
+```{r}
+
+channel = dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username,
+  oracle.password,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+
+query <- paste(
+  "SELECT l.licence_id, a.area_id, b.desc_eng, c.location_id, d.location_desc",
+  "FROM MARFISSCI.LICENCES l",
+  "JOIN MARFISSCI.LICENCE_AREAS a ON l.licence_id = a.licence_id",
+  "JOIN MARFISSCI.AREAS b ON a.area_id = b.area_id",
+  "JOIN MARFISSCI.LICENCE_LOCATIONS c ON l.licence_id = c.licence_id",
+  "JOIN MARFISSCI.LOCATIONS d ON d.location_id = c.location_id",
+  "WHERE L.SPECIES_CODE = 350 AND L.SECTOR_ID = 7",
+  "AND TRUNC(L.UDATE) BETWEEN TO_DATE('01-JAN-23', 'DD-MON-YY') AND TO_DATE('31-DEC-24', 'DD-MON-YY')",
+  sep = "\n"
+)
+
+cat(query)
+
+result <- dbGetQuery(channel, query)
+
+print(result)
+dbDisconnect(channel)
+
+result |> head()
+```
+
+```{r}
+
+#lics <- read_csv("C:/Users/graylo/Documents/licences_to_clarify.csv")
+
+lics |> 
+  mutate(LICENCE_ID = as.character(LICENCE_ID)) |> 
+  full_join(result, by = "LICENCE_ID") |> 
+  select(-LOCATION_ID, -AREA_ID) |> 
+  arrange(LICENCE_ID)
+
+#write_csv(test, "C:/Users/graylo/Documents/mark.csv")
+```
+
+
+```{r}
+catch |>
+filter(LICENCE_ID == 120753) |>
+select(LICENCE_ID, MONTH, DAY, FV_DATE_FISHED, RIVERNAME_CLEANED, FV_GEAR_CODE, GEAR_DESCRIPTION, FV_HOURS_FISHED, FV_WEIGHT, MEASUREMENT_UNIT) |>
+arrange(FV_DATE_FISHED)
+
+```
+
