@@ -101,7 +101,7 @@ catch |>
   filter(YEAR == 2024) |> 
   filter(COUNTY == "SHELBURNE COUNTY" | COUNTY == "YARMOUTH COUNTY") |> 
   select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
-  distinct(LICENCE_ID) -> MARFIS_licences
+  distinct(LICENCE_ID, .keep_all = TRUE) -> MARFIS_licences
 
 unlisted <- anti_join(MARFIS_licences, ys_licences_catch_2024, by = "LICENCE_ID")
 
