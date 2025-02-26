@@ -145,7 +145,8 @@ if (!dir.exists(output_folder)) {dir.create(output_folder)}
 load("~/git/ALOSA.functions/advisory_meetings/data/marfis_pull.Rdata")
 
 # Clean the data
-source("~/MARFIS.error.cleaner.R")
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+#source("~/MARFIS.error.cleaner.R")
 
 # Convert any landings listed as pounds to kilograms
 catch <- convert.KGS(catch)
