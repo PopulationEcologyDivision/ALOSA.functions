@@ -10,25 +10,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r channel_connection}
+```{r libraries}
 library(tidyverse)
 library(DBI)
 library(ROracle)
-
-# Put these variables in your environment in case they aren't already
-oracle.password <- "_REMOVED"
-oracle.password.GASP <- "_REMOVED"
-oracle.username <- "BILLARDM"
-oracle.username.GASP <- "GASPEREA"
-
-# Set up the connection to the database
-channel <- dbConnect(
-  DBI::dbDriver("Oracle"),
-  username = "GASPEREA",
-  password = "_REMOVED",
-  dbname = "PTRAN",
-  believeNRows = FALSE
-)
 
 ```
 
@@ -89,6 +74,92 @@ source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 ```
 
+# OUTPUT FOLDER
+```{r}
+
+# Create the file path for the output folder for this year / area combination
+output_folder <- paste0("~/git/ALOSA.functions/advisory_meetings/", loc, "_", year, "_output")
+
+# Check to see if the folder already exists, if not, create it
+if (!dir.exists(output_folder)) {dir.create(output_folder)}
+
+```
+
+# LOAD MARFIS DATA
+```{r load_MARFIS_data, include=FALSE, warning=FALSE}
+# This is where we keep our MARFIS pulls
+file_path <- "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata"
+
+# Check if the file exists
+if (file.exists(file_path)) {
+  
+  # Get the last modification date of the file
+  file_date <- file.info(file_path)$mtime
+  
+  # Get the current date
+  current_date <- Sys.Date()
+  
+  # Prompt the user to update the file
+  response <- readline(prompt = paste0("The last MARFIS pull is from ", as.Date(file.info(file_path)$mtime), ". Would you like to update it? (y / n): "))
+  
+  # Process user response
+  if (tolower(response) == "y" | tolower(response) == "yes") {
+    
+    message("Updating the MARFIS pull")
+    
+    # Connect to MARFIS db and pull
+    oracle.password <- "_REMOVED"
+    oracle.username <- "BILLARDM"
+    
+    # Set up the connection
+    channel <- dbConnect(
+      DBI::dbDriver("Oracle"),
+      username = oracle.username,
+      password = oracle.password,
+      dbname = "PTRAN",
+      believeNRows = FALSE
+    )
+    
+    source("~/git/ALOSA.functions/MARFIS_all in one.R")
+    save(catch, didnotfish, licencerenewals, file = file_path)
+    
+  } else {
+  message(paste0("Using previous MARFIS pull from ", as.Date(file.info(file_path)$mtime)))
+  }
+  
+} else {
+  message("MARFIS pull not found")
+  message("Completing MARFIS pull...")
+  # Connect to MARFIS db and pull
+  oracle.password <- "_REMOVED"
+  oracle.username <- "BILLARDM"
+  
+  # Set up the connection
+  channel <- dbConnect(
+    DBI::dbDriver("Oracle"),
+    username = oracle.username,
+    password = oracle.password,
+    dbname = "PTRAN",
+    believeNRows = FALSE
+  )
+  source("~/git/ALOSA.functions/MARFIS_all in one.R")
+  save(catch, didnotfish, licencerenewals, file = file_path)
+}
+
+# Load in the data
+load(file_path)
+
+# Clean the data
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+#source("~/MARFIS.error.cleaner.R")
+
+# Convert any landings listed as pounds to kilograms
+catch <- convert.KGS(catch)
+catch <- subset(catch, select = -FV_WEIGHT)
+catch <- catch |> rename(FV_WEIGHT = KGS)
+
+```
+
 ```{r location_and_year}
 # This is where you can select the region for which you are doing a report
 # YS = Yarmouth / Shelburne
@@ -122,37 +193,6 @@ year <- 2024
 
 # Set the value for converting a kilogram of weight into count of fish
 fish_conv <- 0.24
-```
-
-# OUTPUT FOLDER
-```{r}
-
-# Create the file path for the output folder for this year / area combination
-output_folder <- paste0("~/git/ALOSA.functions/advisory_meetings/", loc, "_", year, "_output")
-
-# Check to see if the folder already exists, if not, create it
-if (!dir.exists(output_folder)) {dir.create(output_folder)}
-
-```
-
-# LOAD MARFIS DATA
-```{r load_MARFIS_data, include=FALSE, warning=FALSE}
-# Do a new MARFIS pull to update data when necessary
-# source("~/git/ALOSA.functions/MARFIS_all in one.R")
-# save(catch, didnotfish, licencerenewals, file = "~/git/ALOSA.functions/advisory_meetings/data/marfis_pull.Rdata")
-
-# Load in the data
-load("~/git/ALOSA.functions/advisory_meetings/data/marfis_pull.Rdata")
-
-# Clean the data
-source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
-#source("~/MARFIS.error.cleaner.R")
-
-# Convert any landings listed as pounds to kilograms
-catch <- convert.KGS(catch)
-catch <- subset(catch, select = -FV_WEIGHT)
-catch <- catch |> rename(FV_WEIGHT = KGS)
-
 ```
 
 # LANDINGS
@@ -530,6 +570,18 @@ write_csv(landings_by_area_csv, paste0(output_folder, "/landings_by_area.csv"))
 
 # ESCAPEMENT (YS & GR ONLY)
 ```{r lake_vaughan_escapement}
+# Connect to GASPEREA db for this part
+oracle.password.GASP <- "_REMOVED"
+oracle.username.GASP <- "GASPEREA"
+
+# Set up the connection to the database
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  username = oracle.username.GASP,
+  password = oracle.password.GASP,
+  dbname = "PTRAN",
+  believeNRows = FALSE
+)
 
 # Species split for bluebacks --------------------------------------------------
 # We use this to get the 
@@ -842,6 +894,7 @@ if (loc == "YS") {
   landings |>
     filter(YEAR == 2024 & RIVERNAME == "TUSKET" & GEAR == "GILL NET (SET OR FIXED)") |> 
     filter(FV_DATE_FISHED >= date("2024-05-23") - 7) |> # 7 days for gill nets
+    filter(!(LICENCE_ID %in% c(120318, 120330))) |> # need to remove these problematic licences
     left_join(gill_bb_props, by = "FV_DATE_FISHED") |> 
     select(FV_DATE_FISHED, FV_WEIGHT, BBprop) |>
     mutate(
