@@ -275,20 +275,20 @@ if(plotyear==2013){text(-2,ymax*1.05,paste("Total = ","149,682", sep=""),cex=1.5
 if(plotyear==2014){text(-2,ymax*1.05,"No Count",cex=1.5,pos=4)}
 if(plotyear==2015){text(-2,ymax*1.05,paste("Total = ",paste(GR2015,GRCI2015,sep=" ± "), sep=""),cex=1.5,pos=4)}
 if(plotyear==2016){text(-2,ymax*1.05,paste("Total = ",paste(GR2016,GRCI2016,sep=" ± "), sep=""),cex=1.5,pos=4)}
-axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+axis(2,cex.axis=1.5,las=2,at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
-axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
+axis(1,cex.axis=1.5,at=c(1,12,21,31,43,52,62), 
      labels=c("20","1","10","20","1","10","20"))
 
 mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Date", 1, at=32, cex=1.5, line=5.2)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+mtext("Number of Fish (1000s)",2, outer=T,cex=1.5)
 ```
 
-**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in 2013-2016.
+**Figure 4.** Estimated number of Alewife ascending the White Rock fish ladder in `r plotyears`.
 
 \newpage
 ```{r dailyplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
@@ -322,7 +322,7 @@ if(plotyear==2020){text(-2,ymax*1.05,"No Count",cex=1.5,pos=4)}
 box()
 lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
       lty=1,lwd=1.5)
-axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+axis(2,cex.axis=1.5,las=2,at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
 axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
@@ -332,10 +332,10 @@ mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Date", 1, at=32, cex=1.5, line=5.2)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+mtext("Number of Fish (1000s)",2, outer=T,cex=1.5)
 ```
 
-**Figure 5.** Estimated number of Alewife ascending the White Rock fish ladder in 2017-2020.
+**Figure 5.** Estimated number of Alewife ascending the White Rock fish ladder in `r plotyears`.
 
 \newpage
 ```{r dailyplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
@@ -369,7 +369,7 @@ if(plotyear==2024){text(-2,ymax*1.05,paste("Total = ",paste(GR2024,GRCI2024,sep=
 box()
 lines(GRdata$daynum[GRdata$year==plotyear],GRdata$number[GRdata$year==plotyear]/1000,
       lty=1,lwd=1.5)
-axis(2,cex.axis=1.5, at=c(10,20,30,40,50,60,70,80,90,100,110,120))
+axis(2,cex.axis=1.5,las=2,at=c(10,20,30,40,50,60,70,80,90,100,110,120))
 }
 
 axis(1,cex.axis=1.5, at=c(1,12,21,31,43,52,62), 
@@ -379,10 +379,10 @@ mtext("April",1,at=5,cex=1.5,line=3.5)
 mtext("May",1,at=26,cex=1.5,line=3.5)
 mtext("June",1,at=55,cex=1.5,line=3.5)
 mtext("Date", 1, at=32, cex=1.5, line=5.2)
-mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
+mtext("Number of Fish (1000s)",2, outer=T,cex=1.5)
 ```
 
-**Figure 6.** Estimated number of Alewife ascending the White Rock fish ladder in 2021-2024.
+**Figure 6.** Estimated number of Alewife ascending the White Rock fish ladder in `r plotyears`.
 
 \newpage
 
@@ -394,7 +394,7 @@ mtext("Number of Fish (1000's)",2, outer=T,cex=1.5)
 
 \newpage
 ```{r ageplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
-plotyears=c(2016,2018)
+plotyears=c(2016)
 
 channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "gps983", "PTRAN" , 
                   believeNRows=FALSE) 
@@ -410,7 +410,7 @@ sql <- "SELECT * FROM ALOSA_FISH_AGE_DATA
 
 #windows(8.5,11)
 par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
-par(mar=c(3,5,0,3))
+par(mar=c(3,5,1,3))
 for(plotyear in plotyears){
   plotyear=plotyear
 agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
@@ -432,7 +432,7 @@ for (i in 3:7){
 }
 age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
  barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
-        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,las=1,
         col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
  mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
  
@@ -445,15 +445,15 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 8.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2016 and 2018.
+**Figure 8.** Estimated number of Alewife by age and spawning history ascending the White Rock fish ladder in `r plotyears[1]`.
 
 \newpage
 ```{r ageplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
-plotyears=c(2019,2021)
+plotyears=c(2018,2019)
 
 #windows(8.5,11)
 par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
-par(mar=c(3,5,0,3))
+par(mar=c(3,5,1,3))
 for(plotyear in plotyears){
   plotyear=plotyear
 agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
@@ -475,7 +475,7 @@ for (i in 3:7){
 }
 age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
  barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
-        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,las=1,
         col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
  mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
  
@@ -488,15 +488,15 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 9.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2019 and 2021. 
+**Figure 9.** Estimated number of Alewife by age and spawning history ascending the White Rock fish ladder in `r plotyears[1]` and `r plotyears[2]`. 
 
 \newpage
 ```{r ageplot3,echo=FALSE, fig.width = 7.5,fig.height = 9}
-plotyears=c(2022,2023)
+plotyears=c(2021,2022)
 
 #windows(8.5,11)
 par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
-par(mar=c(3,5,0,3))
+par(mar=c(3,5,1,3))
 for(plotyear in plotyears){
   plotyear=plotyear
 agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
@@ -518,7 +518,7 @@ for (i in 3:7){
 }
 age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
  barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
-        xlab="",ylab="Thousands of Fish",cex.lab=1.5,
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,las=1,
         col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
  mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
  
@@ -531,14 +531,57 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
        title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
 ```
 
-**Figure 10.** Estimated proportion of Alewife by age and spawning history ascending the White Rock fish ladder in 2022 and 2023.
+**Figure 10.** Estimated number of Alewife by age and spawning history ascending the White Rock fish ladder in `r plotyears[1]` and `r plotyears[2]`.
+
+\newpage
+```{r ageplot4,echo=FALSE, fig.width = 7.5,fig.height = 9}
+plotyears=c(2023,2024)
+
+#windows(8.5,11)
+par(mfrow=c(2,1),oma=c(2,0,0,3),xpd=TRUE)
+par(mar=c(3,5,1,3))
+for(plotyear in plotyears){
+  plotyear=plotyear
+agequery=sqlInterpolate(ANSI(), sql, year = plotyear)
+
+agedata=dbGetQuery(channel, agequery)
+
+age.prop.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("Age3","Age4","Age5","Age6","Age7")))
+for (i in 3:7){
+  CurrentAge=agedata[agedata$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(agedata)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.matrix=GR$escape[GR$year==plotyear & !is.na(GR$year)]*age.prop.matrix/1000
+ barplot(age.num.matrix[1:4,],ylim=c(0,max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T)*1.2)),
+        xlab="",ylab="Thousands of Fish",cex.lab=1.5,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+ mtext(plotyear,2,line=-1,las=1,cex=1.5,adj=.05, at=max(sum(age.num.matrix[,2],na.rm=T)*1.2,sum(age.num.matrix[,3],na.rm=T))*0.9)
+ 
+}
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("topright",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+```
+
+**Figure 11.** Estimated number of Alewife by age and spawning history ascending the White Rock fish ladder in `r plotyears[1]` and `r plotyears[2]`.
 
 \newpage
 <!-- ![](//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Figure9.png)  -->
 ![](C:/~/git/ALOSA.functions/figure pngs/Figure9.png)
 
 
-**Figure 11.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
+**Figure 12.** Yield curve showing the relationship between the exploitation rate (the proportion of the spawning run harvested) and the yield from the fishery. The three zones correspond to the removal reference levels provided in Table 2. Adapted from Gibson et al. (2017).
 
 &nbsp;
 
