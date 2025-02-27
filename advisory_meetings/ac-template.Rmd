@@ -6,41 +6,22 @@ for the gaspereau fishery in Nova Scotia and SW New Brunswick
 knitr::opts_chunk$set(
   warning = FALSE, # Suppress warnings
   message = FALSE, # Suppress messages
-  include = FALSE  # Supress code print out
+  include = FALSE  # Suppress code print out
 )
 ```
 
 ```{r libraries}
-library(tidyverse)
-library(DBI)
-library(ROracle)
-
+library(tidyverse) # For data manipulation packages
+library(DBI) # For connecting to databases
+library(ROracle) # For connecting to databases
 ```
 
 # FUNCTIONS
 ```{r}
 
-# We use this to get escapement estimates for YS and GR
-# get_escapement <- function(year, site){
-#   df <- onespecies.river.escapement(
-#   "dummy",
-#   fixtime = FALSE,
-#   database = TRUE,
-#   year = year,
-#   site = site,
-#   channel = channel
-#   )
-# 
-#   df$year <- year
-#   df$date <- make_date(year = df$year, month = df$mon, day = df$day)
-#   return(df)
-# }
-# 
-
 get_escapement <- function(year, site) {
   
   tryCatch({
-    
     df <- onespecies.river.escapement(
       "dummy",
       fixtime = FALSE,
@@ -50,24 +31,26 @@ get_escapement <- function(year, site) {
       channel = channel
     )
     
-    if (nrow(df) == 0) {  # Check if the returned data frame is empty
+    if (nrow(df) == 0) {
+      # Check if the returned data frame is empty
       message(paste("Skipping year", year, "- No data found."))
       return(NULL)
     }
     
     df$year <- year
-    df$date <- make_date(year = df$year, month = df$mon, day = df$day)
+    df$date <-
+      make_date(year = df$year,
+                month = df$mon,
+                day = df$day)
     return(df)
     
   }, error = function(e) {
-    
     message(paste("Skipping year", year, "- Error:", e$message))
     return(NULL)  # Return NULL when an error occurs
     
   })
-
-  }
-
+  
+}
 
 # Source all the functions so we can use them
 source("~/git/ALOSA.functions/functions/sourcery.R")
@@ -90,16 +73,16 @@ if (!dir.exists(output_folder)) {dir.create(output_folder)}
 # This is where we keep our MARFIS pulls
 file_path <- "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata"
 
-# Check if the file exists
+# Check if the MARFIS pull exists
 if (file.exists(file_path)) {
   
-  # Get the last modification date of the file
+  # Get the last modification date of the MARFIS pull
   file_date <- file.info(file_path)$mtime
   
   # Get the current date
   current_date <- Sys.Date()
   
-  # Prompt the user to update the file
+  # Prompt the user whether or not to update the MARFIS pull
   response <- readline(prompt = paste0("The last MARFIS pull is from ", as.Date(file.info(file_path)$mtime), ". Would you like to update it? (y / n): "))
   
   # Process user response
@@ -111,7 +94,6 @@ if (file.exists(file_path)) {
     oracle.password <- "zpdUG7!W"
     oracle.username <- "BILLARDM"
     
-    # Set up the connection
     channel <- dbConnect(
       DBI::dbDriver("Oracle"),
       username = oracle.username,
@@ -129,12 +111,12 @@ if (file.exists(file_path)) {
   
 } else {
   message("MARFIS pull not found")
-  message("Completing MARFIS pull...")
+  message("Pulling data from MARFIS ...")
+  
   # Connect to MARFIS db and pull
   oracle.password <- "zpdUG7!W"
   oracle.username <- "BILLARDM"
   
-  # Set up the connection
   channel <- dbConnect(
     DBI::dbDriver("Oracle"),
     username = oracle.username,
@@ -144,19 +126,25 @@ if (file.exists(file_path)) {
   )
   source("~/git/ALOSA.functions/MARFIS_all in one.R")
   save(catch, didnotfish, licencerenewals, file = file_path)
+  message("Updated MARFIS pull saved")
+
 }
 
 # Load in the data
 load(file_path)
+message("MARFIS data loaded")
 
 # Clean the data
+message("Cleaning MARFIS data ...")
 source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
-#source("~/MARFIS.error.cleaner.R")
+message("MARFIS data cleaned")
 
 # Convert any landings listed as pounds to kilograms
+message("Converting catch units to kilograms ...")
 catch <- convert.KGS(catch)
 catch <- subset(catch, select = -FV_WEIGHT)
 catch <- catch |> rename(FV_WEIGHT = KGS)
+message("Units converted")
 
 ```
 
@@ -172,7 +160,7 @@ catch <- catch |> rename(FV_WEIGHT = KGS)
 valid_choices <- c("YS", "QL", "GR", "SWNB")
 
 repeat {
-  loc <- readline(prompt = "Enter a location (YS, QL, GR, SWNB): ")
+  loc <- readline(prompt = "Select a location (YS, QL, GR, SWNB): ")
   if (loc %in% valid_choices) break
   cat("Invalid choice. Please enter one of:", paste(valid_choices, collapse = ", "), "\n")
 }
@@ -565,7 +553,8 @@ write_csv(landings_by_area_csv, paste0(output_folder, "/landings_by_area.csv"))
 # REPORTING RATE
 
 ```{r reporting_rate}
-
+# Need more information on what licences exist and where they exist before 
+# we can create something standardised here
 ```
 
 # ESCAPEMENT (YS & GR ONLY)
@@ -785,7 +774,8 @@ if (loc == "YS") {
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 12),
       axis.text.y = element_text(size = 12),
       axis.title.x = element_blank(),
-      panel.grid.minor.x = element_blank()
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank()
     )
   
 }
@@ -820,7 +810,8 @@ if (loc == "GR") {
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 12),
     axis.text.y = element_text(size = 12),
     axis.title.x = element_blank(),
-    panel.grid.minor.x = element_blank()
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank()
   )
   
 }
