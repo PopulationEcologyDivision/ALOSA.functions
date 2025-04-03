@@ -1,0 +1,38 @@
+```{r}
+# Season setup ####
+# Only run at beginning of season!
+
+# Source all the functions so we can use them
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+blank.datasheets(
+  seed = 001,
+  startmonth = 4,
+  endmonth = 6,
+  startday = 1,
+  rivername = "Vaughan",
+  year = 2025,
+  recordtime = TRUE,
+  speciesID = TRUE,
+  strata = 6,
+  samplesperstrata = 4
+)
+
+blank.datasheets(
+  seed = 001,
+  startmonth = 4,
+  endmonth = 6,
+  startday = 1,
+  rivername = "Powerhouse",
+  year = 2025,
+  recordtime = TRUE,
+  speciesID = TRUE,
+  strata = 6,
+  samplesperstrata = 4
+)
+
+make.count.filename.textfile("Powerhouse 2025 count data.csv", "Secret_Ladder", 2025)
+make.count.filename.textfile("Vaughan 2025 count data.csv", "Vaughan", 2025)
+```
+
