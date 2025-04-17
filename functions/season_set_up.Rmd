@@ -32,7 +32,7 @@ blank.datasheets(
   samplesperstrata = 4
 )
 
-make.count.filename.textfile("Powerhouse 2025 count data.csv", "Secret_Ladder", 2025)
+make.count.filename.textfile("Powerhouse 2025 count data.csv", "Powerhouse", 2025)
 make.count.filename.textfile("Vaughan 2025 count data.csv", "Vaughan", 2025)
 ```
 
