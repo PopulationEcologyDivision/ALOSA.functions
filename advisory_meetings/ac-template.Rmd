@@ -57,6 +57,41 @@ source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 ```
 
+```{r location_and_year}
+# This is where you can select the region for which you are doing a report
+# YS = Yarmouth / Shelburne
+# QL = Queens / Lunenburg
+# GR = Gaspereau River
+# SWNB = Southwest New Brunswick
+#loc <- "YS"
+
+# Prompt user
+valid_choices <- c("YS", "QL", "GR", "SWNB")
+
+repeat {
+  loc <- readline(prompt = "Select a location (YS, QL, GR, SWNB): ")
+  if (loc %in% valid_choices) break
+  cat("Invalid choice. Please enter one of:", paste(valid_choices, collapse = ", "), "\n")
+}
+
+# We need to indicate province because KINGS and QUEENS counties are similar
+# between NB and NS
+prov <- if_else(loc %in% c("YS", "QL", "GR"), "NS", "NB")
+
+# Based on the value of "loc" above, we can determine which counties need to 
+# get hauled from the MARFIS database ("catch")
+if (loc == "YS") {counties = c("YARMOUTH COUNTY", "SHELBURNE COUNTY")}
+if (loc == "QL") {counties = c("QUEENS COUNTY", "LUNENBURG COUNTY")}
+if (loc == "GR") {counties = c("KINGS COUNTY")}
+if (loc == "SWNB") {counties = c("CHARLOTTE COUNTY", "SAINT JOHN COUNTY", "KINGS COUNTY", "QUEENS COUNTY", "SUNBURY COUNTY", "MULTI")}
+
+# Select the year
+year <- 2024
+
+# Set the value for converting a kilogram of weight into count of fish
+fish_conv <- 0.24
+```
+
 # OUTPUT FOLDER
 ```{r}
 
@@ -146,41 +181,6 @@ catch <- subset(catch, select = -FV_WEIGHT)
 catch <- catch |> rename(FV_WEIGHT = KGS)
 message("Units converted")
 
-```
-
-```{r location_and_year}
-# This is where you can select the region for which you are doing a report
-# YS = Yarmouth / Shelburne
-# QL = Queens / Lunenburg
-# GR = Gaspereau River
-# SWNB = Southwest New Brunswick
-#loc <- "YS"
-
-# Prompt user
-valid_choices <- c("YS", "QL", "GR", "SWNB")
-
-repeat {
-  loc <- readline(prompt = "Select a location (YS, QL, GR, SWNB): ")
-  if (loc %in% valid_choices) break
-  cat("Invalid choice. Please enter one of:", paste(valid_choices, collapse = ", "), "\n")
-}
-
-# We need to indicate province because KINGS and QUEENS counties are similar
-# between NB and NS
-prov <- if_else(loc %in% c("YS", "QL", "GR"), "NS", "NB")
-
-# Based on the value of "loc" above, we can determine which counties need to 
-# get hauled from the MARFIS database ("catch")
-if (loc == "YS") {counties = c("YARMOUTH COUNTY", "SHELBURNE COUNTY")}
-if (loc == "QL") {counties = c("QUEENS COUNTY", "LUNENBURG COUNTY")}
-if (loc == "GR") {counties = c("KINGS COUNTY")}
-if (loc == "SWNB") {counties = c("CHARLOTTE COUNTY", "SAINT JOHN COUNTY", "KINGS COUNTY", "QUEENS COUNTY", "SUNBURY COUNTY", "MULTI")}
-
-# Select the year
-year <- 2024
-
-# Set the value for converting a kilogram of weight into count of fish
-fish_conv <- 0.24
 ```
 
 # LANDINGS
@@ -1287,10 +1287,10 @@ if (loc == "YS") {
     geom_col(fill = "#54BDC2", colour = "grey20", alpha = 0.9) +
     #geom_hline(yintercept = 3.3, linetype = "dotted", size = 3/5) +
     geom_hline(yintercept = 2.6, linetype = "dotted", size = 3/5) +
-    geom_hline(yintercept = 1.75, linetype = "dotted", size = 3/5) +
+    geom_hline(yintercept = 2.1, linetype = "dotted", size = 3/5) +
     annotate("text", x = 5.5, y = 2.95,  label = "Healthy", size = 5, alpha = 0.7, colour = "green4") +
-    annotate("text", x = 5.5, y = 2.2,  label = "Cautious", size = 5, alpha = 0.7, colour = "orange2") +
-    annotate("text", x = 5.5,  y = 1.35,  label = "Critical", size = 5, alpha = 0.7, colour = "red4") +
+    annotate("text", x = 5.5, y = 2.35,  label = "Cautious", size = 5, alpha = 0.7, colour = "orange2") +
+    annotate("text", x = 5.5,  y = 1.55,  label = "Critical", size = 5, alpha = 0.7, colour = "red4") +
     labs(
       title = "Estimated escapement for gaspereau at Lake Vaughan Dam",
       subtitle = "Estimates prior to 2021 do not include fish escaping via the Powerhouse ladder",
