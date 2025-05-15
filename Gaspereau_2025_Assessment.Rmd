@@ -59,17 +59,11 @@ want to create sheets, other wise it should always be set to FALSE.
 ```{r create_data_sheets, include=FALSE}
 
 # Creates blank data sheets for counts, biodata, and ages for specified sites
-# blank.datasheets(seed=115,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("White Rock 2024 count data.csv","WRock",2024)
+# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=22,rivername="White Rock",
+#                  year=2025,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("White Rock 2025 count data.csv","WRock",2025)
 # 
-# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=15,rivername="Lanes Mills",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("Lanes Mills 2024 count data.csv","Lanes Mills",2024)
-# 
-# blank.datasheets(seed=117,startmonth=4,endmonth=6,startday=15,rivername="Below Lanes Mills",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("Below Lanes Mills 2024 count data.csv","Below Lanes Mills",2024)
+
 
 ```
 
@@ -79,7 +73,7 @@ run count scripts to get count totals for in season updates
 make plots or tables to include in emails
 
 ```{r in_season_counts,include=FALSE}
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River")
 
 # filename="White Rock 2024 count data.csv"
 # fixtime=T
@@ -88,22 +82,22 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau Rive
 # site=3
 # channel=channel
 
-x<-onespecies.river.escapement("White Rock 2024 count data.csv",fixtime=T,database=F,downstream.migration = F,2024,3,channel)
+x<-onespecies.river.escapement("White Rock 2025 count data.csv",fixtime=T,database=F,downstream.migration = F,2025,3,channel)
 
 x<-round(x)
 n<-dim(x)[1]
-x<-x[1:n-1,]
+# x<-x[1:n-1,]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
 ```{r in_season_plot,include=FALSE}
 #plot for in season emails
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
-old.data$date=as.Date(paste(old.data$day,old.data$mon,2024,sep="-"),
+old.data$date=as.Date(paste(old.data$day,old.data$mon,2025,sep="-"),
                       format="%d-%m-%Y")
 
 #dayofyear uses "strftime" to evaluate which day of the year each date aligns with
