@@ -59,17 +59,11 @@ want to create sheets, other wise it should always be set to FALSE.
 ```{r create_data_sheets, include=FALSE}
 
 # Creates blank data sheets for counts, biodata, and ages for specified sites
-# blank.datasheets(seed=115,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("White Rock 2024 count data.csv","WRock",2024)
+# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=22,rivername="White Rock",
+#                  year=2025,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("White Rock 2025 count data.csv","WRock",2025)
 # 
-# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=15,rivername="Lanes Mills",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("Lanes Mills 2024 count data.csv","Lanes Mills",2024)
-# 
-# blank.datasheets(seed=117,startmonth=4,endmonth=6,startday=15,rivername="Below Lanes Mills",
-#                  year=2024,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-# make.count.filename.textfile("Below Lanes Mills 2024 count data.csv","Below Lanes Mills",2024)
+
 
 ```
 
@@ -79,16 +73,9 @@ run count scripts to get count totals for in season updates
 make plots or tables to include in emails
 
 ```{r in_season_counts,include=FALSE}
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River")
 
-# filename="White Rock 2024 count data.csv"
-# fixtime=T
-# database=F
-# year=2024
-# site=3
-# channel=channel
-
-x<-onespecies.river.escapement("White Rock 2024 count data.csv",fixtime=T,database=F,downstream.migration = F,2024,3,channel)
+x<-onespecies.river.escapement("White Rock 2025 count data.csv",fixtime=T,database=F,downstream.migration = F,2025,3,channel)
 
 x<-round(x)
 n<-dim(x)[1]
@@ -96,14 +83,14 @@ x<-x[1:n-1,]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
 ```{r in_season_plot,include=FALSE}
 #plot for in season emails
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
-old.data$date=as.Date(paste(old.data$day,old.data$mon,2024,sep="-"),
+old.data$date=as.Date(paste(old.data$day,old.data$mon,2025,sep="-"),
                       format="%d-%m-%Y")
 
 #dayofyear uses "strftime" to evaluate which day of the year each date aligns with
@@ -111,24 +98,16 @@ old.data$dayofyear=as.numeric(strftime(old.data$date, format="%j"))
 
 plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,120000),lwd=2,
      ylab="Number of Fish",xlab="Day of Year")
-# lines(old.data$dayofyear,old.data$Total2015,type="l",col="red")
-# lines(old.data$dayofyear,old.data$Total2016,type="l",col="orange")
-# lines(old.data$dayofyear,old.data$Total2017,type="l",col="yellow")
-# lines(old.data$dayofyear,old.data$Total2018,type="l",col="green")
-# lines(old.data$dayofyear,old.data$Total2019,type="l",col="blue")
-# lines(old.data$dayofyear,old.data$Total2021,type="l",col="purple")
-# lines(old.data$dayofyear,old.data$Total2022,type="l",col="brown")
-# lines(old.data$dayofyear,old.data$Total2023,type="l",col="brown")
+lines(old.data$dayofyear,old.data$Total2017,type="l",col="brown")
+lines(old.data$dayofyear,old.data$Total2018,type="l",col="red")
+lines(old.data$dayofyear,old.data$Total2019,type="l",col="orange")
+lines(old.data$dayofyear,old.data$Total2021,type="l",col="yellow")
+lines(old.data$dayofyear,old.data$Total2022,type="l",col="green")
+lines(old.data$dayofyear,old.data$Total2023,type="l",col="blue")
+lines(old.data$dayofyear,old.data$Total2024,type="l",col="purple")
 
-lines(old.data$dayofyear,old.data$Total2017,type="l",col="red")
-lines(old.data$dayofyear,old.data$Total2018,type="l",col="orange")
-lines(old.data$dayofyear,old.data$Total2019,type="l",col="yellow")
-lines(old.data$dayofyear,old.data$Total2021,type="l",col="green")
-lines(old.data$dayofyear,old.data$Total2022,type="l",col="blue")
-lines(old.data$dayofyear,old.data$Total2023,type="l",col="purple")
-
-legend(110, 100000, legend=c("2017", "2018", "2019", "2021", "2022", "2023", "2024"),
-       col=c("red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
+legend("topleft",legend=c("2017", "2018", "2019", "2021", "2022", "2023", "2024", "2025"),
+       col=c("brown", "red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
 
 ```
 
@@ -138,6 +117,81 @@ clean and prep data for upload
 ageing selection
 recounts
 final versions of some plots
+
+```{r ageing_selection_fishery, include=FALSE}
+#first part simulates some data and reads in made up landings data
+#second part runs the sampling script on the aggregated data, looping over the three sites
+#should be able to swap out the simualted data for real stuff, in the same format,
+#to select scales from real data
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025")
+seed=681:683 #Seed used for scale selection. 
+nsamples=300  #Number of scale selected to be aged
+sites<-c("LOWER","MIDDLE","UPPER")
+#dates set manually for 2025
+date.df<-data.frame(fishing.day=1:24,
+                    month=c(rep(4,6),rep(5,18)),
+                    day=c(21,22,24,25,28,29,01,02,05,06,08,09,12,13,15,16,19,20,22,23,26,27,29,30)
+)
+
+real.bio.data<-read.csv("Gaspereau_fishingsites_biocharacterisitcs.csv")
+real.bio.data<-merge(real.bio.data,date.df)
+
+daily.landings.all<-read.csv("Gaspereau River 2025 fishery landings.csv")
+daily.landings.all<-merge(daily.landings.all,date.df)
+daily.landings.all$number.fish<-ifelse(daily.landings.all$unit=="lbs",
+                                       daily.landings.all$landings*2,
+                                       daily.landings.all$landings*4.4)
+
+###sample it in a for loop for each site
+sample.nums<-list()
+for(j in 1:3)
+{
+  #subset to site
+  ind<-sites[j] #idk why but it doesn;t work indexing to sites[j]
+  daily.landings<-daily.landings.all[daily.landings.all$Location==ind,]
+  bio.data<-real.bio.data[real.bio.data$Location==ind,]
+  
+  n.sampled <- aggregate(bio.data$fishing.day, by = list(bio.data$fishing.day), FUN = function(x){length(x[!is.na(x)])})
+  colnames(n.sampled) = c("fishing.day", "n.sampled")
+  biodata.with.weights <- merge(bio.data, n.sampled, by = "fishing.day", all.x = T)
+  mergedcountdata = aggregate(daily.landings$number.fish, by = list(daily.landings$fishing.day), FUN = sum)
+  colnames(mergedcountdata) = c("fishing.day", "merged.number.up")
+  biodata.with.weights<-merge(biodata.with.weights, mergedcountdata[,c("fishing.day","merged.number.up")], by="fishing.day", all.x = T)
+  
+  biodata.with.weights$weighting <- biodata.with.weights$merged.number.up / biodata.with.weights$n.sampled
+  # Remove infinite values from the weighting column
+  biodata.with.weights$weighting[biodata.with.weights$weighting == Inf] <- 0
+  # sample
+  set.seed(seed[j])
+  ladd.sample <- data.frame(
+    sample(biodata.with.weights$sample[biodata.with.weights$scale == 'Y'],
+          nsamples,
+          replace = F,
+          prob = biodata.with.weights$weighting[biodata.with.weights$scale == 'Y']
+          )
+  )
+  colnames(ladd.sample) <- ("sample")
+  ladd.sample$Location <- sites[j]
+  sample.nums[[j]] <- ladd.sample[with(ladd.sample, order(sample)), ]
+}
+
+sample.nums.all<-do.call("rbind",sample.nums)
+# write.csv(sample.nums.all,file="GR fishery samples to be aged 2025.csv",row.names=F)
+
+#check for days where all samples are selected (bad)
+real.bio.data$to.be.aged<-ifelse(real.bio.data$sample %in% sample.nums.all,1,0)
+out<-list()
+for(j in 1:3)
+{
+  ind<-sites[j] #idk why but it doesn;t work indexing to sites[j]
+  bio.data<-real.bio.data[real.bio.data$Location==ind,]
+  sampled.for.ageing <- aggregate(bio.data$to.be.aged, by = list(bio.data$fishing.day), FUN = mean)
+  colnames(sampled.for.ageing) = c("fishing.day", "sampled.for.ageing")
+  sampled.for.ageing$site<-sites[j]
+  out[[j]]<-sampled.for.ageing
+}
+sampled.for.ageing<-do.call("rbind",out)
+```
 
 ```{r ageing_selection, include=FALSE}
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")

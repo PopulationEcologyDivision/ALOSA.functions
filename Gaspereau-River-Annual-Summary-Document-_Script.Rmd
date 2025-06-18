@@ -19,7 +19,6 @@ library(tinytex)
 ```
 
 \newpage
-Please note that all 2024 values related to catch are interim as of October 21 2024 while an updated 2024 catch estimate is being determined.
 ```{r hardcode_escapement, include=FALSE}
 GR2024<-"588,540"; GRCI2024<-"31,210"
 GR2023<-"1,312,700"; GRCI2023<-"52,246"
@@ -33,7 +32,7 @@ GR2015<-"438,874"; GRCI2015<-"24,070"
 #no CI available for 2013 due to method used
 ```
 
-**Table 1.** Summary of catch data, estimated escapement, estimated run size, and exploitation rate for Alewife on the Gaspereau River, NS. Italicized values for 2024 are placeholders while an updated 2024 catch estimate is being determined.
+**Table 1.** Summary of catch data, estimated escapement, estimated run size, and exploitation rate for Alewife on the Gaspereau River, NS. 
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
