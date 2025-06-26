@@ -39,6 +39,7 @@ format.BIODATA.onesite <- function(filename) {
   data <- data[ , names(data) %in% goodnames]
   
   data$SITE_ID <- siteID
+  data$AGE_SPECIFIC_NOTES <- ""
   
   A.names = c("Alewife", "Alewife ", "A", "a", "alewife", "ale", "Ale", "ALE")
   B.names = c("Blueback Herring", "blueback herring", "Blueback", "blueback", "BBH", "b", "B", "bbh", "Bbh", "Bb", "BB", "bb")
@@ -60,11 +61,11 @@ format.BIODATA.onesite <- function(filename) {
   
   data$fork.length = round(data$fork.length, digits = 1)
   
-  col_order <- c("sample", "SITE_ID", "year", "mon", "day","species", "sex", "fork.length", "weight", "scale", "notes")
+  col_order <- c("sample", "SITE_ID", "year", "mon", "day","species", "sex", "fork.length", "weight", "scale", "notes", "AGE_SPECIFIC_NOTES")
   
   data <- data[ , col_order]
   
-  names(data) <- c("FISH_ID", "SITE_ID", "YEAR", "MON", "DAY","SPECIES_ID", "SEX_ID", "FORK_LENGTH", "WEIGHT", "SCALE", "NOTES")
+  names(data) <- c("FISH_ID", "SITE_ID", "YEAR", "MON", "DAY","SPECIES_ID", "SEX_ID", "FORK_LENGTH", "WEIGHT", "SCALE", "NOTES", "AGE_SPECIFIC_NOTES")
   
   return(data)
   
