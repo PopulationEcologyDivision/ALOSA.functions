@@ -75,4 +75,5 @@ message("Converting catch units to kilograms ...")
 catch <- convert.KGS(catch)
 catch <- subset(catch, select = -FV_WEIGHT)
 catch <- catch |> rename(FV_WEIGHT = KGS)
+catch$MEASUREMENT_UNIT <- "KILOGRAMS"
 message("Units converted")
