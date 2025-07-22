@@ -150,6 +150,7 @@ onespecies.river.escapement <- function(
       n.counts = strata.n$x
       )
     
+    assign("summary_data_check", summary.data, envir = .GlobalEnv)
     # --- UNCOUNTABLE TIME UNITS AND EXTRAPOLATION ---
     
     # Check for missing strata
