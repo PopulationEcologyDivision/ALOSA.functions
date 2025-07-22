@@ -92,6 +92,12 @@ ageing.selection.test <- function(
   ladd.sample$to.be.aged <- "Y"
   ladd.sample <- ladd.sample[with(ladd.sample, order(sample)), ]
   out <- merge(biodata.with.weights, ladd.sample, by = "sample", all.y = T)
+  # To get the number of fish that are to be used for aging and to compare this
+  # to the number of fish that actually were sampled that day to see if we are
+  # over sampling i.e. if the number to be aged is the same as the number that
+  # were sampled (or close to it)
+  scales_sampled_per_time_unit <- out
+  
   if(species == "A"){out$species <- "A"}
   if(species == "B"){out$species <- "B"}
   # if(species == "both"){out$species <- NA}
@@ -108,4 +114,25 @@ ageing.selection.test <- function(
     row.names = F,
     na = ""
   )
+  
+  # Check to see if we sampled correctly
+  
+  # Choose the time column based on what exists in the data
+  time_col <- if ("weekofyear" %in% names(scales_sampled_per_time_unit)) {
+    sym("weekofyear")
+  } else {
+    sym("dayofyear")
+  }
+  
+  # Group and summarise using the selected time column
+  scales_sampled_per_time_unit <- scales_sampled_per_time_unit |> 
+    group_by(!!time_col) |> 
+    summarise(
+      count_to_be_aged = sum(!is.na(to.be.aged)),
+      n_sampled = first(n.sampled),
+      .groups = "drop"
+    )
+  
+  assign("scales_sampled_per_time_unit", scales_sampled_per_time_unit, envir = .GlobalEnv)
+  # return(scales_sampled_per_time_unit)
 }
