@@ -33,7 +33,7 @@ unique_dets <- unique(dets$id)
 #clean metadata
 metadata$id <- paste(metadata$pref, metadata$suff, sep="")
 metadata$rdt <- ymd_hm(paste(metadata$rdate, metadata$rtime, sep = ""))
-metadata$rdt[is.na(metadata$rdt)] <- paste(metadata$rdate[is.na(metadata$rdt)], "14:00:00", sep = " ")
+metadata$rdt[is.na(metadata$rdt)] <- paste(metadata$rdate[is.na(metadata$rdt)], "14:00:00", sep = " ") #for instance where release time wasn;t recorded.
 
 #get rids of morts
 metadata <- metadata[metadata$mort %in% "N",]
@@ -210,7 +210,7 @@ dw<-D*n/g
 #by running a blr on the data and adding rows for every fish in the population,
 #we are assuming that there is no change in passage success as time goes on, and 
 #a big fish on day has the same prob as a small fish at the end.
-#so a blr where we just add all fish in as rows, essentialyl assumes that there
+#so a blr where we just add all fish in as rows, essentially assumes that there
 #is no change in passage success as time goes on.
 #we could either check this assumption (maybe it will be revealed to be no big deal)
 #by looking at fork lengths of tagged/untagged fish at WR
@@ -218,5 +218,35 @@ dw<-D*n/g
 #or figure out a way to do a weighted blr and weight the population somehow
 #or use the weights to make a second "tagged" population to directly compare to the real population
 #by adding a rows for each tagged fish equal to the weights
+```
+
+```{r binary logistic regression}
+#demonstrate tagging effect with a binary logistic regression (blr)
+#need to create a dataframe with a row for every fish in the population
+#start by subsetting tag data
+#using data trimmed only to the study window, for releases and detections
+tag.df<-subset(metadata.trim,select=c(id,ana,tagger))
+tag.df$pass.success<-ifelse(tag.df$id %in% trimdet$id,1,0)
+
+#now, make a population dataframe
+wrN<-round(sum(wrcount.trim$total),0) #number of fish that passed WR
+lmN<-round(sum(lmcount$total),0) #number of fish that passed LM
+failN<-wrN-lmN #number of fish that passed WR but not LM
+pop.df<-data.frame(id=as.character(1:wrN),
+                   tagger=rep("N",wrN),
+                   ana=rep("N",wrN),
+                   pass.success=c(rep(1,lmN),rep(0,failN))
+)
+
+#merge the two dataframes
+all.df<-rbind(tag.df,pop.df)
+
+#run model
+fit1<-glm(pass.success~tagger*ana,data=all.df,family="binomial")
+summary(fit1)
+
+#model with no interaction
+fit2<-glm(pass.success~tagger,data=all.df,family="binomial")
+summary(fit2)
 ```
 
