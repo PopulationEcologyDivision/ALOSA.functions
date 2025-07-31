@@ -92,8 +92,114 @@ travel.times<- exit_all%>%
 
 hist(as.numeric(travel.times$delay),breaks = 0:20)
 
+#plot of travel time broken down by tagger and anesthetic use
+par(mfrow=c(1,4),oma=c(0.5,1.5,0.5,0.5),mar=c(2,0.5,0.5,0))
+hist(as.numeric(travel.times$delay[travel.times$tagger=="MB" & travel.times$ana=="Y"]),breaks = 0:20,ylim=c(0,25),
+     main="MB, Y ana",xlab="days")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="MB" & travel.times$ana=="N"]),breaks = 0:20,ylim=c(0,25),
+     main="MB, N ana",xlab="days",ylab="")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="GN" & travel.times$ana=="Y"]),breaks = 0:20,ylim=c(0,25),
+     main="GN, Y ana",xlab="days",ylab="")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="GN" & travel.times$ana=="N"]),breaks = 0:20,ylim=c(0,25),
+     main="GN, N ana",xlab="days",ylab="")
+
 #using median travel time, we get around 4 days for both taggers
 ```
+
+```{r tagging det summary plots}
+exit_all$id<-as.factor(exit_all$id)
+detsMBana<-exit_all[exit_all$ana=="Y" & exit_all$tagger=="MB",]
+detsMBnana<-exit_all[exit_all$ana=="N" & exit_all$tagger=="MB",]
+detsGNana<-exit_all[exit_all$ana=="Y" & exit_all$tagger=="GN",]
+detsGNnana<-exit_all[exit_all$ana=="N" & exit_all$tagger=="GN" & exit_all$dt<"2025-05-20",]
+trim.time<-as.POSIXct("2024-05-21 23:59:59",tz="UTC")
+
+####plot all detections####
+par(mfrow=c(2,2),oma=c(0.5,0.5,0.5,0.5),mar=c(2,2,1,1))
+#MB, ana
+id.key<-unique(detsMBana$id)
+plot(detsMBana$dt,detsMBana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBana$id))
+{
+  points(min(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsMBnana$id)
+plot(detsMBnana$dt,detsMBnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBnana$id))
+{
+  points(min(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNana$id)
+plot(detsGNana$dt,detsGNana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNana$id))
+{
+  points(min(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNnana$id)
+plot(detsGNnana$dt,detsGNnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNnana$id))
+{
+  points(min(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+####plot all detections from releases prior to May 20####
+metadata.trim<-metadata[metadata$rdt<"2024-05-20",]
+detsMBana<-detsMBana[detsMBana$id %in% metadata.trim$id,]
+detsMBnana<-detsMBnana[detsMBnana$id %in% metadata.trim$id,]
+detsGNana<-detsGNana[detsGNana$id %in% metadata.trim$id,]
+detsGNnana<-detsGNnana[detsGNnana$id %in% metadata.trim$id,]
+  
+par(mfrow=c(2,2),oma=c(0.5,0.5,0.5,0.5),mar=c(2,2,1,1))
+#MB, ana
+id.key<-unique(detsMBana$id)
+plot(detsMBana$dt,detsMBana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBana$id))
+{
+  points(min(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsMBnana$id)
+plot(detsMBnana$dt,detsMBnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBnana$id))
+{
+  points(min(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNana$id)
+plot(detsGNana$dt,detsGNana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNana$id))
+{
+  points(min(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNnana$id)
+plot(detsGNnana$dt,detsGNnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNnana$id))
+{
+  points(min(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+```
+
 
 ```{r setup escapement counts}
 #get escapement from both sites####
@@ -246,7 +352,62 @@ fit1<-glm(pass.success~tagger*ana,data=all.df,family="binomial")
 summary(fit1)
 
 #model with no interaction
-fit2<-glm(pass.success~tagger,data=all.df,family="binomial")
+fit2<-glm(pass.success~0+tagger,data=all.df,family="binomial")
 summary(fit2)
+
+#what if the tagged fish were just late?
+tag.df$pass.success.late<-ifelse(tag.df$id %in% exit_all$id,1,0) #
+#don;t fit another model, since we can't know how many untagged migrants made it up late too
+#just report the change in proportions
+pass.prop=c(mean(tag.df$pass.success[tag.df$tagger=="GN" & tag.df$ana=="N"]),
+            mean(tag.df$pass.success[tag.df$tagger=="GN" & tag.df$ana=="Y"]),
+            mean(tag.df$pass.success[tag.df$tagger=="MB" & tag.df$ana=="N"]),
+            mean(tag.df$pass.success[tag.df$tagger=="MB" & tag.df$ana=="Y"])
+)
+
+pass.prop.late=c(mean(tag.df$pass.success.late[tag.df$tagger=="GN" & tag.df$ana=="N"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="GN" & tag.df$ana=="Y"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="MB" & tag.df$ana=="N"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="MB" & tag.df$ana=="Y"])
+)
+
+n.pass.success.tab<-data.frame(tagger=c("GN","GN","MB","MB"),
+                               ana=c("N","Y","N","Y"),
+                               n=as.vector(table(tag.df$ana,tag.df$tagger)),
+                               pass=as.vector(table(tag.df$ana[tag.df$pass.success==1],tag.df$tagger[tag.df$pass.success==1])),
+                               pass.prop=round(pass.prop,3),
+                               pass.late=as.vector(table(tag.df$ana[tag.df$pass.success.late==1],tag.df$tagger[tag.df$pass.success.late==1])),
+                               pass.prop.late=round(pass.prop.late,3)
+)
+
+#silly model time
+# tag.df2<-subset(metadata.trim,select=c(id,ana,tagger,sx,fl,rdt))
+# tag.df2$pass.success<-ifelse(tag.df2$id %in% trimdet$id,1,0)
+# fit3<-glm(pass.success~sx+fl+tagger*ana,data=tag.df2,family="binomial")
+# summary(fit3)
+# 
+# tag.df3<-subset(metadata,select=c(id,ana,tagger,sx,fl,rdt))
+# tag.df3$pass.success<-ifelse(tag.df3$id %in% exit_all$id,1,0)
+# fit4<-glm(pass.success~tagger*ana+fl,data=tag.df3,family="binomial")
+# summary(fit4)
+```
+
+A binary logistic regression was fit to the data to determine if tagging fish and anesthetizing them affected their passage success. Passage success was defined as a fish migrating from the top of the White Rock fish ladder to the top of the Lanes Mills fish ladder.
+
+For all tagged fish, passage success was determined by detecting them at the top of the Lanes Mills fish ladder, within the study window. For all untagged fish (the population), passage success for the entire population was determined as the number of fish that were counted escaping the LM fish ladder divided by those that were counted escaping the White Rock fish ladder. For the purposes of the regression, each fish that escaped WR fish ladder was assigned a passage success or fail, such that the proportion of the successes matched the proportion of the population that successfully migrated to LM.
+
+The probability that an untagged fish observed at WR successfully passed LM during the study window was `r exp(coef(fit2)["taggerN"])/(1+exp(coef(fit2)["taggerN"]))`, while the probability of a fish tagged by the experienced and inexperienced tagger passed was `r exp(coef(fit2)["taggerGN"])/(1+exp(coef(fit2)["taggerGN"]))` and `r exp(coef(fit2)["taggerMB"])/(1+exp(coef(fit2)["taggerMB"]))`, respectively. 
+
+The results of the binary logistic regression where passage success is predicted by tagger (experienced, inexperienced, or none) and anasthetic use (yes or no) are as follows. The only statistically significant (p<0.05) model result was that not tagging a fish increased its odds of passage success by `r exp(coef(fit1)["taggerN"])-1` (p-value 0.0168) when compared to passage success of fish tagged by the experienced tagger. Passage success of fish tagged by the inexperienced tagger was lower than those tagged by the experienced tagger, with a `r exp(coef(fit1)["taggerMB"])-1` reduction in the odds of passage success, though these results were not significant (p-value 0.0566). Use of anesthetic did not significantly effect fish's migration success; results indicate that fish anesthetized by the experienced tagger had a reduction in migration success, whereas fish anesthetized by the inexperienced tagged had an increase in passage success.
+
+The study window ends on May 21 because large numbers of downstream-migrating post spawn alewife moving through the Lanes Mills fish ladder prevented accurate escapement enumeration, thus preventing the "like-to-like" comparison of proportions tagged and untagged fish. Though escapement enumeration ceased, detection of tagged fish continued, allowing us to to investigate the proportion of "late" migrating fish. `r n.pass.success.tab`
+
+```{r investigate passage after study window}
+#what if all the fish got up later?
+all.tag.df<-subset(metadata.trim,select=c(id,ana,tagger,sx,fl,rdt))
+all.tag.df$pass.success<-ifelse(all.tag.df$id %in% exit_all$id,1,0)
+sum(tag.df$pass.success)
+
+
 ```
 
