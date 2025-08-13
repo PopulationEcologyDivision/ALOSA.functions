@@ -1,0 +1,452 @@
+---
+title: "Gasp 2024 Tagging"
+output: html_document
+date: "2025-07-28"
+---
+
+```{r setup, include=FALSE}
+#packages
+require(lubridate)
+require(dplyr)
+require(tidyverse)
+require(ROracle)
+#source our functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+#connect to our database
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE) 
+```
+
+```{r setup detections}
+#need to use read_csv for dets because weird encoding
+dets <- read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024/PIT Downloads/Lanes mills exit_WORKING_1.csv")
+metadata <- read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024/PIT Downloads/2024 PIT Tagging Data.csv")
+
+#clean detection data
+# names(dets)[names(dets)=="TAGID"]<-"id"
+# dets$date<-as.character(as.Date(dets$DATE, format = "%m/%d/%Y"))
+# dets$time<-format(strptime(dets$time, format = "%H:%M.%OS"), "%H:%M:%OS")
+# dets$dt<-ymd_hms(paste(dets$date, dets$time, sep = ""))
+unique_dets <- unique(dets$id)
+
+#clean metadata
+metadata$id <- paste(metadata$pref, metadata$suff, sep="")
+metadata$rdt <- ymd_hm(paste(metadata$rdate, metadata$rtime, sep = ""))
+metadata$rdt[is.na(metadata$rdt)] <- paste(metadata$rdate[is.na(metadata$rdt)], "14:00:00", sep = " ") #for instance where release time wasn;t recorded.
+
+#get rids of morts
+metadata <- metadata[metadata$mort %in% "N",]
+
+##how many tags for each tagger and ana?
+
+MB <- metadata[metadata$tagger %in% "MB",]
+GN <- metadata[metadata$tagger %in% "GN",]
+
+ana <- metadata[metadata$ana %in% "Y",]
+nana <- metadata[metadata$ana %in% "N",]
+```
+
+```{r tag detections summary}
+#first, all tags (no treatment)
+exit_all <- left_join(dets, metadata)
+exit_all <- exit_all[exit_all$id %in% metadata$id,]
+
+detected_all <- unique(exit_all$id)
+length(metadata$id)
+length(detected_all)
+
+#now, ana
+exit_ana <- exit_all[exit_all$id %in% ana$id,]
+length(unique(exit_ana$id))
+length(unique(ana$id))
+
+#nana
+exit_nana <- exit_all[exit_all$id %in% nana$id,]
+length(unique(exit_nana$id))
+length(unique(nana$id))
+
+#Tagger
+exit_gn <- exit_all[exit_all$id %in% GN$id,]
+length(unique(exit_gn$id))
+length(unique(GN$id))
+
+exit_mb <- exit_all[exit_all$id %in% MB$id,]
+length(unique(exit_mb$id))
+length(unique(MB$id))
+```
+
+```{r migration timing}
+exit_all$dt <- ymd_hms(paste(exit_all$date, exit_all$time, sep=""))
+exit_all <- exit_all[exit_all$dt >= min(metadata$rdt),]
+
+travel <- exit_all%>%
+  group_by(id, tagger, ana)%>%
+  summarize(swim = min(dt), rel = min(rdt), delay = swim-rel)%>%
+  group_by(tagger)%>%
+  summarize(mean = mean(delay), min = min(delay), max = max(delay), median = median(delay))
+
+travel.times<- exit_all%>%
+  group_by(id, tagger, ana)%>%
+  summarize(swim = min(dt), rel = min(rdt), delay = swim-rel)
+
+hist(as.numeric(travel.times$delay),breaks = 0:20)
+
+#plot of travel time broken down by tagger and anesthetic use
+par(mfrow=c(1,4),oma=c(0.5,1.5,0.5,0.5),mar=c(2,0.5,0.5,0))
+hist(as.numeric(travel.times$delay[travel.times$tagger=="MB" & travel.times$ana=="Y"]),breaks = 0:20,ylim=c(0,25),
+     main="MB, Y ana",xlab="days")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="MB" & travel.times$ana=="N"]),breaks = 0:20,ylim=c(0,25),
+     main="MB, N ana",xlab="days",ylab="")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="GN" & travel.times$ana=="Y"]),breaks = 0:20,ylim=c(0,25),
+     main="GN, Y ana",xlab="days",ylab="")
+hist(as.numeric(travel.times$delay[travel.times$tagger=="GN" & travel.times$ana=="N"]),breaks = 0:20,ylim=c(0,25),
+     main="GN, N ana",xlab="days",ylab="")
+
+#using median travel time, we get around 4 days for both taggers
+```
+
+```{r tagging det summary plots}
+exit_all$id<-as.factor(exit_all$id)
+detsMBana<-exit_all[exit_all$ana=="Y" & exit_all$tagger=="MB",]
+detsMBnana<-exit_all[exit_all$ana=="N" & exit_all$tagger=="MB",]
+detsGNana<-exit_all[exit_all$ana=="Y" & exit_all$tagger=="GN",]
+detsGNnana<-exit_all[exit_all$ana=="N" & exit_all$tagger=="GN" & exit_all$dt<"2025-05-20",]
+trim.time<-as.POSIXct("2024-05-21 23:59:59",tz="UTC")
+
+####plot all detections####
+par(mfrow=c(2,2),oma=c(0.5,0.5,0.5,0.5),mar=c(2,2,1,1))
+#MB, ana
+id.key<-unique(detsMBana$id)
+plot(detsMBana$dt,detsMBana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBana$id))
+{
+  points(min(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsMBnana$id)
+plot(detsMBnana$dt,detsMBnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBnana$id))
+{
+  points(min(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNana$id)
+plot(detsGNana$dt,detsGNana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNana$id))
+{
+  points(min(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNnana$id)
+plot(detsGNnana$dt,detsGNnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNnana$id))
+{
+  points(min(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+####plot all detections from releases prior to May 20####
+metadata.trim<-metadata[metadata$rdt<"2024-05-20",]
+detsMBana<-detsMBana[detsMBana$id %in% metadata.trim$id,]
+detsMBnana<-detsMBnana[detsMBnana$id %in% metadata.trim$id,]
+detsGNana<-detsGNana[detsGNana$id %in% metadata.trim$id,]
+detsGNnana<-detsGNnana[detsGNnana$id %in% metadata.trim$id,]
+  
+par(mfrow=c(2,2),oma=c(0.5,0.5,0.5,0.5),mar=c(2,2,1,1))
+#MB, ana
+id.key<-unique(detsMBana$id)
+plot(detsMBana$dt,detsMBana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBana$id))
+{
+  points(min(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBana$dt[detsMBana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsMBnana$id)
+plot(detsMBnana$dt,detsMBnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsMBnana$id))
+{
+  points(min(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsMBnana$dt[detsMBnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNana$id)
+plot(detsGNana$dt,detsGNana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNana$id))
+{
+  points(min(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNana$dt[detsGNana$id==id.key[i]]),id.key[i],col="red")
+}
+
+id.key<-unique(detsGNnana$id)
+plot(detsGNnana$dt,detsGNnana$id)
+segments(trim.time,0,trim.time,311)
+for(i in 1:length(detsGNnana$id))
+{
+  points(min(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="blue")
+  points(max(detsGNnana$dt[detsGNnana$id==id.key[i]]),id.key[i],col="red")
+}
+
+```
+
+
+```{r setup escapement counts}
+#get escapement from both sites####
+wrcount<-onespecies.river.escapement(fixtime = T,downstream.migration = F,year = 2024,
+                                    database = T,site = 3,channel = channel)
+#lm count data is already trimmed to the 21st of May, after which there is too much down stream migration
+lmcount<-onespecies.river.escapement(filename="R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024/Lanes Mills 2024 count data.csv",
+                                     fixtime = F,downstream.migration = F,year = 2024,
+                                     database = F,site = 4,channel = channel)
+# LM dates are may 5 to 21
+
+#trim data
+#using a travel time of 4 days, the window for WR is May 01 to May 17. 
+#however, since we counted 0s at LM, we can conclude that all the fish that
+#migrated up WR before May 01 didn't slip by LM, so let's include those fish 
+wrcount.trim<-wrcount[wrcount$dayofyear<=138,]
+metadata.trim<-metadata[metadata$rdt<"2024-05-20",]
+
+```
+
+
+```{r weight detections}
+#weight fish based on release time####
+#arbitrary attempt 1
+#tag release days: "2024-05-03" "2024-05-06" "2024-05-08" "2024-05-13" "2024-05-14" "2024-05-15" "2024-05-16" "2024-05-17"
+g1<-sum(wrcount.trim$total[wrcount.trim$dayofyear<=125]) #start to may 4
+g2<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=126 & wrcount.trim$dayofyear<=128])
+g3<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=129 & wrcount.trim$dayofyear<=131])
+g4<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=132 & wrcount.trim$dayofyear<=134])
+g5<-sum(wrcount.trim$total[wrcount.trim$dayofyear==135])
+g6<-sum(wrcount.trim$total[wrcount.trim$dayofyear==136])
+g7<-sum(wrcount.trim$total[wrcount.trim$dayofyear==137])
+g8<-sum(wrcount.trim$total[wrcount.trim$dayofyear==138])
+
+n1<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",])
+n2<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-06",])
+n3<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-08",])
+n4<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-13",])
+n5<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-14",])
+n6<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-15",])
+n7<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-16",])
+n8<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-17",])
+
+w1<-g1/nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",])
+w2<-g2/nrow(metadata.trim[metadata.trim$rdate=="2024-05-06",])
+w3<-g3/nrow(metadata.trim[metadata.trim$rdate=="2024-05-08",])
+w4<-g4/nrow(metadata.trim[metadata.trim$rdate=="2024-05-13",])
+w5<-g5/nrow(metadata.trim[metadata.trim$rdate=="2024-05-14",])
+w6<-g6/nrow(metadata.trim[metadata.trim$rdate=="2024-05-15",])
+w7<-g7/nrow(metadata.trim[metadata.trim$rdate=="2024-05-16",])
+w8<-g8/nrow(metadata.trim[metadata.trim$rdate=="2024-05-17",])
+
+####scale detections to population, then back down to sample####
+trimdet<-exit_all[exit_all$dt<"2024-05-21 23:59:59",]
+tags.det<-unique(trimdet$id)
+
+#number of tags detected in each period
+d1<-length(unique(trimdet$id[trimdet$rdate=="2024-05-03"]))
+d2<-length(unique(trimdet$id[trimdet$rdate=="2024-05-06"]))
+d3<-length(unique(trimdet$id[trimdet$rdate=="2024-05-08"]))
+d4<-length(unique(trimdet$id[trimdet$rdate=="2024-05-13"]))
+d5<-length(unique(trimdet$id[trimdet$rdate=="2024-05-14"]))
+d6<-length(unique(trimdet$id[trimdet$rdate=="2024-05-15"]))
+d7<-length(unique(trimdet$id[trimdet$rdate=="2024-05-16"]))
+d8<-length(unique(trimdet$id[trimdet$rdate=="2024-05-17"]))
+
+#try with vectors
+#tag release days: "2024-05-03" "2024-05-06" "2024-05-08" "2024-05-13" "2024-05-14" "2024-05-15" "2024-05-16" "2024-05-17"
+g<-c(sum(wrcount.trim$total[wrcount.trim$dayofyear<=125]), #start to may 4
+     sum(wrcount.trim$total[wrcount.trim$dayofyear>=126 & wrcount.trim$dayofyear<=128]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear>=129 & wrcount.trim$dayofyear<=131]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear>=132 & wrcount.trim$dayofyear<=134]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear==135]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear==136]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear==137]),
+     sum(wrcount.trim$total[wrcount.trim$dayofyear==138])
+)
+
+n<-c(nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-06",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-08",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-13",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-14",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-15",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-16",]),
+     nrow(metadata.trim[metadata.trim$rdate=="2024-05-17",])
+)
+
+w<-g/n
+
+####scale detections to population, then back down to sample####
+trimdet<-exit_all[exit_all$dt<"2024-05-21 23:59:59",]
+tags.det<-unique(trimdet$id)
+
+#number of tags detected in each period
+d<-c(length(unique(trimdet$id[trimdet$rdate=="2024-05-03"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-06"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-08"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-13"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-14"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-15"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-16"])),
+     length(unique(trimdet$id[trimdet$rdate=="2024-05-17"]))
+)
+
+#scale each group up to the population
+D<-d*w
+
+#weighted number of detected tags, scaled back down to the sample size
+dw<-sum(D)*sum(n)/sum(g)
+dw<-D*n/g
+
+#weighting this way results in only a corrected number of fish, losing the tagger/ana variables
+#by running a blr on the data and adding rows for every fish in the population,
+#we are assuming that there is no change in passage success as time goes on, and 
+#a big fish on day has the same prob as a small fish at the end.
+#so a blr where we just add all fish in as rows, essentially assumes that there
+#is no change in passage success as time goes on.
+#we could either check this assumption (maybe it will be revealed to be no big deal)
+#by looking at fork lengths of tagged/untagged fish at WR
+#demonstrate that the assumption doesn;t matter enough to account for (maybe do two prop ztest, show results are still significant)
+#or figure out a way to do a weighted blr and weight the population somehow
+#or use the weights to make a second "tagged" population to directly compare to the real population
+#by adding a rows for each tagged fish equal to the weights
+```
+
+```{r binary logistic regression}
+#demonstrate tagging effect with a binary logistic regression (blr)
+#need to create a dataframe with a row for every fish in the population
+#start by subsetting tag data
+#using data trimmed only to the study window, for releases and detections
+tag.df<-subset(metadata.trim,select=c(id,ana,tagger))
+tag.df$pass.success<-ifelse(tag.df$id %in% trimdet$id,1,0)
+
+#now, make a population dataframe
+wrN<-round(sum(wrcount.trim$total),0) #number of fish that passed WR
+lmN<-round(sum(lmcount$total),0) #number of fish that passed LM
+failN<-wrN-lmN #number of fish that passed WR but not LM
+pop.df<-data.frame(id=as.character(1:wrN),
+                   tagger=rep("N",wrN),
+                   ana=rep("N",wrN),
+                   pass.success=c(rep(1,lmN),rep(0,failN))
+)
+
+#merge the two dataframes
+all.df<-rbind(tag.df,pop.df)
+
+#run model
+fit1<-glm(pass.success~tagger*ana,data=all.df,family="binomial")
+summary(fit1)
+
+#model with no interaction
+fit2<-glm(pass.success~0+tagger,data=all.df,family="binomial")
+summary(fit2)
+
+#what if the tagged fish were just late?
+tag.df$pass.success.late<-ifelse(tag.df$id %in% exit_all$id,1,0) #
+#don;t fit another model, since we can't know how many untagged migrants made it up late too
+#just report the change in proportions
+pass.prop=c(mean(tag.df$pass.success[tag.df$tagger=="GN" & tag.df$ana=="N"]),
+            mean(tag.df$pass.success[tag.df$tagger=="GN" & tag.df$ana=="Y"]),
+            mean(tag.df$pass.success[tag.df$tagger=="MB" & tag.df$ana=="N"]),
+            mean(tag.df$pass.success[tag.df$tagger=="MB" & tag.df$ana=="Y"])
+)
+
+pass.prop.late=c(mean(tag.df$pass.success.late[tag.df$tagger=="GN" & tag.df$ana=="N"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="GN" & tag.df$ana=="Y"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="MB" & tag.df$ana=="N"]),
+                 mean(tag.df$pass.success.late[tag.df$tagger=="MB" & tag.df$ana=="Y"])
+)
+
+n.pass.success.tab<-data.frame(tagger=c("GN","GN","MB","MB"),
+                               ana=c("N","Y","N","Y"),
+                               n=as.vector(table(tag.df$ana,tag.df$tagger)),
+                               pass=as.vector(table(tag.df$ana[tag.df$pass.success==1],tag.df$tagger[tag.df$pass.success==1])),
+                               pass.prop=round(pass.prop,3),
+                               pass.late=as.vector(table(tag.df$ana[tag.df$pass.success.late==1],tag.df$tagger[tag.df$pass.success.late==1])),
+                               pass.prop.late=round(pass.prop.late,3)
+)
+
+#silly model time
+# tag.df2<-subset(metadata.trim,select=c(id,ana,tagger,sx,fl,rdt))
+# tag.df2$pass.success<-ifelse(tag.df2$id %in% trimdet$id,1,0)
+# fit3<-glm(pass.success~sx+fl+tagger*ana,data=tag.df2,family="binomial")
+# summary(fit3)
+# 
+# tag.df3<-subset(metadata,select=c(id,ana,tagger,sx,fl,rdt))
+# tag.df3$pass.success<-ifelse(tag.df3$id %in% exit_all$id,1,0)
+# fit4<-glm(pass.success~tagger*ana+fl,data=tag.df3,family="binomial")
+# summary(fit4)
+```
+
+A binary logistic regression was fit to the data to determine if tagging fish and anesthetizing them affected their passage success. Passage success was defined as a fish migrating from the top of the White Rock fish ladder to the top of the Lanes Mills fish ladder.
+
+For all tagged fish, passage success was determined by detecting them at the top of the Lanes Mills fish ladder, within the study window. For all untagged fish (the population), passage success for the entire population was determined as the number of fish that were counted escaping the LM fish ladder divided by those that were counted escaping the White Rock fish ladder. For the purposes of the regression, each fish that escaped WR fish ladder was assigned a passage success or fail, such that the proportion of the successes matched the proportion of the population that successfully migrated to LM.
+
+The probability that an untagged fish observed at WR successfully passed LM during the study window was `r exp(coef(fit2)["taggerN"])/(1+exp(coef(fit2)["taggerN"]))`, while the probability of a fish tagged by the experienced and inexperienced tagger passed was `r exp(coef(fit2)["taggerGN"])/(1+exp(coef(fit2)["taggerGN"]))` and `r exp(coef(fit2)["taggerMB"])/(1+exp(coef(fit2)["taggerMB"]))`, respectively. 
+
+The results of the binary logistic regression where passage success is predicted by tagger (experienced, inexperienced, or none) and anasthetic use (yes or no) are as follows. The only statistically significant (p<0.05) model result was that not tagging a fish increased its odds of passage success by `r exp(coef(fit1)["taggerN"])-1` (p-value 0.0168) when compared to passage success of fish tagged by the experienced tagger. Passage success of fish tagged by the inexperienced tagger was lower than those tagged by the experienced tagger, with a `r exp(coef(fit1)["taggerMB"])-1` reduction in the odds of passage success, though these results were not significant (p-value 0.0566). Use of anesthetic did not significantly effect fish's migration success; results indicate that fish anesthetized by the experienced tagger had a reduction in migration success, whereas fish anesthetized by the inexperienced tagged had an increase in passage success.
+
+The study window ends on May 21 because large numbers of downstream-migrating post spawn alewife moving through the Lanes Mills fish ladder prevented accurate escapement enumeration, thus preventing the "like-to-like" comparison of proportions tagged and untagged fish. Though escapement enumeration ceased, detection of tagged fish continued, allowing us to to investigate the proportion of "late" migrating fish. `r n.pass.success.tab`
+
+```{r count estimate uncertainty}
+#how could the uncertainty in our count estimates affect conclusions?
+
+#1. what is the probability that the proportion of untagged fish that went up LM is the same as tagged fish
+
+#assume CI's from total WR count are propotional to trimmed
+wrCI<-(619749.5-557330.5)# from count output above
+wrCI.percent<-wrCI*0.5/sum(wrcount$total) #half of the CI as a percent
+wrcount.hi<-sum(wrcount.trim$total)*(1+wrCI.percent)
+lmcount.low<-352192 #from count output above
+extreme.prop<-lmcount.low/wrcount.hi
+#the probability of a count below the lmcount.low and wrcount.hi are each 2.5%,
+#giving a joint probabiltiy of 0.0625%, assuming they are independent, which is false
+#but in reality a hi wr count would make a low lm count less likely, so w/e
+
+#2. what is the probability that the counts would result in a non significant model result?
+#plug in values to the model to get close to a p value of 0.05
+#code copied and modified from above chunk
+lm.mod<-0.987
+wr.mod<-1
+
+tag.df<-subset(metadata.trim,select=c(id,ana,tagger))
+tag.df$pass.success<-ifelse(tag.df$id %in% trimdet$id,1,0)
+#now, make a population dataframe
+wrN<-round(sum(wrcount.trim$total)*wr.mod,0) #number of fish that passed WR
+lmN<-round(sum(lmcount$total)*lm.mod,0) #number of fish that passed LM
+failN<-wrN-lmN #number of fish that passed WR but not LM
+pop.df<-data.frame(id=as.character(1:wrN),
+                   tagger=rep("N",wrN),
+                   ana=rep("N",wrN),
+                   pass.success=c(rep(1,lmN),rep(0,failN))
+)
+
+#merge the two dataframes
+all.df<-rbind(tag.df,pop.df)
+
+#run model
+fit1<-glm(pass.success~tagger*ana,data=all.df,family="binomial")
+summary(fit1)
+
+
+#a lm escapement of 373530 gives a p-value near 0.05 in the model
+#what is the probabiltiy of a count less than 373530?
+
+pnorm(sum(lmcount$total)*lm.mod,sum(lmcount$total),sqrt(171718128))
+```
+
+The proportion of untagged fish that migrated successfully through Lanes Mills is based on two escapement estimates, which are produced with a measure of 95% confidence interval around them based upon the statistical design of the two-way stratified sampling design for enumerating the escapements (Nelson 2006). We can evaluate the effect the uncertainty of those estimates can have on our conclusions about tagging effect. The proportion of untagged fish that successfully migrated is `r exp(coef(fit2)["taggerN"])/(1+exp(coef(fit2)["taggerN"]))`, if we use the lower confidence limit from the Lanes Mills estimate and the upper confidence limit from the White Rock count estimate, we get a proportion of `r round(extreme.prop,3)`, which is very similar to the proportion of successful migrants tagged by the experienced tagger `r exp(coef(fit2)["taggerGN"])/(1+exp(coef(fit2)["taggerGN"]))`. However, the probability of a proportion equal to or less than `r round(extreme.prop,3)` for untagged fish would be approximately 0.0625%, since there is a 2.5% chance of the true value of the both escapement estimates existing beyond the lower or upper confidence limit. While it is extremely unlikely to observe that pair of count estimates, a count estimate less than approximately `r lm.mod,sum(lmcount$total)` at Lanes Mills changes the model results enough to result in a non-significant difference in the migration success of untagged fish when compared to unanesthetized fish tagged by the experienced tagger; the probability of observing that count at Lanes Mills is approximately 35%, using a standard deviation produced from the escapement enumeration of `r sqrt(171718128)`. 
