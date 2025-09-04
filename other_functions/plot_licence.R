@@ -2,6 +2,8 @@ plot_licence <- function(licence_number = NULL) {
   
   load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
   
+  source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
+  
   df <- marfis_error_cleaner(catch, years = "all", convert_to_kgs = TRUE, tidy_data = TRUE, correct_eel_pot = TRUE, unknown_rivers_are_na = TRUE, unknown_gear_are_na = TRUE)
   
   if (nrow(df |> filter(LICENCE_ID == licence_number)) == 0) {
