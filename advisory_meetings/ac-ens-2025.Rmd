@@ -1,9 +1,10 @@
 ```{r}
-
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
 #source("C:/Users/graylo/Documents/git/ALOSA.functions/other_functions/pull_marfis_data.R")
 
 load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
-
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
 df <- marfis_error_cleaner(
   catch,
   convert_to_kgs = TRUE,
@@ -12,6 +13,16 @@ df <- marfis_error_cleaner(
   unknown_rivers_are_na = TRUE,
   unknown_gear_are_na = TRUE
   )
+
+dfens<-df[df$COUNTY %in% c("COLCHESTER COUNTY", "CUMBERLAND COUNTY", "HALIFAX COUNTY", "HANTS COUNTY", "GUYSBOROUGH COUNTY"),]
+dfenssum<-dfens[c(1,2,4)]
+dfenssum<-dfenssum[!duplicated(dfenssum),]
+table(dfenssum$RIVERNAME_CLEANED,dfenssum$YEAR)
+
+dfcb<-df[df$COUNTY %in% c("RICHMOND COUNTY", "VICTORIA COUNTY", "CAPE BRETON COUNTY"),]
+dfcbsum<-dfcb[c(1,2,4)]
+dfcbsum<-dfcbsum[!duplicated(dfcbsum),]
+table(dfcbsum$RIVERNAME_CLEANED,dfcbsum$YEAR)
 ```
 
 
