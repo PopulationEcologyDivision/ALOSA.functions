@@ -102,7 +102,8 @@ filling out with data throughout the season.
 ## VD daily escapement
 ```{r escapement_vd}
 # Locate your CSV for counts
-path_to_counts_CSV <- "C:/Users/graylo/Documents/Vaughan 2025 count data.csv"
+#path_to_counts_CSV <- "C:/Users/graylo/Documents/Vaughan 2025 count data.csv"
+path_to_counts_CSV <- "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2025/Vaughan 2025 count data.csv"
 
 # Run escapement script
 # Note: arguments year, site, and channel don't matter when database = FALSE
@@ -645,12 +646,13 @@ temp <- onespecies.river.escapement(
   channel = channel
 )
 
-# Get the biodata for the year from the db so it is all formated nicely
-biodata_db <- dbReadTable(channel, "ALOSA_FISH_BIO_DATA")
-biodata_db |> filter(SITE_ID == 2 & YEAR == current_year) -> biodata_tusket
+# Biodata from CSV - this doesn't work currently with biodata taken from the db
+biodata <- read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2025/data/Vaughan 2025 biocharacteristics data.csv")
 
-# Since we do not collect data every day, we run the missing.days.R script
-missing_days <- missing.days(biodata = biodata_tusket)
+biodata <- standardise_column_names(biodata)
+
+# Calculate missing days
+missing.days(biodata)
 
 # This selects the scales to age
 # Note: we don't put anything in the mergedays argument because this is only
@@ -667,6 +669,15 @@ ageing.selection.test(
   )
 
 # This will output a csv file to the working directory
+
+# Check to see if any day has almost all of the fish being sampled for aging
+scales_sampled_per_time_unit |> 
+  group_by(weekofyear) |>
+  summarise(
+    count_to_be_aged = sum(!is.na(to.be.aged)),
+    n_sampled = first(n.sampled),
+    .groups = "drop"
+  )
 ```
 
 ## Species proportions
@@ -833,7 +844,7 @@ BB |>
   ) +
   theme_bw() +
   labs(
-    title = paste0("Gaspereau escapement at the Lake Vaughan fish ladder in ", current_year),
+    title = paste0("Blueback escapement at the Lake Vaughan fish ladder in ", current_year),
     x = "Date",
     y = "Fish / day"
   ) +
