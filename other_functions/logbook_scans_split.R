@@ -2,7 +2,7 @@
 #
 # This script splits .pdfs from large scans into singular pages.
 # It was originally named split_pdf.R and was located in the logbook directory
-# so I decided to put it here and rename it (and other scripts associated with
+# so I decided to put it here and renamed it (and other scripts associated with
 # log book scanning) so we could keep track of it.
 #
 # Required packages: pdftools
