@@ -1,0 +1,211 @@
+```{r}
+# Get the MARFIS data and clean it
+
+#source("C:/Users/graylo/Documents/git/ALOSA.functions/other_functions/pull_marfis_data.R")
+
+source("~/git/ALOSA.functions/functions/sourcery.R")
+
+sourcery()
+
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
+df <- marfis_error_cleaner(
+  catch,
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+
+```
+```{r}
+dfcb<-df[df$COUNTY %in% c("RICHMOND COUNTY", "VICTORIA COUNTY", "CAPE BRETON COUNTY"),]
+dfcbsum<-dfcb[c(1,2,4)]
+dfcbsum<-dfcbsum[!duplicated(dfcbsum),]
+table(dfcbsum$RIVERNAME_CLEANED,dfcbsum$YEAR)
+
+dfcb24<-dfcb[dfcb$YEAR>=2024,]
+
+cbtotlandings<-aggregate(dfcb24$FV_WEIGHT,
+                         by=list(LICENCE_ID=dfcb24$LICENCE_ID,YEAR=dfcb24$YEAR,RIVERNAME_CLEANED=dfcb24$RIVERNAME_CLEANED),
+                         FUN=sum)
+names(cbtotlandings)[4]<-"LANDINGS (KG)"
+write.csv(cbtotlandings,file="R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/CB/CB24Summary.csv",row.names=F)
+```
+
+```{r DNFs}
+# Get the licence data provided by RM
+licences <- readxl::read_excel("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx")
+
+# We can use this to grab data for what licences are not reporting
+licences |> 
+  select(
+    LICENCE_ID = `Licence Id`,
+    LICENCE_TYPE = `Licence Type Description (English)`,
+    COUNTY = `County Name 1`,
+    PROVINCE = `Province Abbrev (English)`,
+    GEAR_DESCRIPTION = `Gear Description (English)`,
+    RIVERNAME = `RIVER CONFIRMED`
+    ) |> 
+  filter(COUNTY %in% c("RICHMOND", "VICTORIA", "CAPE BRETON")) |> 
+  distinct(LICENCE_ID, COUNTY) |> 
+  arrange(LICENCE_ID) -> cb_licences_2024
+
+dnfcb<-didnotfish[didnotfish$LICENCE_ID %in% cb_licences_2024$LICENCE_ID,]
+dnfcb24<-dnfcb[dnfcb$YEAR==2024,]
+
+table(dnfcb$YEAR,dnfcb$NIL_REPORT_FLAG)
+```
+
+```{r}
+# There are two entries where the Bras D'or Lakes are entered as Multi for counties
+# but these only amount to a few hundred kg so I am just going to ignor them
+
+cb_counties <- c("CAPE BRETON COUNTY", "RICHMOND COUNTY", "VICTORIA COUNTY")
+
+df |> 
+  filter(PROVINCE == "NS" & COUNTY %in% cb_counties) |> 
+  group_by(YEAR, COUNTY) |> 
+  summarise(TOTAL = sum(FV_WEIGHT), .groups = "drop") |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  mutate(
+    COUNTY = str_remove(COUNTY, " COUNTY"),
+    COUNTY = str_to_title(COUNTY)
+  ) |> 
+  #mutate(COUNTY = fct_reorder(COUNTY, TOTAL, .fun = sum)) |> 
+  mutate(COUNTY = factor(COUNTY, levels = c("Victoria", "Richmond", "Cape Breton"))) |> 
+  ggplot(aes(YEAR, TOTAL, fill = COUNTY)) +
+  geom_col(colour = "grey10", alpha = 0.8) +
+  scale_y_continuous(
+    n.breaks = 10,
+    labels = scales::comma
+    ) +
+  scale_fill_viridis_d() +
+  labs(title = "Reported landings for Cape Breton (2008 - 2025)", x = "", y = "Landings (kg)", fill = "County") +
+  theme_bw() +
+  theme(
+      axis.text.x = element_text(size = 12, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      #axis.title.x = element_blank(),
+      axis.title.y = element_text(size = 14),
+      panel.grid = element_blank(),
+      #panel.grid.minor = element_blank(),
+      legend.background = element_blank(),
+      # legend.position = "top",
+      # legend.justification = "left",
+      plot.title = element_text(size = 16),
+      # plot.subtitle = element_text(size = 14),
+      plot.background = element_rect(fill = "grey95")
+    ) -> landings_CB
+
+landings_CB
+
+#ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/landings_CB.png", plot = landings_CB, width = 6, height = 4, dpi = 300)
+
+
+```
+
+```{r}
+cb_counties <- c("CAPE BRETON COUNTY", "RICHMOND COUNTY", "VICTORIA COUNTY")
+
+df |> 
+  filter(PROVINCE == "NS" & COUNTY %in% cb_counties) |> 
+  group_by(YEAR) |>
+  filter(YEAR %in% c(2015:2024)) |> 
+  summarise(TOTAL = sum(FV_WEIGHT), .groups = "drop") |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  ggplot(aes(YEAR, TOTAL)) +
+  geom_col(fill = "#41B7C4", colour = "grey10", alpha = 0.8) +
+  scale_y_continuous(
+    n.breaks = 10,
+    labels = scales::comma
+    ) +
+  scale_fill_viridis_d() +
+  labs(title = "Reported gaspereau landings for Cape Breton", x = "", y = "Landings (kg)", fill = "County") +
+  theme_bw() +
+  theme(
+      axis.text.x = element_text(size = 12, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      axis.title.y = element_text(size = 14),
+      panel.grid = element_blank(),
+      legend.background = element_blank(),
+      plot.title = element_text(size = 16)
+    )
+
+ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/CB/landings_CB.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+
+```
+
+```{r}
+df |>
+  filter(PROVINCE == "NS" & COUNTY %in% c(cb_counties)) |> 
+  group_by(YEAR, COUNTY) |> 
+  summarise(unique_licences = n_distinct(LICENCE_ID), .groups = "drop") -> cb_lics
+
+cb_lics
+```
+
+```{r}
+cb_lics |> 
+  #complete(COUNTY, YEAR) |> 
+  mutate(
+    YEAR = as.factor(YEAR),
+    COUNTY = str_remove(COUNTY, " COUNTY"),
+    COUNTY = str_to_title(COUNTY),
+    COUNTY = factor(COUNTY, levels = c("Victoria", "Richmond", "Cape Breton"))
+    # COUNTY = fct_reorder(COUNTY, unique_licences, .desc = FALSE)
+    ) |> 
+  ggplot(aes(YEAR, unique_licences, fill = COUNTY)) +
+  geom_col(colour = "grey20", alpha = 0.8) +
+  scale_fill_viridis_d(direction = 1) +
+  labs(title = "Alewife licences in Cape Breton by county (2008 - 2025)", x = "", y = "Licences", fill = "County") +
+  theme_bw() +
+  theme(
+      axis.text.x = element_text(size = 12, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      #axis.title.x = element_blank(),
+      axis.title.y = element_text(size = 14),
+      panel.grid = element_blank(),
+      #panel.grid.minor = element_blank(),
+      legend.background = element_blank(),
+      # legend.position = "top",
+      # legend.justification = "left",
+      plot.title = element_text(size = 16),
+      # plot.subtitle = element_text(size = 14),
+      plot.background = element_rect(fill = "grey95")
+    )
+
+ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/CB/lics_CB.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+
+```
+
+```{r}
+df |>
+  filter(PROVINCE == "NS" & COUNTY %in% c(cb_counties)) |> 
+  group_by(YEAR) |> 
+  summarise(unique_licences = n_distinct(LICENCE_ID), .groups = "drop") -> cb_lics2
+
+cb_lics2
+```
+
+```{r}
+cb_lics2 |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  filter(YEAR %in% c(2015:2024)) |> 
+  ggplot(aes(YEAR, unique_licences)) +
+  geom_col(fill = "#529985", colour = "grey20", alpha = 0.8) +
+  labs(title = "Gaspereau licences in Cape Breton", x = "", y = "Licences", fill = "County") +
+  theme_bw() +
+  theme(
+      axis.text.x = element_text(size = 12, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      axis.title.y = element_text(size = 14),
+      panel.grid = element_blank(),
+      legend.background = element_blank(),
+      plot.title = element_text(size = 16)
+    )
+
+ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/CB/lics_CB2.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+```
+
