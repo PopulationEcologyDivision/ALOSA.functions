@@ -1,11 +1,8 @@
 ```{r}
-<<<<<<< HEAD
 # Get the MARFIS data and clean it
 
-=======
 source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
->>>>>>> 5a1d9559a8bff8683089a6736b5de052f244c6b4
 #source("C:/Users/graylo/Documents/git/ALOSA.functions/other_functions/pull_marfis_data.R")
 
 load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
@@ -19,9 +16,7 @@ df <- marfis_error_cleaner(
   unknown_gear_are_na = TRUE
   )
 
-<<<<<<< HEAD
 df
-=======
 dfens<-df[df$COUNTY %in% c("COLCHESTER COUNTY", "CUMBERLAND COUNTY", "HALIFAX COUNTY", "HANTS COUNTY", "GUYSBOROUGH COUNTY"),]
 dfenssum<-dfens[c(1,2,4)]
 dfenssum<-dfenssum[!duplicated(dfenssum),]
@@ -31,7 +26,6 @@ dfcb<-df[df$COUNTY %in% c("RICHMOND COUNTY", "VICTORIA COUNTY", "CAPE BRETON COU
 dfcbsum<-dfcb[c(1,2,4)]
 dfcbsum<-dfcbsum[!duplicated(dfcbsum),]
 table(dfcbsum$RIVERNAME_CLEANED,dfcbsum$YEAR)
->>>>>>> 5a1d9559a8bff8683089a6736b5de052f244c6b4
 ```
 
 
@@ -246,5 +240,3 @@ df |>
 #ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/east_NS/landings_by_area.png", plot = landings_by_area, width = 6, height = 4, dpi = 300)
 
 ```
-```
-
