@@ -41,7 +41,8 @@ fwl <- function(
       filter(LICENCE_ID == licence & YEAR == year) |>
       select(LICENCE_ID, MONTH, DAY, FV_DATE_FISHED, RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_GEAR_CODE, GEAR_DESCRIPTION, FV_HOURS_FISHED, FV_WEIGHT, MEASUREMENT_UNIT) |>
       arrange(FV_DATE_FISHED) |> 
-      mutate(FV_WEIGHT = FV_WEIGHT / conversion) -> out
+      mutate(FV_WEIGHT = FV_WEIGHT / conversion) |> 
+      mutate(MEASUREMENT_UNIT = "CONVERTED TO COUNT") -> out
     
   } else {
     
