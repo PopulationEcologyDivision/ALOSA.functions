@@ -1,0 +1,117 @@
+```{r library_etc, warning=FALSE}
+# Library
+library(tidyverse)
+library(readxl)
+library(here)
+
+# Source alosa functions
+source(here("functions", "sourcery.R"))
+sourcery()
+```
+
+# Get MARFIS data
+```{r get_MARFIS_data}
+# This is where we store the MARFIS pulls:
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata
+
+# This function checks to see when the last pull was and asks if you'd like to
+# update the pull. It then loads the MARFIS data without changing anything.
+# If you decide to do a new MARFIS pull and there are new additions to the db
+# that were not in the last pull, you will be prompted to make changes to the
+# Master Rivername Database. This is located on the R drive here:'
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MASTER_RIVERNAME_DATABASE.csv
+#source(here("other_functions", "pull_marfis_data.R"))
+
+# You don't always have to pull the MARFIS data when working with it, that just
+# updates the copy of the data we have to the most up to date version. If you 
+# want to load MARFIS data that already exist, just load it from here:
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+
+```
+
+```{r licence_data}
+# This is from RM and it has proven helpful. We likely will get more up to 
+# date info and we can replace this with the new info when we get it
+
+#licences <- read_excel(path = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx", sheet = 1)
+
+# New data from licencing
+licences <- read_excel(path = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/LA1040- Gaspereau Licences WITH SITE LOCATIONS 2024.xlsx", sheet = 1)
+```
+
+# marfis_error_cleaner
+```{r, warning=FALSE}
+# The function we use to clean the data is currently located here:
+
+# "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R"
+
+# This function contains data which CANNOT be stored on the unit github page
+# because it contains information that ostensibly could be used to glean how
+# much someone is earning, so we store it on the R drive, which seems a bit
+# extra. However, this is the rule (for now)
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS_error_cleaner.R")
+
+df <- marfis_error_cleaner(
+  catch = catch,
+  years = "all",
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+```
+
+# Data exploration
+```{r}
+# I use this function to quickly look at pertinent log data from the catch df
+source(here("other_functions", "fwl.R"))
+
+# This function plots landings for the licence
+source(here("other_functions", "plot_licence.R"))
+```
+
+```{r}
+
+# Get number of observations
+df |> 
+  filter(RIVERNAME_CLEANED == "TUSKET") |> 
+  filter(YEAR %in% c(2024, 2025)) |> 
+  mutate(YEAR = as.factor(YEAR)) |>
+  group_by(YEAR, LICENCE_ID) |> 
+  summarise(TOTAL = sum(FV_WEIGHT)) |> 
+  count() -> counts
+
+df |> 
+  filter(RIVERNAME_CLEANED == "TUSKET") |> 
+  filter(YEAR %in% c(2024, 2025)) |> 
+  mutate(YEAR = as.factor(YEAR)) |>
+  group_by(YEAR, LICENCE_ID) |> 
+  summarise(TOTAL = sum(FV_WEIGHT)) |> 
+  ggplot(aes(x = YEAR, y = TOTAL, fill = YEAR)) +
+  geom_boxplot() +
+  #geom_jitter() +
+  geom_point() +
+  geom_text(
+    data = counts,
+    aes(x = YEAR, y = 3.5e4, label = paste0("n=", n)),
+    vjust = 0
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+    ) +
+  scale_y_continuous(
+    n.breaks = 10,
+    labels = scales::comma
+  ) +
+  labs(
+    title = "Reported landings for Tusket",
+    x = "",
+    y = "Total landings (kg)",
+    fill = "Year"
+    )
+```
+
+
