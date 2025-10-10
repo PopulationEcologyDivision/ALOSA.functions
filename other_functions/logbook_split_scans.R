@@ -8,7 +8,7 @@
 # Required packages: pdftools
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-logbook_scans_split <- function() {
+logbook_split_scans <- function() {
   
   # Load the pdftools package
   library(pdftools)
