@@ -40,7 +40,7 @@ changes_in_catch <- function(
       TOTAL_WEIGHT = round(TOTAL_WEIGHT, round_digits),
       PREV_WEIGHT = round(PREV_WEIGHT, round_digits)
     ) |> 
-    select(YEAR, RIVERNAME_CLEANED, LICENCE_ID, TOTAL_WEIGHT, PREV_WEIGHT, DIFF_WEIGHT, PERCENT_CHANGE)
+    select(YEAR, RIVERNAME_CLEANED, LICENCE_ID, TOTAL_WEIGHT, PREV_WEIGHT, DIFF_WEIGHT, PERCENT_CHANGE) -> catch_changes
   
   # Check for max percent
   if (is.null(max_percent)) {
