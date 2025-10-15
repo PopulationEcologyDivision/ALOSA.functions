@@ -1,5 +1,6 @@
 #calculate selectivity from age data collected only at the fish ladder
 library(lubridate)
+library(miscTools)
 require(ROracle)
 channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
@@ -68,20 +69,20 @@ esc.df<-data.frame(year=c(1982,1983,1984,1995,1997,1998,1999,2000,2001,2002,
                          1114450,1061688,1021186,984094,874862,1312700,588540)
 )
 
-sel97<-calc.sel(1997,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==1997],esc.df$esc[esc.df$year==1997])
-sel98<-calc.sel(1998,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==1998],esc.df$esc[esc.df$year==1998])
-sel99<-calc.sel(1999,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==1999],esc.df$esc[esc.df$year==1999])
-sel00<-calc.sel(2000,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2000],esc.df$esc[esc.df$year==2000])
-sel01<-calc.sel(2001,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2001],esc.df$esc[esc.df$year==2001])
-sel02<-calc.sel(2002,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2002],esc.df$esc[esc.df$year==2002])
+sel97<-calc.sel(1997,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1997],esc.df$esc[esc.df$year==1997])
+sel98<-calc.sel(1998,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1998],esc.df$esc[esc.df$year==1998])
+sel99<-calc.sel(1999,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1999],esc.df$esc[esc.df$year==1999])
+sel00<-calc.sel(2000,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2000],esc.df$esc[esc.df$year==2000])
+sel01<-calc.sel(2001,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2001],esc.df$esc[esc.df$year==2001])
+sel02<-calc.sel(2002,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2002],esc.df$esc[esc.df$year==2002])
 
-sel16<-calc.sel(2016,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2016],esc.df$esc[esc.df$year==2016])
-sel18<-calc.sel(2018,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2018],esc.df$esc[esc.df$year==2018])
+sel16<-calc.sel(2016,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2016],esc.df$esc[esc.df$year==2016])
+sel18<-calc.sel(2018,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2018],esc.df$esc[esc.df$year==2018])
 sel19<-calc.sel(2019,3,"May 31",delay.time=2,abun.df$catch[abun.df$year==2019],esc.df$esc[esc.df$year==2019])
-sel21<-calc.sel(2021,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2021],esc.df$esc[esc.df$year==2021])
-sel22<-calc.sel(2022,3,"May 31",delay.time=5,abun.df$catch[abun.df$year==2022],esc.df$esc[esc.df$year==2022])
-sel23<-calc.sel(2023,3,"May 19",delay.time=5,abun.df$catch[abun.df$year==2023],esc.df$esc[esc.df$year==2023])
-sel24<-calc.sel(2024,3,"May 21",delay.time=5,abun.df$catch[abun.df$year==2024],esc.df$esc[esc.df$year==2024])
+sel21<-calc.sel(2021,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2021],esc.df$esc[esc.df$year==2021])
+sel22<-calc.sel(2022,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2022],esc.df$esc[esc.df$year==2022])
+sel23<-calc.sel(2023,3,"May 19",delay.time=3,abun.df$catch[abun.df$year==2023],esc.df$esc[esc.df$year==2023])
+sel24<-calc.sel(2024,3,"May 21",delay.time=3,abun.df$catch[abun.df$year==2024],esc.df$esc[esc.df$year==2024])
 
 # sel97<-calc.sel(1997,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1997],esc.df$esc[esc.df$year==1997])
 # sel98<-calc.sel(1998,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1998],esc.df$esc[esc.df$year==1998])
@@ -101,9 +102,9 @@ sel24<-calc.sel(2024,3,"May 21",delay.time=5,abun.df$catch[abun.df$year==2024],e
 selall<-data.frame(rbind(sel97,sel98,sel99,sel00,sel01,sel02,sel16,sel18,sel19,sel21,sel22,sel23,sel24))
 colnames(selall)<-c("sel3","sel4","sel5","sel6","ffully","prop3","prop4","prop5","prop6+")
 selall$years<-c(1997:2002,2016,2018,2019,2021:2024)
-means<-colMeans(selall)
+means<-colMeans(selall) #change to medians if desired. note that median props-at-age don't sum to 1
 selall<-rbind(selall,means)
-write.csv(selall,"calcedsel2.csv",row.names=F)
+write.csv(selall,"calcedsel.csv",row.names=F)
 #random diagnostic plots
 # age<-3:6
 # 

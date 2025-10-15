@@ -35,7 +35,9 @@ get.age.data<-function(year, siteID, sppID, AgeStructure, PrimaryAger, channel){
   {
     agedata=agedata[agedata$AGE_STRUCTURE_SAMPLE=="Y",]
   }
-
+  #removes duplicate columns FISH_ID, SITE_ID, and YEAR
+  agedata<-agedata[!duplicated(names(agedata))]
+  
   return(agedata)
   
 }
