@@ -22,11 +22,20 @@ sourcery()
 #save(catch, didnotfish, licencerenewals, file = "C:/Users/graylo/Documents/data/marfis_pull.Rdata")
 
 # Load in the data
-load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
+# load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
 
 # Clean the data
-# source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
-source("~/MARFIS.error.cleaner.R")
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
+# source("~/MARFIS.error.cleaner.R")
+catch <- marfis_error_cleaner(
+  catch,
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+
 
 # Convert weights to kilograms
 catch <- convert.KGS(catch)
@@ -77,7 +86,7 @@ Get the actual landings data
 catch |> 
   select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
   filter(YEAR == 2023 & PROVINCE == "NB") |>
-  #filter(YEAR == 2024 & PROVINCE == "NB") |>
+  filter(YEAR == 2024 & PROVINCE == "NB") |>
   group_by(YEAR, COUNTY) |> 
   mutate(COUNTY = str_remove(COUNTY, " COUNTY")) |> 
   summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
@@ -92,7 +101,7 @@ Plot them
 # This is the break down of all the SWNB landings for each year since 2019
 nb_catch <- catch|> 
   select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
-  filter(YEAR >= 2019 & PROVINCE == "NB") |>
+  filter(YEAR >= 2019 & YEAR < 2025 & PROVINCE == "NB") |>
   group_by(YEAR) |> 
   summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
   mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000)) |> 
@@ -106,8 +115,8 @@ nb_catch |>
     y = "Landings (mt)"
     ) +
   scale_y_continuous(
-    limits = c(0, 3e3),
-    breaks = seq(0, 3e3, 200),
+    limits = c(0, 3.5e3),
+    breaks = seq(0, 4.5e3, 200),
     labels = scales::label_comma()
   ) +
   theme_bw() +
