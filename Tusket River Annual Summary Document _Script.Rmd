@@ -259,7 +259,7 @@ text(0.4, 0.26, "2025", pos=4, col = "gray35", cex = 0.85)
 
 ```
 
-**Figure 2.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status for 2014, 2015, 2019, and 2021 are show using open circles, while status from 2022 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
+**Figure 2.** Stock status plot for the Tusket River Alewife stock. Each point indicates status in a single year, and the lines connect the points in sequence. Stock status for 2014 - 2024 are shown using open circles, while status from 2025 is shown with a closed circle. The plot is updated from Gibson et al. 2017.
 
 \newpage
 
