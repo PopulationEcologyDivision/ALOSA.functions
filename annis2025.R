@@ -88,15 +88,18 @@ for(i in 1:nrow(summary.a))
   summary.a$df[i]<-df.func(288,summary.a$n.samples[i],summary.a$sd[i]^2)
   summary.b$df[i]<-df.func(288,summary.b$n.samples[i],summary.b$sd[i]^2)
 }
-summary.a$clow<-summary.a$tot-qt(1-0.05/2,summary.a$df)*summary.a$sd
-summary.a$chigh<-summary.a$tot+qt(1-0.05/2,summary.a$df)*summary.a$sd
+# summary.a$clow<-(summary.a$mean-qt(1-0.2/2,summary.a$df)*summary.a$sd)*288
+# summary.a$chigh<-(summary.a$mean+qt(1-0.2/2,summary.a$df)*summary.a$sd)*288
 
-summary.b$clow<-summary.b$tot-qt(1-0.05/2,summary.b$df)*summary.b$sd
-summary.b$chigh<-summary.b$tot+qt(1-0.05/2,summary.b$df)*summary.b$sd
+summary.a$clow<-(0.5*qchisq(0.975,summary.a$mean*2))*288
+summary.a$chigh<-(0.5*qchisq(0.025,(summary.a$mean+1)*2))*288
 
-plot(summary.b$date,summary.b$tot,pch=19)
+summary.b$clow<-(0.5*qchisq(0.975,summary.b$mean*2))*288
+summary.b$chigh<-(0.5*qchisq(0.025,(summary.b$mean+1)*2))*288
+
+plot(summary.b$date,summary.b$tot,pch=19,ylim=c(0,max(summary.b$tot)*1.2))
 for(i in 1:nrow(summary.b))
 {
-  segments(summary.b$clow[i],summary.b$date[i],summary.b$chigh[i],summary.b$date[i])
+  segments(summary.b$date[i],summary.b$clow[i],summary.b$date[i],summary.b$chigh[i])
 }
 
