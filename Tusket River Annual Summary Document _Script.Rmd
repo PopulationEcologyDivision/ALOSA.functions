@@ -186,7 +186,7 @@ reference.point.plot<-function(
   # Add labels in bottom right
   mtext(paste("µ URR =", Fupper,   sep = ""), 1, line = 4, at = 1.5, las = 0, adj = 1)
   mtext(paste("µ fully =", Ffully, sep = ""), 1, line = 5, at = 1.5, las = 0, adj = 1)
-  mtext(paste("Esc URP =", ssnmsy, sep = ""), 1, line = 6, at = 1.5, las = 0, adj = 1)
+  mtext(paste("Esc USR =", ssnmsy, sep = ""), 1, line = 6, at = 1.5, las = 0, adj = 1)
   mtext(paste("Esc LRP =", ssn10,  sep = ""), 1, line = 7, at = 1.5, las = 0, adj = 1)
   
   # Add text to bottom left
