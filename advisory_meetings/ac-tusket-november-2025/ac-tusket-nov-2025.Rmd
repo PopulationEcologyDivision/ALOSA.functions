@@ -858,8 +858,8 @@ mortality_df <- tibble(mortality_df)
 mortality_df |> 
   mutate(
     ER = c(0.51, 0.38, 0.44, 0.45),
-    F = ER * Z / mort_prop,
-    M = Z * (1 - (ER / mort_prop))
+    F = -log(1-ER),
+    M = -Z - F
   ) -> mortality_df
     
 mortality_df |> 
