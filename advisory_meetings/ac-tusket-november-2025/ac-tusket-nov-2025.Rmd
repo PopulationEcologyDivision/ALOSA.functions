@@ -26,8 +26,8 @@ channel <- dbConnect(
   )
 ```
 
-# Data - Load
-```{r get_MARFIS_data}
+# Landings - QC data
+```{r get_MARFIS_data, warning=FALSE}
 # This is where we store the MARFIS pulls:
 # R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata
 
@@ -43,10 +43,7 @@ channel <- dbConnect(
 # updates the copy of the data we have to the most up to date version. If you 
 # want to load MARFIS data that already exist, just load it from here:
 load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
-```
 
-# Data - Cleaning
-```{r, warning=FALSE}
 # The function we use to clean the data is currently located here:
 
 # "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R"
@@ -69,7 +66,7 @@ df <- marfis_error_cleaner(
 
 ```
 
-# Data - Landings
+# Landings - Tusket plots
 ```{r}
 
 # Get number of observations
@@ -124,6 +121,7 @@ df |>
   filter(RIVERNAME_CLEANED == "TUSKET") |> 
   filter(YEAR %in% c(2023, 2024, 2025)) |> 
   mutate(YEAR = as.factor(YEAR)) |>
+  mutate(FV_WEIGHT = FV_WEIGHT / 0.24) |> 
   # Make all dates in 2025 so they can plot on the same date axis, but we will
   # colour for YEAR later so we can tell them apart
   mutate(FV_DATE_FISHED = make_date(year = 2025, month = month(FV_DATE_FISHED), day = day(FV_DATE_FISHED))) |> 
@@ -135,7 +133,8 @@ df |>
   ggplot(aes(WEEK, FV_WEIGHT, fill = YEAR)) +
   geom_col(position = position_dodge(), colour = "grey20", alpha = 0.7) +
   scale_y_continuous(labels = scales::comma, n.breaks = 10) +
-  labs(title = "Reported gaspereau landings for Tusket River", x = "", y = "Mass (kg)", fill = "Year") +
+  #labs(title = "Reported gaspereau landings for Tusket River", x = "", y = "Mass (kg)", fill = "Year") +
+  labs(title = "Reported gaspereau landings for Tusket River", x = "", y = "Fish", fill = "Year") +
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
   theme(
     panel.grid.major = element_blank(),
@@ -149,84 +148,157 @@ df |>
 
 ```
 
-# Data - Age
-```{r, warning=FALSE}
-# Get fish measurements for Tusket
-fish_meas <- dbReadTable(channel, "ALOSA_FISH_BIO_DATA")
-fish_meas |> 
-  filter(SITE_ID == 2) -> fish_meas
-
-# Get fish ages for Tusket
-fish_age <- dbReadTable(channel, "ALOSA_FISH_AGE_DATA")
-fish_age |> 
-  # Get fish measured at Lake Vaughan only
-  filter(SITE_ID == 2) -> fish_age
-
-fish_age |> 
-  left_join(fish_meas, by = c("YEAR", "FISH_ID")) |> 
-  select(YEAR, CURRENT_AGE, AGE_AT_FIRST_SPAWN, MON, DAY, SPECIES_ID, SEX_ID, FORK_LENGTH, WEIGHT) |> 
-  mutate(DATE = make_date(year = YEAR, month = MON, day = DAY), .after = YEAR) |> 
-  select(-MON, -DAY) |> 
-  filter(!(SEX_ID == 3)) |> 
+# Landings - Rivers / Areas 2024
+```{r}
+# Licences reporting from different regions
+df |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY %in% c("YARMOUTH COUNTY", "SHELBURNE COUNTY")) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  rename(RIVERNAME = RIVERNAME_CLEANED) |>
   mutate(
-    SEX_ID = case_when(
-      SEX_ID == 1 ~ "M",
-      SEX_ID == 2 ~ "F",
-      TRUE ~ NA
-      )
-  ) -> fish_df
+  AREA = case_when(
+    RIVERNAME == "TUSKET" ~ "TUSKET",
+    RIVERNAME == "ANNIS" ~ "ANNIS",
+    RIVERNAME == "KIACK BROOK" | RIVERNAME == "EEL LAKE" ~ "KIACK BROOK / EEL LAKE",
+    RIVERNAME == "ARGYLE" ~ "ARGYLE",
+    RIVERNAME == "BARRINGTON" | RIVERNAME == "ROSEWAY" | RIVERNAME == "PORT SAXON" ~ "SHELBURNE COUNTY",
+    RIVERNAME == "MILTON" 
+    | RIVERNAME == "YARMOUTH HARBOUR" 
+    | RIVERNAME == "DUNN" 
+    | RIVERNAME == "ARCADIA" 
+    | RIVERNAME == "PORT MAITLAND" 
+    | RIVERNAME == "SHORT BEACH" 
+    | RIVERNAME == "ISLAND POND" 
+    | RIVERNAME == "GREENVILLE" 
+    | RIVERNAME == "PEMBROKE" 
+    | RIVERNAME == "HIPSON'S BROOK" 
+    | RIVERNAME == "CHEBOGUE" 
+    | RIVERNAME == "MELBOURNE" 
+    | RIVERNAME == "CHEGGOGIN" 
+    | RIVERNAME == "STINK PLANT" 
+    | RIVERNAME == "BEAVER RIVER" ~ "YARMOUTH COUNTY (OTHER)",
+    TRUE ~ RIVERNAME
+    )
+  ) |> 
+  group_by(AREA) |> 
+  count() |> 
+  arrange(desc(n))
 
-fish_df |>
-  #ggplot(aes(CURRENT_AGE, FORK_LENGTH, group = interaction(CURRENT_AGE, AGE_AT_FIRST_SPAWN))) +
-  filter(CURRENT_AGE > 2) |> 
-  ggplot(aes(CURRENT_AGE, FORK_LENGTH, group = interaction(CURRENT_AGE, SEX_ID), fill = SEX_ID)) +
-  geom_boxplot(
-    outlier.shape = 21,
-    alpha = 0.8
-    ) +
-  scale_y_continuous(n.breaks = 10) +
-  labs(
-    title = "Age versus length for gasepreau measured at Lake Vaughan Dam",
-    #subtitle = "DNR = Did Not Report; DNF = Did Not Fish; Y = Reported",
-    x = "Current Age",
-    y = "Fork length (cm)",
-    fill = "Sex"
-    ) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank()
-    ) +
-  scale_fill_viridis_d()  
-  
+# Landings of these regions
+df |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY %in% c("YARMOUTH COUNTY", "SHELBURNE COUNTY")) |> 
+  rename(RIVERNAME = RIVERNAME_CLEANED) |> 
+  mutate(
+  AREA = case_when(
+    RIVERNAME == "TUSKET" ~ "TUSKET",
+    RIVERNAME == "ANNIS" ~ "ANNIS",
+    RIVERNAME == "KIACK BROOK" | RIVERNAME == "EEL LAKE" ~ "KIACK BROOK / EEL LAKE",
+    RIVERNAME == "ARGYLE" ~ "ARGYLE",
+    RIVERNAME == "BARRINGTON" | RIVERNAME == "ROSEWAY" | RIVERNAME == "PORT SAXON" ~ "SHELBURNE COUNTY",
+    RIVERNAME == "MILTON" 
+    | RIVERNAME == "YARMOUTH HARBOUR" 
+    | RIVERNAME == "DUNN" 
+    | RIVERNAME == "ARCADIA" 
+    | RIVERNAME == "PORT MAITLAND" 
+    | RIVERNAME == "SHORT BEACH" 
+    | RIVERNAME == "ISLAND POND" 
+    | RIVERNAME == "GREENVILLE" 
+    | RIVERNAME == "PEMBROKE" 
+    | RIVERNAME == "HIPSON'S BROOK" 
+    | RIVERNAME == "CHEBOGUE" 
+    | RIVERNAME == "MELBOURNE" 
+    | RIVERNAME == "CHEGGOGIN" 
+    | RIVERNAME == "STINK PLANT" 
+    | RIVERNAME == "BEAVER RIVER" ~ "YARMOUTH COUNTY (OTHER)",
+    TRUE ~ NA_character_
+    )
+  ) |> 
+  group_by(AREA) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = FV_WEIGHT / 1000, NUMBER_FISH = FV_WEIGHT / 0.24) |>
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT_MT), FV_WEIGHT = round(FV_WEIGHT), NUMBER_FISH = round(NUMBER_FISH)) |> 
+  arrange(desc(FV_WEIGHT_MT))
+
 ```
 
-```{r, warning=FALSE}
-fish_df |>
-  #ggplot(aes(CURRENT_AGE, FORK_LENGTH, group = interaction(CURRENT_AGE, AGE_AT_FIRST_SPAWN))) +
-  filter(CURRENT_AGE > 2) |> 
-  ggplot(aes(CURRENT_AGE, WEIGHT, group = interaction(CURRENT_AGE, SEX_ID), fill = SEX_ID)) +
-  geom_boxplot(
-    outlier.shape = 21,
-    alpha = 0.8
-    ) +
-  scale_y_continuous(n.breaks = 10) +
-  labs(
-    title = "Age versus mass for gasepreau measured at Lake Vaughan Dam",
-    #subtitle = "DNR = Did Not Report; DNF = Did Not Fish; Y = Reported",
-    x = "Current Age",
-    y = "Mass (grams)",
-    fill = "Sex"
-    ) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank()
-    ) +
-  scale_fill_viridis_d()
+# Landings - Rivers / Areas 2025
+```{r}
+# Licences reporting from different regions
+df |> 
+  filter(YEAR == 2025) |> 
+  filter(COUNTY %in% c("YARMOUTH COUNTY", "SHELBURNE COUNTY")) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  rename(RIVERNAME = RIVERNAME_CLEANED) |>
+  mutate(
+  AREA = case_when(
+    RIVERNAME == "TUSKET" ~ "TUSKET",
+    RIVERNAME == "ANNIS" ~ "ANNIS",
+    RIVERNAME == "KIACK BROOK" | RIVERNAME == "EEL LAKE" ~ "KIACK BROOK / EEL LAKE",
+    RIVERNAME == "ARGYLE" ~ "ARGYLE",
+    RIVERNAME == "BARRINGTON" | RIVERNAME == "ROSEWAY" | RIVERNAME == "PORT SAXON" ~ "SHELBURNE COUNTY",
+    RIVERNAME == "MILTON" 
+    | RIVERNAME == "YARMOUTH HARBOUR" 
+    | RIVERNAME == "DUNN" 
+    | RIVERNAME == "ARCADIA" 
+    | RIVERNAME == "PORT MAITLAND" 
+    | RIVERNAME == "SHORT BEACH" 
+    | RIVERNAME == "ISLAND POND" 
+    | RIVERNAME == "GREENVILLE" 
+    | RIVERNAME == "PEMBROKE" 
+    | RIVERNAME == "HIPSON'S BROOK" 
+    | RIVERNAME == "CHEBOGUE" 
+    | RIVERNAME == "MELBOURNE" 
+    | RIVERNAME == "CHEGGOGIN" 
+    | RIVERNAME == "STINK PLANT" 
+    | RIVERNAME == "BEAVER RIVER" ~ "YARMOUTH COUNTY (OTHER)",
+    TRUE ~ RIVERNAME
+    )
+  ) |> 
+  group_by(AREA) |> 
+  count() |> 
+  arrange(desc(n))
+
+# Landings of these regions
+df |> 
+  filter(YEAR == 2025) |> 
+  filter(COUNTY %in% c("YARMOUTH COUNTY", "SHELBURNE COUNTY")) |> 
+  rename(RIVERNAME = RIVERNAME_CLEANED) |> 
+  mutate(
+  AREA = case_when(
+    RIVERNAME == "TUSKET" ~ "TUSKET",
+    RIVERNAME == "ANNIS" ~ "ANNIS",
+    RIVERNAME == "KIACK BROOK" | RIVERNAME == "EEL LAKE" ~ "KIACK BROOK / EEL LAKE",
+    RIVERNAME == "ARGYLE" ~ "ARGYLE",
+    RIVERNAME == "BARRINGTON" | RIVERNAME == "ROSEWAY" | RIVERNAME == "PORT SAXON" ~ "SHELBURNE COUNTY",
+    RIVERNAME == "MILTON" 
+    | RIVERNAME == "YARMOUTH HARBOUR" 
+    | RIVERNAME == "DUNN" 
+    | RIVERNAME == "ARCADIA" 
+    | RIVERNAME == "PORT MAITLAND" 
+    | RIVERNAME == "SHORT BEACH" 
+    | RIVERNAME == "ISLAND POND" 
+    | RIVERNAME == "GREENVILLE" 
+    | RIVERNAME == "PEMBROKE" 
+    | RIVERNAME == "HIPSON'S BROOK" 
+    | RIVERNAME == "CHEBOGUE" 
+    | RIVERNAME == "MELBOURNE" 
+    | RIVERNAME == "CHEGGOGIN" 
+    | RIVERNAME == "STINK PLANT" 
+    | RIVERNAME == "BEAVER RIVER" ~ "YARMOUTH COUNTY (OTHER)",
+    TRUE ~ NA_character_
+    )
+  ) |> 
+  group_by(AREA) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = FV_WEIGHT / 1000, NUMBER_FISH = FV_WEIGHT / 0.24) |>
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT_MT), FV_WEIGHT = round(FV_WEIGHT), NUMBER_FISH = round(NUMBER_FISH)) |> 
+  arrange(desc(FV_WEIGHT_MT))
+
 ```
 
-# Data - Escapement
+# Escapement - one-species escapement
 ```{r escapement_vd}
 # Locate your CSV for counts
 path_to_counts_CSV <- "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2025/Vaughan 2025 count data.csv"
@@ -291,8 +363,112 @@ escapement_vd |>
 # Save as a png for sharing
 #ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/escapement.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
 ```
+# Escapement - one-species 2024
+```{r}
+# Run escapement script
+escapement_vd_2024 <- onespecies.river.escapement(
+  path_to_counts_CSV,
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = 2024,
+  site = 2,
+  channel = channel
+)
 
-# Data - Blueback proportions (observed)
+# We want to add where the data are from
+escapement_vd_2024$location <- "Lake Vaughan"
+
+escapement_vd_2024  |> 
+  mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) |> 
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, .))) |> 
+  mutate(date = make_date(2024, mon, day)) -> escapement_vd_2024
+
+#in_season_vd_escapement_plot <-
+escapement_vd_2024 |> 
+  ggplot(aes(date, total)) +
+  geom_ribbon(
+    aes(ymin = clow, ymax = chigh),
+    fill = "#41B7C4",
+    #colour = "#4BBAC3",
+    alpha = 0.2
+  ) +
+  geom_path(
+    colour = "grey50",
+    alpha = 0.8,
+    linewidth = 0.7
+    ) +
+  theme_bw() +
+  labs(
+    title = paste("Gaspereau escapement at Lake Vaughan in", 2025),
+    subtitle = "Shading represents 95% confidence intervals",
+    x = "Date",
+    y = "Fish / day"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(escapement_vd_2024$chigh, na.rm = TRUE)),
+    breaks = seq(0, max(escapement_vd_2024$chigh, na.rm = TRUE), by = 1e4),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+      ),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+    )
+
+# Save as a png for sharing
+#ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/escapement.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+```
+```{r}
+escapement_vd_2025 <- escapement_vd
+escapement_vd_2025$year <- 2025
+escapement_vd_2024$year <- 2024
+escapement_both <- rbind(escapement_vd_2024, escapement_vd_2025)
+
+escapement_both |> 
+  mutate(date = make_date(year = 2024, month = mon, day = day)) |> 
+  mutate(year = as.factor(year)) |> 
+  ggplot(aes(date, total, fill = year, colour = year)) +
+  #geom_ribbon(aes(ymin = clow, ymax = chigh), alpha = 0.2) +
+  geom_path(alpha = 0.8, linewidth = 1) +
+  theme_bw() +
+  labs(
+    title = paste("Gaspereau escapement at Lake Vaughan"),
+    #subtitle = "Shading represents 95% confidence intervals",
+    x = "Date",
+    y = "Fish / day",
+    colour = "Year"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(escapement_both$chigh, na.rm = TRUE)),
+    breaks = seq(0, max(escapement_both$chigh, na.rm = TRUE), by = 1e4),
+    labels = scales::comma
+  ) +
+  scale_colour_viridis_d(begin = 0, end = 0.8) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+      ),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    plot.background  = element_rect(fill = "transparent", colour = NA)
+    )
+
+ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/escapement_both.png", plot = last_plot(), bg = "transparent", width = 6, height = 4, dpi = 300)
+```
+
+# Escapement - observed BBs
 ```{r}
 # This takes the observations of species from the biocharacteristics data and 
 # the supplementary observations (i.e. the ones just checking for species) and
@@ -304,11 +480,11 @@ proportions <- split_species(
   )
 
 # This shows the actual number of As and Bs we counted each day
-proportions |>
-  select(date, A, BB) |> 
-  pivot_longer(cols = c(A, BB), values_to = "observed", names_to = "species") |> 
-  ggplot(aes(date, observed, fill = species)) +
-  geom_col(position = position_dodge())
+# proportions |>
+#   select(date, A, BB) |> 
+#   pivot_longer(cols = c(A, BB), values_to = "observed", names_to = "species") |> 
+#   ggplot(aes(date, observed, fill = species)) +
+#   geom_col(position = position_dodge())
 
 # This shows them as proportions
 proportions |>
@@ -341,7 +517,7 @@ proportions |>
 
 ```
 
-# Data - Blueback proportions (imputed)
+# Escapement - imputed BBs
 ```{r}
 # Proportions for 2024
 proportions_2024 <- split_species(year = 2024, siteID = 2, channel = channel)
@@ -360,11 +536,12 @@ proportions_2025$day<-day(proportions_2025$date)
 #proportions_2025 |> ggplot(aes(date, BBprop)) + geom_path()
 ```
 
+# Escapement - BBs plot (daily)
 ```{r}
 # We can also use the twospecies.river.escapement function to get the species
 # splits, but this has the added benefit of calculating CIs. We use the 
 # proportions df we made above in the function
-species_df <- twospecies.river.escapement(
+species_df_2025 <- twospecies.river.escapement(
   filename = NULL,
   year = 2025,
   site = 2,
@@ -373,10 +550,10 @@ species_df <- twospecies.river.escapement(
 )
 
 # Alewives
-#species_df[[1]]
+#species_df_2025[[1]]
 
 # Bluebacks
-species_df[[2]] -> BB
+BB <- species_df_2025[[2]]
 
 # Deal with the NaNs so that the plot is good
 BB |> 
@@ -422,6 +599,7 @@ BB |>
 
 ```
 
+# Escapement - BBs plot (cumulative)
 ```{r}
 # Cumulative plot of BBs
 BB_cumulative <- BB |> mutate(cumulative_total = cumsum(total))
@@ -453,7 +631,7 @@ BB_cumulative |>
 #ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/blueback_escapement_cumulative.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
 
 ```
-
+# Escapement - BBs plot (mult. years)
 ```{r}
 all_years_df |>
   group_by(year) |> 
@@ -494,7 +672,7 @@ all_years_BBs_cumulative |>
 
 ```
 
-# Data - Exploitation 2025
+# Exploitation - 2025
 ```{r}
 # These are data from when George and Mark inspected catches of bags of 100 fish
 # on the Tusket for alewife vs blueback in 2022. We will use them to infer the
@@ -542,14 +720,14 @@ tusket_gill |>
 # Calculate the BB ER by taking the number we estimate to have been caught
 # (in this case it was only by gill netters) and divide it by the total number
 # of bluebacks estimated to have escaped.
-bluebacks_escaped_2025 <- sum(as.data.frame(species_df[[2]])["total"])
+bluebacks_escaped_2025 <- sum(as.data.frame(species_df_2025[[2]])["total"])
 blueback_exploitation_2025 <- bluebacks_caught_2025$BB_CAUGHT / ( bluebacks_escaped_2025+ bluebacks_caught_2025$BB_CAUGHT)
 
 # Grab alewife exploitation
 df |>
   filter(RIVERNAME_CLEANED == "TUSKET" & YEAR == 2025) |> summarise(N_CAUGHT = sum(FV_WEIGHT) / 0.24) |> 
   mutate(ALEWIFE_CAUGHT = N_CAUGHT - bluebacks_caught_2025$BB_CAUGHT) |> 
-  mutate(ALEWIFE_ESCAPED = sum(as.data.frame(species_df[1])["total"])) |> 
+  mutate(ALEWIFE_ESCAPED = sum(as.data.frame(species_df_2025[1])["total"])) |> 
   mutate(ALEWIFE_ER = ALEWIFE_CAUGHT / (ALEWIFE_ESCAPED + ALEWIFE_CAUGHT)) -> alewife_2025_df
 
 # Combine everything into a table
@@ -571,11 +749,11 @@ exploitation_2025 <- exploitation_2025 |>
 
 ```
 
-# Data - Exploitation 2024
+# Exploitation - 2024
 ```{r}
 # This is the same procedure we did above but for 2024
-species_df_2024_vd <- twospecies.river.escapement(filename = NULL, year = 2024, site = 2, channel = channel, species.split = proportions)
-species_df_2024_ph <- twospecies.river.escapement(filename = NULL, year = 2024, site = 14, channel = channel, species.split = proportions)
+species_df_2024_vd <- twospecies.river.escapement(filename = NULL, year = 2024, site = 2, channel = channel, species.split = proportions_2024)
+species_df_2024_ph <- twospecies.river.escapement(filename = NULL, year = 2024, site = 14, channel = channel, species.split = proportions_2024)
 
 # Get the total catch (in number of fish) for Tusket for 2024
 df |>
@@ -653,15 +831,15 @@ exploitation_2024 <- exploitation_2024 |>
   select(species, year, escaped, caught, exploitation_rate)
 ```
 
-# Data - Summary Document Table 1
+# Summary Document - Table 1
 ```{r}
 rbind(exploitation_2024, exploitation_2025)
 ```
 
-# Data - Export data for daily counts all years CSV
+# Summary Document - daily counts all years CSV
 ```{r}
 # 2025 - Just VD
-proportions_2025 <- split_species(year = 2025, siteID = 2, channel = channel)
+# proportions_2025 <- split_species(year = 2025, siteID = 2, channel = channel)
 escapement_2025 <- twospecies.river.escapement(filename = NULL, year = 2025, site = 2, channel = channel, species.split = proportions_2025)
 escapement_2025_A <- as.data.frame(escapement_2025[1])
 escapement_2025_B <- as.data.frame(escapement_2025[2])
@@ -674,7 +852,7 @@ bind_rows(escapement_2025_A, escapement_2025_B) |>
   summarise(across(where(is.numeric), sum, na.rm = TRUE), .groups = "drop") -> escapement_2025_All
 
 # 2024 - we need PH + VD
-proportions_2024 <- split_species(year = 2024, siteID = 2, channel = channel)
+#proportions_2024 <- split_species(year = 2024, siteID = 2, channel = channel)
 escapement_2024_vd <- twospecies.river.escapement(filename = NULL, year = 2024, site = 2, channel = channel, species.split = proportions_2024)
 escapement_2024_ph <- twospecies.river.escapement(filename = NULL, year = 2024, site = 14, channel = channel, species.split = proportions_2024)
 escapement_2024_vd_A <- as.data.frame(escapement_2024_vd[1])
@@ -691,7 +869,7 @@ bind_rows(escapement_2024_vd_A, escapement_2024_ph_A) |>
   group_by(mon, day) |>
   summarise(across(where(is.numeric), sum, na.rm = TRUE), .groups = "drop") |>
   mutate(year = 2024, species = "A", river = "Tusket") |> 
-  select(month, day, year, species, number = total, river) ->
+  select(mon, day, year, species, number = total, river) ->
   escapement_2024_A
 
 bind_rows(escapement_2024_vd_B, escapement_2024_vd_B) |> select(-dayofyear) |> group_by(mon, day) |> summarise(across(where(is.numeric), sum, na.rm = TRUE), .groups = "drop") -> escapement_2024_B
@@ -699,14 +877,17 @@ bind_rows(escapement_2024_vd_B, escapement_2024_vd_B) |> select(-dayofyear) |> g
 bind_rows(escapement_2024_A, escapement_2024_B) |> group_by(mon, day) |> summarise(across(where(is.numeric), sum, na.rm = TRUE), .groups = "drop") -> escapement_2024_All
 
 # Export the data
-write.csv(escapement_2025_A, "C:/Users/graylo/Documents/data/escapement_2025_A.csv")
+write.csv(escapement_2025_All, "C:/Users/graylo/Documents/data/escapement_2025_All.csv")
+write.csv(escapement_2025_A,   "C:/Users/graylo/Documents/data/escapement_2025_A.csv")
+write.csv(escapement_2025_B,   "C:/Users/graylo/Documents/data/escapement_2025_B.csv")
+write.csv(escapement_2024_All, "C:/Users/graylo/Documents/data/escapement_2024_All.csv")
+write.csv(escapement_2024_A,   "C:/Users/graylo/Documents/data/escapement_2024_A.csv")
+write.csv(escapement_2024_B,   "C:/Users/graylo/Documents/data/escapement_2024_B.csv")
+
 ```
 
-# Data - Reporting
+# Reporting Rate - Tusket
 ```{r}
-# New data from licencing
-licences <- read_excel(path = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/LA1040- Gaspereau Licences WITH SITE LOCATIONS 2024.xlsx", sheet = 1)
-
 # Get all the licences that have ever reported for Tusket
 df |> 
   #filter(YEAR %in% c(2020:2025)) |> 
@@ -783,11 +964,91 @@ licence_table |>
     ) +
   scale_fill_viridis_d()
 
-ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/reporting_rate.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+#ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2025/yar-shel/reporting_rate.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
 
 ```
 
-# Data - Catch curve
+# Reporting Rate - Yarmouth / Shelburne
+```{r}
+# These are licences that RM gave us
+licences <- read_xlsx(path = "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx", sheet = 1)
+
+licences |> 
+  select(STATUS, LICENCE_ID = `Licence Id`, RENEWED = Renewed, TYPE = `Licence Type Description (English)`, COUNTY = `County Name 1`, GEAR = `Gear Description (English)`) |> 
+  filter(RENEWED == 2023) |> 
+  filter(COUNTY %in% c("YARMOUTH", "SHELBURNE")) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) -> YS_licences
+
+# REGISTERED LICENCES
+# This is a crap-shoot because there are licences in MARFIS that do not appear
+# in the list of licences that RM gave us
+YS_licences |> filter(COUNTY == "YARMOUTH") |> pull(LICENCE_ID) -> yar_licences
+YS_licences |> filter(COUNTY == "SHELBURNE") |> pull(LICENCE_ID) -> shel_licences
+
+# YARMOUTH 2024
+df |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY == "YARMOUTH COUNTY") |> 
+  distinct(LICENCE_ID) |> 
+  pull(LICENCE_ID) -> yar_reported_2024
+
+# Licences that reported DNF in 2024
+# This isn't perfect because that licence list isn't complete, but it's all we have
+didnotfish |> 
+  filter(YEAR == 2024) |> 
+  filter(NIL_REPORT_FLAG == "Y") |> 
+  filter(LICENCE_ID %in% yar_licences) |> 
+  pull(LICENCE_ID) -> yar_DNF_2024
+
+# SHELBURNE 2024
+df |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY == "SHELBURNE COUNTY") |> 
+  distinct(LICENCE_ID) |> 
+  pull(LICENCE_ID) -> shel_reported_2024
+
+didnotfish |> 
+  filter(YEAR == 2024) |> 
+  filter(NIL_REPORT_FLAG == "Y") |> 
+  filter(LICENCE_ID %in% shel_licences) |> 
+  pull(LICENCE_ID) -> shel_DNF_2024
+
+# YARMOUTH 2025
+df |>
+  filter(YEAR == 2025) |>
+  filter(COUNTY == "YARMOUTH COUNTY") |>
+  distinct(LICENCE_ID) |>
+  pull(LICENCE_ID) -> yar_reported_2025
+
+didnotfish |>
+  filter(YEAR == 2025) |>
+  filter(NIL_REPORT_FLAG == "Y") |>
+  filter(LICENCE_ID %in% yar_licences) |>
+  pull(LICENCE_ID) -> yar_DNF_2025
+
+# SHELBURNE 2025
+df |>
+  filter(YEAR == 2025) |>
+  filter(COUNTY == "SHELBURNE COUNTY") |>
+  distinct(LICENCE_ID) |>
+  pull(LICENCE_ID) -> shel_reported_2025
+
+didnotfish |>
+  filter(YEAR == 2025) |>
+  filter(NIL_REPORT_FLAG == "Y") |>
+  filter(LICENCE_ID %in% shel_licences) |>
+  pull(LICENCE_ID) -> shel_DNF_2025
+
+# What proportion of licences that reported in 2024 have reported in 2025?
+reported_2024 <- c(yar_reported_2024, shel_reported_2024)
+reported_2025 <- c(yar_reported_2025, shel_reported_2025)
+mean(reported_2024 %in% reported_2025)
+
+# What percentage of landings was that compared to 2024?
+```
+
+
+# Catch curve
 ```{r, warning=FALSE}
 # Make a grid to hold the combinations of ages and spawnings
 # Note, fish spawning for the first time have a spawnings value = 0
