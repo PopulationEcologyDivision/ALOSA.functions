@@ -148,6 +148,29 @@ df |>
 
 ```
 
+# Landings - Annis
+```{r}
+df |> 
+  filter(RIVERNAME_CLEANED == "ANNIS") |> 
+  filter(YEAR %in% c(2020, 2021, 2022, 2023, 2024, 2025)) |> 
+  mutate(YEAR = as.factor(YEAR)) |>
+  mutate(NUMBER_CAUGHT = FV_WEIGHT / 0.24) |> 
+  group_by(YEAR) |> 
+  summarise(NUMBER_CAUGHT = sum(NUMBER_CAUGHT), .groups = "drop") |> 
+  ggplot(aes(YEAR, NUMBER_CAUGHT)) +
+  geom_col(position = position_dodge(), fill = "blue", colour = "grey20", alpha = 0.5) +
+  #geom_col(position = position_dodge(), colour = "grey20", alpha = 0.7) +
+  scale_y_continuous(labels = scales::comma, n.breaks = 10) +
+  #labs(title = "Reported gaspereau landings for Tusket River", x = "", y = "Mass (kg)", fill = "Year") +
+  labs(title = "Reported gaspereau landings for Annis River", x = "", y = "Fish", fill = "Year") +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank()
+    ) +
+  scale_fill_viridis_d()
+```
+
 # Landings - Rivers / Areas 2024
 ```{r}
 # Licences reporting from different regions
