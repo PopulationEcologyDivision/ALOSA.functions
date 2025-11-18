@@ -20,17 +20,16 @@ sourcery()
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata<-"TUSKET_2023_VAUGHAN_sppid.csv"
-filename.agedata<-"to be aged_White Rock 2023 final.csv"
-filename.countdata<-"White Rock Counts - final.csv"
+filename.biodata <- "TUSKET_2023_VAUGHAN_sppid.csv"
+filename.agedata <- "to be aged_White Rock 2023 final.csv"
+filename.countdata <- "White Rock Counts - final.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 
 #-------------------------------------------------------------------------------
 # If needed, add the speciesID only fish to the bio characteristics file:
+speciesID.expand(data = read.csv(file.choose(), header = TRUE, stringsAsFactors = FALSE), filename.biodata, "Tusket", 2022)
 
-speciesID.expand(data=read.csv(file.choose(),header=T,stringsAsFactors = F),
-                 filename.biodata, "Tusket", 2022)
 # Alternatively, you can format the speciesID only data 
 # with format.IDfish.toBIODATA.R. this owrks similarly to the above function
 # but is most useful if you only have speciesID data
@@ -53,52 +52,61 @@ age.check(filename.agedata)
 require("ROracle") 
 
 #-------------------------------------------------------------------------------
-#Set account name, password, and server
-channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, 
-                  oracle.password.GASP, "PTRAN" , 
-                  believeNRows=FALSE) 
+# Set account name, password, and server
+channel = dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN", believeNRows = FALSE)
+
 #-------------------------------------------------------------------------------
 # Format count data
-oracle.count<-format.COUNTDATA.onesite(filename.countdata)
+oracle.count <- format.COUNTDATA.onesite(filename.countdata)
 
 #oracle.count<-oracle.count[oracle.count$COUNT_ID>1375,]
 
 # If you are happy with it, proceed to uploading it the GASPERA database
-dbWriteTable(conn = channel, schema="GASPEREA", 
-             value = oracle.count,
-             name = "ALOSA_VIDEO_COUNT_DATA", 
-             date=TRUE,
-             row.names = FALSE, 
-             overwrite = FALSE, ## NEVER CHANGE TO TRUE
-             append = TRUE)
+dbWriteTable(
+  conn = channel,
+  schema = "GASPEREA",
+  value = oracle.count,
+  name = "ALOSA_VIDEO_COUNT_DATA",
+  date = TRUE,
+  row.names = FALSE,
+  overwrite = FALSE, ## NEVER CHANGE TO TRUE
+  append = TRUE
+  )
 
 #-------------------------------------------------------------------------------
 # Format biological data
-oracle.bio<-format.BIODATA.onesite(filename.biodata)
+oracle.bio <- format.BIODATA.onesite(filename.biodata)
 
 # oracle.bio<-oracle.bio[oracle.bio$FISH_ID>1338,]
 
 # If you are happy with it, proceed to uploading it the GASPERA database
-dbWriteTable(conn = channel, schema="GASPEREA", 
-             value = oracle.bio,
-             name = "ALOSA_FISH_BIO_DATA", 
-             date=TRUE,
-             row.names = FALSE, 
-             overwrite = FALSE, ## NEVER CHANGE TO TRUE
-             append = TRUE)
+dbWriteTable(
+  conn = channel,
+  schema = "GASPEREA",
+  value = oracle.bio,
+  name = "ALOSA_FISH_BIO_DATA",
+  date = TRUE,
+  row.names = FALSE,
+  overwrite = FALSE, ## NEVER CHANGE TO TRUE
+  append = TRUE
+  )
 
 #-------------------------------------------------------------------------------
 # Format age data
-oracle.age<-format.AGE.onesite(filename.agedata)
+oracle.age <- format.AGE.onesite(filename.agedata)
 
 # If you are happy with it, proceed to uploading it the GASPERA database
-dbWriteTable(conn = channel, schema="GASPEREA", 
-             value = oracle.age,
-             name = "ALOSA_FISH_AGE_DATA", 
-             date=TRUE,
-             row.names = FALSE, 
-             overwrite = FALSE, ## NEVER CHANGE TO TRUE
-             append = TRUE)
+dbWriteTable(
+  conn = channel,
+  schema = "GASPEREA",
+  value = oracle.age,
+  name = "ALOSA_FISH_AGE_DATA",
+  date = TRUE,
+  row.names = FALSE,
+  overwrite = FALSE, ## NEVER CHANGE TO TRUE
+  append = TRUE
+  )
+
 #===============================================================================
 # Common errors you may encounter:
 # ---------------------------------
@@ -120,6 +128,7 @@ dbWriteTable(conn = channel, schema="GASPEREA",
 
 # Then compare the data that exits in the database to what you are 
 # trying to add.
+# 
 #----------------------------------
 # ORA-02291: integrity constraint (constraint name) violated - description
 #
@@ -129,25 +138,27 @@ dbWriteTable(conn = channel, schema="GASPEREA",
 # For example, say you enter the site number as 30 but site '30' does not 
 # exist in the SITE_DESC table. This would cause an integrity error because
 # the site MUST be defined before you can add it to another table.
+# 
 #-----------------------------------
 # ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
 # This is an error you would get on SQL developer if you are trying to 
 # modify tables while you have an open connection through R.
-
-#dbDisconnect(channel)
-
+# 
+# dbDisconnect(channel)
+#
 # Run the above code to disconnect.
+# 
 #-----------------------------------
 # ORA-01722: invalid number
-
-## Usually a column that should be numeric is saved as a character due
-## to a typo somewhere in the csv file.
+# 
+# Usually a column that should be numeric is saved as a character due
+# to a typo somewhere in the csv file.
+# 
 #-----------------------------------
-
+#
 # Do you wan to add lines or modify entries to an existing table such as 
 # SITE_DESC or RIVER_DESC?
 #
-## X<-dbGetQuery(channel,"SELECT * FROM TABLENAME")
-##
-
+# X<-dbGetQuery(channel,"SELECT * FROM TABLENAME")
+#
 #-------------------------------------------------------------------------------
