@@ -21,7 +21,7 @@ sourcery()
 # where they are all stored.
 
 filename.biodata <- "TUSKET_2023_VAUGHAN_sppid.csv"
-filename.agedata <- "to be aged_White Rock 2023 final.csv"
+filename.agedata <- "GR_scales_to_age_2025_CLEANED.csv"
 filename.countdata <- "White Rock Counts - final.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
@@ -138,6 +138,9 @@ dbWriteTable(
 # For example, say you enter the site number as 30 but site '30' does not 
 # exist in the SITE_DESC table. This would cause an integrity error because
 # the site MUST be defined before you can add it to another table.
+#
+# Uploading the age data before the bio data have been uploaded will
+# result in this error code as well.
 # 
 #-----------------------------------
 # ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
