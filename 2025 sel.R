@@ -17,6 +17,32 @@ wrl25<-get.age.data(2025,siteID = 3,sppID = 3501,AgeStructure = T,PrimaryAger = 
 library(lubridate)
 wrl25$DATE<-make_date(year = wrl25$YEAR, month = wrl25$MON, day = wrl25$DAY)
 wrl25$DOY<-yday(wrl25$DATE)
+wrl25$SEX<-ifelse(wrl25$SEX_ID==1,"M","F")
+
+#fix sample 1310
+wrl25$CURRENT_AGE[wrl25$FISH_ID==1310]<-5
+wrl25$AGE_AT_FIRST_SPAWN[wrl25$FISH_ID==1310]<-4
+
+table(wrl25$CURRENT_AGE,wrl25$AGE_AT_FIRST_SPAWN)
+#create dataframe to put numbers-at-age in
+wrl.age25<-data.frame(CURRENT_AGE=rep(c(3,4,4,5,5,5,6,6,6,6,7),2),
+                      AGE_AT_FIRST_SPAWN=rep(c(3,3,4,3,4,5,3,4,5,6,4),2),
+                      SEX=c(rep("M",11),rep("F",11)),
+                      NUMBER_OF_FISH=rep(NA,22))
+for(i in 1:nrow(wrl.age25))
+{
+  wrl.age25$NUMBER_OF_FISH[i]<-nrow(wrl25[wrl25$CURRENT_AGE==wrl.age25$CURRENT_AGE[i] &
+                                          wrl25$AGE_AT_FIRST_SPAWN==wrl.age25$AGE_AT_FIRST_SPAWN[i] &
+                                          wrl25$SEX==wrl.age25$SEX[i],])
+}
+
+
+wr25count<-858041 #from running escapement function in Gaspereau_2025_Assessment.Rmd
+ladd.corr<-wr25count/500
+
+#multiply the numbers-at-age from the combined three fishing stands to get the
+#total numbers-at-age for the entire fishery (assuming these three are representative)
+wrl.age25$NUMBER_OF_FISH<-wrl.age25$NUMBER_OF_FISH*ladd.corr
 
 #get fishery age and bio data
 grf25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Ageing/GR fishery samples aged_LILY.csv")
@@ -69,3 +95,23 @@ for(i in 1:nrow(grf.age25))
                                                  grf25$AGE_AT_FIRST_SPAWN==grf.age25$AGE_AT_FIRST_SPAWN[i] &
                                                  grf25$SEX==grf.age25$SEX[i]],na.rm=T)
 }
+
+gr25catch<-336873*2 #number of pounds reported by Chelsea in email 2025-06-02
+catch.corr<-gr25catch/sum(grf.landings25$LANDINGSFISH)
+
+#multiply the numbers-at-age from the combined three fishing stands to get the
+#total numbers-at-age for the entire fishery (assuming these three are representative)
+grf.age25$NUMBER_OF_FISH<-grf.age25$NUMBER_OF_FISH*catch.corr
+
+####calc sel####
+fishery.age<-aggregate(grf.age25$NUMBER_OF_FISH, by = list(grf.age25$CURRENT_AGE), FUN = "sum")
+ladder.age<-aggregate(wrl.age25$NUMBER_OF_FISH, by = list(wrl.age25$CURRENT_AGE), FUN = "sum")
+#sum 6 and 7 into plus group for ladder
+ladder.age$x[4]<-ladder.age$x[4]+ladder.age$x[5]
+ladder.age<-ladder.age[-5,]
+
+sel.df<-merge(fishery.age,ladder.age,by="Group.1")
+colnames(sel.df)<-c("age","n.catch","n.esc")
+sel.df$u.at.age<-sel.df$n.catch/(sel.df$n.catch+sel.df$n.esc)
+sel.df$f.at.age<-(-log(1-sel.df$u.at.age)) #age 5 is max
+sel.df$sel<-sel.df$f.at.age/sel.df$f.at.age[3]
