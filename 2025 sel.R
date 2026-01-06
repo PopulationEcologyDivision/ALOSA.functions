@@ -65,53 +65,70 @@ grf.landings25$DATE<-make_date(year = grf.landings25$YEAR, month = grf.landings2
 grf.landings25$DOY<-yday(grf.landings25$DATE)
 
 grf25<-merge(grf25,grf.landings25,by=c("YEAR","MON","DAY","SITE_ID"))
+#separate out sites for later
+grf25l<-grf25[grf25$SITE_ID=="LOWER",]
+grf25m<-grf25[grf25$SITE_ID=="MIDDLE",]
+grf25u<-grf25[grf25$SITE_ID=="UPPER",]
 
+grf.landings25l<-grf.landings25[grf.landings25$SITE_ID=="LOWER",]
+grf.landings25m<-grf.landings25[grf.landings25$SITE_ID=="MIDDLE",]
+grf.landings25u<-grf.landings25[grf.landings25$SITE_ID=="UPPER",]
 
-# grf25$DATE<-make_date(year = grf25$YEAR, month = grf25$MON, day = grf25$DAY)
-# grf25$DOY<-yday(grf25$DATE)
-#we will scale the aged sample up to the get the total number of aged a,ps fish at each site
-#then scale it back down to the sample size, in numbers-at-age,ps
-
-#treat fishery as single point
-#daily weights
-n.sampled <- aggregate(grf25$DOY, by = list(grf25$DOY), FUN = function(x){length(x[!is.na(x)])})
-#fish caught
-n.caught <- aggregate(grf.landings25$LANDINGSFISH, by = list(grf.landings25$DOY), FUN = "sum")
-weights.df<-merge(n.sampled,n.caught,by="Group.1")
-colnames(weights.df)<-c("DOY","sampled","caught")
-weights.df$WEIGHTS<-weights.df$caught/weights.df$sampled
-
-#merge back with all data to get numbers-at-age
-grf25<-merge(grf25,weights.df[,c(1,4)],by="DOY")
-
-#create dataframe to put numbers-at-age in
-grf.age25<-data.frame(CURRENT_AGE=rep(c(3,4,4,5,5,5,6,6,6,6),2),
-                      AGE_AT_FIRST_SPAWN=rep(c(3,3,4,3,4,5,3,4,5,6),2),
-                      SEX=c(rep("M",10),rep("F",10)),
-                      NUMBER_OF_FISH=rep(NA,20))
-for(i in 1:nrow(grf.age25))
+grf.sel.calc<-function(ages,landings)
 {
-  grf.age25$NUMBER_OF_FISH[i]<-sum(grf25$WEIGHTS[grf25$CURRENT_AGE==grf.age25$CURRENT_AGE[i] &
-                                                 grf25$AGE_AT_FIRST_SPAWN==grf.age25$AGE_AT_FIRST_SPAWN[i] &
-                                                 grf25$SEX==grf.age25$SEX[i]],na.rm=T)
+  grf25<-ages
+  grf.landings25<-landings
+  #we will scale the aged sample up to the get the total number of aged a,ps fish at each site
+  #then scale it back down to the sample size, in numbers-at-age,ps
+  
+  #treat fishery as single point
+  #daily weights
+  n.sampled <- aggregate(grf25$DOY, by = list(grf25$DOY), FUN = function(x){length(x[!is.na(x)])})
+  #fish caught
+  n.caught <- aggregate(grf.landings25$LANDINGSFISH, by = list(grf.landings25$DOY), FUN = "sum")
+  weights.df<-merge(n.sampled,n.caught,by="Group.1")
+  colnames(weights.df)<-c("DOY","sampled","caught")
+  weights.df$WEIGHTS<-weights.df$caught/weights.df$sampled
+  
+  #merge back with all data to get numbers-at-age
+  grf25<-merge(grf25,weights.df[,c(1,4)],by="DOY")
+  #create dataframe to put numbers-at-age in
+  grf.age25<-data.frame(CURRENT_AGE=rep(c(3,4,4,5,5,5,6,6,6,6),2),
+                        AGE_AT_FIRST_SPAWN=rep(c(3,3,4,3,4,5,3,4,5,6),2),
+                        SEX=c(rep("M",10),rep("F",10)),
+                        NUMBER_OF_FISH=rep(NA,20))
+  for(i in 1:nrow(grf.age25))
+  {
+    grf.age25$NUMBER_OF_FISH[i]<-sum(grf25$WEIGHTS[grf25$CURRENT_AGE==grf.age25$CURRENT_AGE[i] &
+                                                     grf25$AGE_AT_FIRST_SPAWN==grf.age25$AGE_AT_FIRST_SPAWN[i] &
+                                                     grf25$SEX==grf.age25$SEX[i]],na.rm=T)
+  }
+  
+  gr25catch<-336873*2 #number of pounds reported by Chelsea in email 2025-06-02
+  catch.corr<-gr25catch/sum(grf.landings25$LANDINGSFISH)
+  
+  #multiply the numbers-at-age from the combined three fishing stands to get the
+  #total numbers-at-age for the entire fishery (assuming these three are representative)
+  grf.age25$NUMBER_OF_FISH<-grf.age25$NUMBER_OF_FISH*catch.corr
+  
+  ####calc sel####
+  fishery.age<-aggregate(grf.age25$NUMBER_OF_FISH, by = list(grf.age25$CURRENT_AGE), FUN = "sum")
+  ladder.age<-aggregate(wrl.age25$NUMBER_OF_FISH, by = list(wrl.age25$CURRENT_AGE), FUN = "sum")
+  #sum 6 and 7 into plus group for ladder
+  ladder.age$x[4]<-ladder.age$x[4]+ladder.age$x[5]
+  ladder.age<-ladder.age[-5,]
+  
+  sel.df<-merge(fishery.age,ladder.age,by="Group.1")
+  colnames(sel.df)<-c("age","n.catch","n.esc")
+  sel.df$u.at.age<-sel.df$n.catch/(sel.df$n.catch+sel.df$n.esc)
+  sel.df$f.at.age<-(-log(1-sel.df$u.at.age)) #age 5 is max
+  sel.df$sel<-sel.df$f.at.age/sel.df$f.at.age[3]
+  return(sel.df)
 }
 
-gr25catch<-336873*2 #number of pounds reported by Chelsea in email 2025-06-02
-catch.corr<-gr25catch/sum(grf.landings25$LANDINGSFISH)
+sel.lower<-grf.sel.calc(grf25l,grf.landings25l)
+sel.middle<-grf.sel.calc(grf25m,grf.landings25m)
+sel.upper<-grf.sel.calc(grf25u,grf.landings25u)
+sel.all<-grf.sel.calc(grf25,grf.landings25)
 
-#multiply the numbers-at-age from the combined three fishing stands to get the
-#total numbers-at-age for the entire fishery (assuming these three are representative)
-grf.age25$NUMBER_OF_FISH<-grf.age25$NUMBER_OF_FISH*catch.corr
 
-####calc sel####
-fishery.age<-aggregate(grf.age25$NUMBER_OF_FISH, by = list(grf.age25$CURRENT_AGE), FUN = "sum")
-ladder.age<-aggregate(wrl.age25$NUMBER_OF_FISH, by = list(wrl.age25$CURRENT_AGE), FUN = "sum")
-#sum 6 and 7 into plus group for ladder
-ladder.age$x[4]<-ladder.age$x[4]+ladder.age$x[5]
-ladder.age<-ladder.age[-5,]
-
-sel.df<-merge(fishery.age,ladder.age,by="Group.1")
-colnames(sel.df)<-c("age","n.catch","n.esc")
-sel.df$u.at.age<-sel.df$n.catch/(sel.df$n.catch+sel.df$n.esc)
-sel.df$f.at.age<-(-log(1-sel.df$u.at.age)) #age 5 is max
-sel.df$sel<-sel.df$f.at.age/sel.df$f.at.age[3]
