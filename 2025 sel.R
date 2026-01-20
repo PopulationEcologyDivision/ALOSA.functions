@@ -74,9 +74,9 @@ grf.landings25l<-grf.landings25[grf.landings25$SITE_ID=="LOWER",]
 grf.landings25m<-grf.landings25[grf.landings25$SITE_ID=="MIDDLE",]
 grf.landings25u<-grf.landings25[grf.landings25$SITE_ID=="UPPER",]
 
-grf.sel.calc<-function(ages,landings)
+grf.numbers.at.age<-function(samp.ages,landings)
 {
-  grf25<-ages
+  grf25<-samp.ages
   grf.landings25<-landings
   #we will scale the aged sample up to the get the total number of aged a,ps fish at each site
   #then scale it back down to the sample size, in numbers-at-age,ps
@@ -106,12 +106,22 @@ grf.sel.calc<-function(ages,landings)
   
   gr25catch<-336873*2 #number of pounds reported by Chelsea in email 2025-06-02
   catch.corr<-gr25catch/sum(grf.landings25$LANDINGSFISH)
-  
+
   #multiply the numbers-at-age from the combined three fishing stands to get the
   #total numbers-at-age for the entire fishery (assuming these three are representative)
   grf.age25$NUMBER_OF_FISH<-grf.age25$NUMBER_OF_FISH*catch.corr
-  
-  ####calc sel####
+  return(grf.age25)
+}  
+
+grf25.agesl<-grf.numbers.at.age(grf25l,grf.landings25l)
+grf25.agesm<-grf.numbers.at.age(grf25m,grf.landings25m)
+grf25.agesu<-grf.numbers.at.age(grf25u,grf.landings25u)
+grf25.ages<-grf.numbers.at.age(grf25,grf.landings25)
+
+grf.sel.calc<-function(fishery.all.ages,ladder.all.ages)
+{
+  grf.age25<-fishery.all.ages
+  wrl.age25<-ladder.all.ages
   fishery.age<-aggregate(grf.age25$NUMBER_OF_FISH, by = list(grf.age25$CURRENT_AGE), FUN = "sum")
   ladder.age<-aggregate(wrl.age25$NUMBER_OF_FISH, by = list(wrl.age25$CURRENT_AGE), FUN = "sum")
   #sum 6 and 7 into plus group for ladder
@@ -126,9 +136,22 @@ grf.sel.calc<-function(ages,landings)
   return(sel.df)
 }
 
-sel.lower<-grf.sel.calc(grf25l,grf.landings25l)
-sel.middle<-grf.sel.calc(grf25m,grf.landings25m)
-sel.upper<-grf.sel.calc(grf25u,grf.landings25u)
-sel.all<-grf.sel.calc(grf25,grf.landings25)
+sel.lower<-grf.sel.calc(grf25.agesl,wrl.age25)
+sel.middle<-grf.sel.calc(grf25.agesm,wrl.age25)
+sel.upper<-grf.sel.calc(grf25.agesu,wrl.age25)
+sel.all<-grf.sel.calc(grf25.ages,wrl.age25)
 
 
+##look at proportion of repeat spawners
+grf25.agesl$prop<-grf25.agesl$NUMBER_OF_FISH/sum(grf25.agesl$NUMBER_OF_FISH)
+grf25.agesm$prop<-grf25.agesm$NUMBER_OF_FISH/sum(grf25.agesm$NUMBER_OF_FISH)
+grf25.agesu$prop<-grf25.agesu$NUMBER_OF_FISH/sum(grf25.agesu$NUMBER_OF_FISH)
+sum(grf25.agesl$prop[grf25.agesl$CURRENT_AGE>grf25.agesl$AGE_AT_FIRST_SPAWN])
+sum(grf25.agesm$prop[grf25.agesm$CURRENT_AGE>grf25.agesm$AGE_AT_FIRST_SPAWN])
+sum(grf25.agesu$prop[grf25.agesu$CURRENT_AGE>grf25.agesu$AGE_AT_FIRST_SPAWN])
+
+wrl.age25$prop<-wrl.age25$NUMBER_OF_FISH/sum(wrl.age25$NUMBER_OF_FISH)
+sum(wrl.age25$prop[wrl.age25$CURRENT_AGE>wrl.age25$AGE_AT_FIRST_SPAWN])
+
+grf25.ages$prop<-grf25.ages$NUMBER_OF_FISH/sum(grf25.ages$NUMBER_OF_FISH)
+sum(grf25.ages$prop[grf25.ages$CURRENT_AGE>grf25.ages$AGE_AT_FIRST_SPAWN])
