@@ -91,12 +91,24 @@ fishery_lengths_binned |>
 
 fishery_lengths_binned_totals
 
-# NEED TO THINK MORE ABOUT THIS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Now we want to correct for the entire fishery since we only looked at three 
-# sites and we know how many total fish were reported as caught
-total_landings <- 336873 * 2 # Get the landings in pounds to total fish 
+# sites. We know how many pounds total fish were reported as caught, so we can
+# convert this to total fish caught and then get the proportion of total fish
+# that these three stands represent
+
+# Convert the total reported landings (from RM) in pounds to fish
+total_landings <- 336873 * 2
+
+# The LANDINGS_FISH column is in total fish, so if we sum it for all DOY and
+# divide it by the total_landings, we will get the proportion of the fishery
+# represented by the three sites
 landings_corr <- sum(fishery_landings$LANDINGS_FISH) / total_landings
-fishery_lengths_binned_totals |> mutate(TOTAL_FISH_IN_BIN = TOTAL_FISH_IN_BIN / landings_corr)
+
+# If we divide by this, we will get the total fish for the whole fishery
+fishery_lengths_binned_totals |> 
+  mutate(FISHERY_CORRECTED = round(TOTAL_FISH_IN_BIN / landings_corr)) -> fishery_lengths_binned_totals_corrected
+
+fishery_lengths_binned_totals_corrected
 ```
 
 # Ladder biocharacteristics and binning
@@ -122,9 +134,7 @@ get.age.data(2025, siteID = 3, sppID = 3501, AgeStructure = TRUE, PrimaryAger = 
     SEX = if_else(SEX_ID == 1, "M", "F"),
     FORK_LENGTH = FORK_LENGTH * 10
   ) |> 
-  select(FISH_ID, DATE, DOY, SEX, FORK_LENGTH, WEIGHT) -> ladder
-
-ladder |>
+  select(FISH_ID, DATE, DOY, SEX, FORK_LENGTH, WEIGHT) |> 
   mutate(
     LENGTH_BIN = cut(
       FORK_LENGTH,
@@ -134,7 +144,30 @@ ladder |>
   ) |>
   group_by(DOY, LENGTH_BIN, SEX) |>
   summarise(N = n(), .groups = "drop") |>
-  mutate(NUMBER_OF_FISH = round(N * ladd.corr)) |>
-  arrange(DOY, SEX, LENGTH_BIN) -> ladder_length_bins_totals
+  mutate(LADDER_CORRECTED = round(N * ladd.corr)) |>
+  arrange(DOY, SEX, LENGTH_BIN) -> ladder_length_bins_totals_corrected
+
+ladder_length_bins_totals_corrected
 ```
 
+# Merge the fishery and ladder data
+```{r}
+# This is a sanity check to see the number of fish harvested versus the number
+# escaped using the correction factors
+fishery_lengths_binned_totals_corrected |> 
+  full_join(ladder_length_bins_totals_corrected, by = c("DOY", "LENGTH_BIN", "SEX")) |> 
+  ungroup() |> 
+  summarise(FISHERY = sum(FISHERY_CORRECTED, na.rm = TRUE), LADDER = sum(LADDER_CORRECTED, na.rm = TRUE))
+
+# This just has DOY where we have both fishery AND ladder data; I have
+# added an exploitation rate (ER)
+fishery_lengths_binned_totals_corrected |>
+  full_join(ladder_length_bins_totals_corrected, by = c("DOY", "LENGTH_BIN", "SEX")) |>
+  group_by(DOY, LENGTH_BIN, SEX) |> 
+  summarise(FISHERY = sum(FISHERY_CORRECTED, na.rm = TRUE), LADDER = sum(LADDER_CORRECTED, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(TOTAL = FISHERY + LADDER, ER = round(FISHERY / TOTAL, 2)) |> 
+  complete(DOY, LENGTH_BIN, SEX) |> 
+  arrange(DOY, SEX, LENGTH_BIN)
+
+```
