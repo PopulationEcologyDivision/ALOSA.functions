@@ -66,7 +66,7 @@ format.AGE.onesite <- function(filename) {
   data <- data[, col_order]
   
   # We format the column names so they match what is in the ALOSA_FISH_AGE_DATA table
-  names(data) <- c("FISH_ID", "SITE_ID", "YEAR", "CURRENT_AGE", "AGE_AT_FIRST_SPAWN", "NOTES", "AGE_STRUCTURE_SAMPLE", "AGER_ID", "STRUCTURE_ID", "AGER_NOTES", "PRIMARY_AGE_RECORD")
+  names(data) <- c("FISH_ID", "SITE_ID", "YEAR", "CURRENT_AGE", "AGE_AT_FIRST_SPAWN", "OLD_NOTES", "AGE_STRUCTURE_SAMPLE", "AGER_ID", "STRUCTURE_ID", "AGER_NOTES", "PRIMARY_AGE_RECORD")
   
   # Keep only the rows of data that have no missing values in CURRENT_AGE and AGE_AT_FIRST_SPAWN i.e. removes rows with NAs in these columns
   data <- data[complete.cases(data[ , c("CURRENT_AGE", "AGE_AT_FIRST_SPAWN")]), ]
