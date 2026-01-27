@@ -33,8 +33,9 @@ logbook_split_scans <- function() {
   path = strsplit(PATH2WD, "\\\\")
   
   # Search for the year by finding the folder containing the year with grep
-  for (i in path) { p = grep("FFLR_Scans_Gaspereau", i, value = T) }
-  year = substr(p, 0, 4)
+  # for (i in path) { p = grep("FFLR_Scans_Gaspereau", i, value = T) }
+  # year = substr(p, 0, 4)
+  year = readline(prompt = "What year are the files from?")
   
   # List all the files in the directory. This is used when selector == 2 below
   loglist = list.files(PATH2WD)
