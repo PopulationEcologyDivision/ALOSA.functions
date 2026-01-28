@@ -155,3 +155,9 @@ sum(wrl.age25$prop[wrl.age25$CURRENT_AGE>wrl.age25$AGE_AT_FIRST_SPAWN])
 
 grf25.ages$prop<-grf25.ages$NUMBER_OF_FISH/sum(grf25.ages$NUMBER_OF_FISH)
 sum(grf25.ages$prop[grf25.ages$CURRENT_AGE>grf25.ages$AGE_AT_FIRST_SPAWN])
+
+sel2016<-data.frame(age=3:6,
+                    sel16=c(0.504,0.653,0.834,1))
+
+sel.all<-merge(sel.all,sel2016,by="age")
+rowMeans(sel.all[,6:7])
