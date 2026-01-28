@@ -73,17 +73,17 @@ run count scripts to get count totals for in season updates
 make plots or tables to include in emails
 
 ```{r in_season_counts,include=FALSE}
-setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River")
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025")
 
 x<-onespecies.river.escapement("White Rock 2025 count data.csv",fixtime=T,database=F,downstream.migration = F,2025,3,channel)
 
 x<-round(x)
-n<-dim(x)[1]
-x<-x[1:n-1,]
+# n<-dim(x)[1]
+# x<-x[1:n-1,]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
 ```{r in_season_plot,include=FALSE}
