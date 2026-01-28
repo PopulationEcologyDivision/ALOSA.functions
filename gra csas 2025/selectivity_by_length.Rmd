@@ -13,7 +13,7 @@ channel <- dbConnect(
   oracle.password.GASP,
   "PTRAN",
   believeNRows = FALSE
-) 
+  )
 ```
 
 
@@ -45,7 +45,7 @@ fishery_lengths[fishery_lengths$FORK_LENGTH == 2400, "FORK_LENGTH"] <- 240
 
 # Now we can calculate the range of lengths to get some bins
 length_range <- range(fishery_lengths$FORK_LENGTH)[2] - range(fishery_lengths$FORK_LENGTH)[1]
-n_bins <- 4
+n_bins <- 10
 bin_width <- length_range / n_bins
 
 # Now we want to bin the fishery data
@@ -159,15 +159,52 @@ fishery_lengths_binned_totals_corrected |>
   ungroup() |> 
   summarise(FISHERY = sum(FISHERY_CORRECTED, na.rm = TRUE), LADDER = sum(LADDER_CORRECTED, na.rm = TRUE))
 
-# This just has DOY where we have both fishery AND ladder data; I have
-# added an exploitation rate (ER)
+# This setup has all the data from both the fishry and the ladder, there are lots
+# of NAs because there are missing length bins, days where sampling wasn't done
+# at the fishery or ladder, etc 
 fishery_lengths_binned_totals_corrected |>
   full_join(ladder_length_bins_totals_corrected, by = c("DOY", "LENGTH_BIN", "SEX")) |>
   group_by(DOY, LENGTH_BIN, SEX) |> 
   summarise(FISHERY = sum(FISHERY_CORRECTED, na.rm = TRUE), LADDER = sum(LADDER_CORRECTED, na.rm = TRUE)) |> 
   ungroup() |> 
-  mutate(TOTAL = FISHERY + LADDER, ER = round(FISHERY / TOTAL, 2)) |> 
+  mutate(across(where(is.numeric), ~ na_if(.x, 0))) |> 
+  mutate(
+    TOTAL = FISHERY + LADDER,
+    ER = round(FISHERY / TOTAL, 2),
+    F_MORT = -log(1 - ER)
+    ) |> 
   complete(DOY, LENGTH_BIN, SEX) |> 
   arrange(DOY, SEX, LENGTH_BIN)
 
+# This is the dataframe but only where we have observations at the fishery AND 
+# at the ladder so that we can get comparisons for ER
+fishery_lengths_binned_totals_corrected |>
+  inner_join(ladder_length_bins_totals_corrected, by = c("DOY", "LENGTH_BIN", "SEX")) |>
+  group_by(LENGTH_BIN) |> 
+  summarise(FISHERY = sum(FISHERY_CORRECTED, na.rm = TRUE), LADDER = sum(LADDER_CORRECTED, na.rm = TRUE)) |> 
+  ungroup() |> 
+  mutate(across(where(is.numeric), ~ na_if(.x, 0))) |> 
+  mutate(
+    TOTAL = FISHERY + LADDER,
+    ER = round(FISHERY / TOTAL, 2),
+    F_MORT = -log(1 - ER),
+    # We get selectivity by comparing the F_MORT of all the length bins to the
+    # length bin with the highest F_MORT which is going to be dependent on the
+    # number of length bins
+    SEL = F_MORT / max(F_MORT)
+    )
+
 ```
+
+```{r}
+test <- get.age.data(2025, siteID = 3, sppID = 3501, AgeStructure = TRUE, PrimaryAger = "Y", channel)
+
+test |> 
+  group_by(CURRENT_AGE) |> 
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) |> 
+  summarise(
+    mean_length = mean(FORK_LENGTH, na.rm = TRUE),
+    mean_weight = mean(WEIGHT, na.rm = TRUE)
+    )
+```
+
