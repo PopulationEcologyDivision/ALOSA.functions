@@ -48,25 +48,25 @@ calc.sel<-function(year,location=3,close.date="May 31",delay.time=1,catch,escape
 }
 
 #stole from data setup.R in gra
-abun.df<-data.frame(year=1979:2024,
+abun.df<-data.frame(year=1979:2025,
                     catch=c(1066800,622300,243840,254068,150408,212966,217170,1171956,1461770,1154049,
                             1572260,975233,357632,421640,747522,1018794,954960,761873,611520,372400,
                             698600,754585,119348,391278,416335,268820,219173,292589,332264,371940,
                             342884,581998,431497,384803,387333,439000,705500,769133,605900,903655,
-                            784152,1202604,1231005,1562900,1431500,1265348),
+                            784152,1202604,1231005,1562900,1431500,1265348,673746),
                     ccr=c(0.31,0.31,0.31,0.20,0.76,0.52,0.31,0.31,0.31,0.31,
                           0.31,0.31,0.31,0.31,0.31,0.31,0.13,0.31,0.16,0.46,
                           0.12,0.13,2.00,0.93,1.05,0.65,1.21,0.71,1.41,0.93,
                           1.16,0.93,0.93,0.93,0.39,0.93,0.62,0.59,1.84,1.17,
-                          1.30,0.93,0.80,0.56,0.92,0.47)
+                          1.30,0.93,0.80,0.56,0.92,0.47,1.27)
 )
 
 esc.df<-data.frame(year=c(1982,1983,1984,1995,1997,1998,1999,2000,2001,2002,
                           2003,2004,2005,2006,2007,2009,2012,2013,2015,2016,
-                          2017,2018,2019,2021,2022,2023,2024),
+                          2017,2018,2019,2021,2022,2023,2024,2025),
                    esc=c(50400,114800,111100,126933,95443,171639,81326,98883,238842,310746,
                          435842,222662,299910,242078,470356,398807,158387,149682,438874,454800,
-                         1114450,1061688,1021186,984094,874862,1312700,588540)
+                         1114450,1061688,1021186,984094,874862,1312700,588540,859000)
 )
 
 sel97<-calc.sel(1997,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1997],esc.df$esc[esc.df$year==1997])
@@ -83,6 +83,7 @@ sel21<-calc.sel(2021,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2021],e
 sel22<-calc.sel(2022,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2022],esc.df$esc[esc.df$year==2022])
 sel23<-calc.sel(2023,3,"May 19",delay.time=3,abun.df$catch[abun.df$year==2023],esc.df$esc[esc.df$year==2023])
 sel24<-calc.sel(2024,3,"May 21",delay.time=3,abun.df$catch[abun.df$year==2024],esc.df$esc[esc.df$year==2024])
+sel25<-calc.sel(2025,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==2025],esc.df$esc[esc.df$year==2025])
 
 # sel97<-calc.sel(1997,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1997],esc.df$esc[esc.df$year==1997])
 # sel98<-calc.sel(1998,3,"May 31",delay.time=3,abun.df$catch[abun.df$year==1998],esc.df$esc[esc.df$year==1998])
@@ -99,12 +100,12 @@ sel24<-calc.sel(2024,3,"May 21",delay.time=3,abun.df$catch[abun.df$year==2024],e
 # sel23<-calc.sel(2023,3,"May 19",delay.time=3,abun.df$catch[abun.df$year==2023],esc.df$esc[esc.df$year==2023])
 # sel24<-calc.sel(2024,3,"May 21",delay.time=3,abun.df$catch[abun.df$year==2024],esc.df$esc[esc.df$year==2024])
 
-selall<-data.frame(rbind(sel97,sel98,sel99,sel00,sel01,sel02,sel16,sel18,sel19,sel21,sel22,sel23,sel24))
+selall<-data.frame(rbind(sel97,sel98,sel99,sel00,sel01,sel02,sel16,sel18,sel19,sel21,sel22,sel23,sel24,sel25))
 colnames(selall)<-c("sel3","sel4","sel5","sel6","ffully","prop3","prop4","prop5","prop6+")
-selall$years<-c(1997:2002,2016,2018,2019,2021:2024)
+selall$years<-c(1997:2002,2016,2018,2019,2021:2025)
 means<-colMeans(selall) #change to medians if desired. note that median props-at-age don't sum to 1
 selall<-rbind(selall,means)
-write.csv(selall,"calcedsel.csv",row.names=F)
+write.csv(selall,"calcedsel25.csv",row.names=F)
 #random diagnostic plots
 # age<-3:6
 # 
