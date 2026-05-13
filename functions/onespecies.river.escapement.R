@@ -4,7 +4,7 @@
 # This should be added in in the future.
 #
 # Inputs:
-#     - filename: filename where escapement counts are
+#     - count.data: R dataframe of counts, OR filename where escapement counts are
 #     - fixtime = F: default is F but use T if the minutes/seconds columns are present
 #     - downstream.migration = F: if true sets all up - down = Total that are negative to 0
 #     - database = T: pull count data from database instead of local file (preferred method)
@@ -24,7 +24,7 @@
 #     - runVAR.term
 
 onespecies.river.escapement <- function(
-    filename,
+    count.data,
     fixtime = F,
     downstream.migration = F,
     database = T,
@@ -53,7 +53,8 @@ onespecies.river.escapement <- function(
     
     if(database == F){
       
-      count.data = read.csv(filename, header = T, stringsAsFactors = F)
+      #read in count data if only given a filename
+      if(is.character(count.data)==T){count.data = read.csv(count.data, header = T, stringsAsFactors = F)}
       
       if(fixtime == F){goodnames = (c("year", "mon", "day", "time", "strata", "count.upstream", "count.downstream"))}
       

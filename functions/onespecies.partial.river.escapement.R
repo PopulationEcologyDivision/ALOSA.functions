@@ -5,7 +5,7 @@
 # This should be added in in the future.
 #
 # Inputs:
-#        - filename: filename where escapement counts are
+#        - count.data: R dataframe of counts, OR filename where escapement counts are
 #        - fixtime=F: default is F but use T if the minutes/seconds columns are present
 #        - database=T: pull count data from database instead of local file (prefered method)
 #        - year: use if database=T
@@ -25,7 +25,7 @@
 # setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
 # filename="Carleton Count Sheet Cleaned 2022.csv"
   
-onespecies.partial.river.escapement<-function(filename,
+onespecies.partial.river.escapement<-function(count.data,
                                       fixtime=F,
                                       database=T,
                                       year,
@@ -45,8 +45,8 @@ onespecies.partial.river.escapement<-function(filename,
     names(count.data)[9]<-"seconds"
   }
   if(database==F){
-    count.data=read.csv(filename,header=T,
-                        stringsAsFactors = F)
+    #read in count data if only given a filename
+    if(is.character(count.data)==T){count.data = read.csv(count.data, header = T, stringsAsFactors = F)}
     
     if(fixtime==F){
       goodnames=(c("year","mon","day","time","strata","count.upstream",

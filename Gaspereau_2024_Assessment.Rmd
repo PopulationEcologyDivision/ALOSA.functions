@@ -283,4 +283,30 @@ biodata.with.weights$weighting<- biodata.with.weights$merged.total/biodata.with.
 weighted.mean(biodata.with.weights$WEIGHT,biodata.with.weights$weighting)
 
 ```
+```{r Lanes Mills Counts}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024")
+lm.count<-onespecies.river.escapement("Lanes Mills 2024 count data.csv",fixtime=F,database=F,downstream.migration = F,2024,4,channel)
+
+lm.count$date<-make_date(2024, lm.count$mon, lm.count$day)
+
+#from above, start with white rock
+plot(countdata$date,countdata$total,type="l",xlab="",ylab="",ylim=c(0,100000),yaxt="n")
+polygon(c(countdata$date,rev(countdata$date)),c(countdata$clow,rev(countdata$chigh)),col=rgb(0, 0, 0,0.5),border=NA)
+#lanes mills
+lines(lm.count$date,lm.count$total,lty=1,col="red")
+polygon(c(lm.count$date,rev(lm.count$date)),c(lm.count$clow,rev(lm.count$chigh)),col=rgb(1, 0, 0,0.5),border=NA)
+
+
+axis(2,at=seq(0,100000,by=20000),labels=seq(0,100,by=20),las=2)
+
+segments(as.Date("2024-05-22"),0,as.Date("2024-05-22"),max(lm.count$chigh,na.rm=T))
+mtext("Date",1,line=3)
+mtext("Thousands of Fish",2,line=3)
+mtext("Gaspereau River fish ladder counts 2024",3,line=1)
+box()
+
+text(as.Date("2024-04-16"),95000,labels="Lanes Mills: >378,445 ± 26,258",adj=0)
+text(as.Date("2024-04-16"),85000,labels="White Rock: 588,540 ± 31,210",adj=0)
+
+```
 
