@@ -91,7 +91,14 @@ write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 
 ```{r}
 # remotes::install_github("PopulationEcologyDivision/CloudBurglar")
-test<-CloudBurglar::get_file("https://086gc.sharepoint.com/:x:/r/sites/msteams_74c888/Shared%20Documents/Alosa/Counts/2026/White%20Rock%202026%20count%20data.xlsx?d=wcf38570fa8344aefb34ae349e4a7b4c5&csf=1&web=1&e=XQ0fC6")
+vcount<-CloudBurglar::get_file("https://086gc.sharepoint.com/:x:/r/sites/msteams_74c888/Shared%20Documents/Alosa/Counts/2026/Vaughan%202026%20count%20data.xlsx?d=wbaf213b4e3a04b3aa3abdb1f2c847933&csf=1&web=1&e=C1ehyS")
+y<-onespecies.partial.river.escapement(vcount,fixtime=T,database=F,2026,2,channel)
+
+v.strata<-y$summary.data
+v.total<-y$daily.summary
+v.strata<-v.strata[order(v.strata$dayofyear),]
+
+
 ```
 
 
