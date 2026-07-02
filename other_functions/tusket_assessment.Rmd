@@ -21,7 +21,7 @@ library(ROracle)
 library(imputeTS)
 
 # Vars
-current_year <- 2025
+current_year <- 2026
 
 # Source necessary functions from the Alosa functions
 source("~/git/ALOSA.functions/functions/sourcery.R")
@@ -68,31 +68,58 @@ filling out with data throughout the season.
 
 # Creates blank data sheets for counts and biodata for Lake Vaughan
 # blank.datasheets(
-#   seed = 112,
-#   startmonth = 3,
+#   seed = 118,
+#   startmonth = 4,
 #   endmonth = 6,
 #   startday = 1,
 #   rivername = "Vaughan",
-#   year = 2023,
-#   recordtime = T,
-#   speciesID = T,
+#   year = 2026,
+#   recordtime = TRUE,
+#   speciesID = TRUE,
 #   strata = 6,
 #   samplesperstrata = 4
 # )
 # 
 # # Creates blank data sheets for counts and biodata for Powerhouse
 # blank.datasheets(
-#   seed = 113,
-#   startmonth = 3,
+#   seed = 118,
+#   startmonth = 4,
 #   endmonth = 6,
 #   startday = 15,
 #   rivername = "Powerhouse",
-#   year = 2023,
-#   recordtime = T,
-#   speciesID = T,
+#   year = 2026,
+#   recordtime = TRUE,
+#   speciesID = TRUE,
 #   strata = 6,
 #   samplesperstrata = 4
 # )
+
+```
+
+Generate a list of files based on the data sheets created above so we can use it
+to upload the correct videos to the shared drive.
+
+```{r}
+#file_names_csv <- read_csv("C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Vaughan 2026 count data.csv")
+#file_names_csv <- read_csv("C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Powerhouse 2026 count data.csv")
+
+# Add leading zeros to all values in the month column, days < 10, and times so
+# that all times have four characters
+
+# file_names_csv |>
+#   mutate(mon = paste0("0", mon)) |>
+#   mutate(day = as.character(day)) |>
+#   mutate(day = if_else(day %in% c(1:9), paste0("0", day), day)) |>
+#   # This is a function for string formatting from C. It is saying that the value
+#   # is an integer (the %d) and it should be 4 characters wide with leading zeros
+#   # if necessary (04)
+#   mutate(time = sprintf("%04d", time)) |>
+#   # mutate(new_date_time = paste0("Vaughan-", day, mon, year, "-", time, ".h264")) |>
+#   mutate(new_date_time = paste0("POWERHOUSE-", day, mon, year, "-", time, ".h264")) |>
+#   pull(new_date_time) -> file_names
+# 
+# #writeLines(file_names, "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Vaughan 2026 Count filenames for video uploader script.txt")
+#writeLines(file_names, "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Powerhouse 2026 Count filenames for video uploader script.txt")
 
 ```
 
@@ -103,7 +130,7 @@ filling out with data throughout the season.
 ```{r escapement_vd}
 # Locate your CSV for counts
 #path_to_counts_CSV <- "C:/Users/graylo/Documents/Vaughan 2025 count data.csv"
-path_to_counts_CSV <- "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2025/Vaughan 2025 count data.csv"
+path_to_counts_CSV <- "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Vaughan 2026 count data.csv"
 
 # Run escapement script
 # Note: arguments year, site, and channel don't matter when database = FALSE
@@ -140,14 +167,14 @@ escapement_vd |>
     linewidth = 1
     ) +
   theme_bw() +
-  geom_smooth(
-    method = "loess",
-    # Adjust the span to control smoothness (lower = more flexible)
-    span = 0.3,
-    se = FALSE,
-    colour = "#F6AC50",
-    linewidth = 1
-    ) +
+  # geom_smooth(
+  #   method = "loess",
+  #   # Adjust the span to control smoothness (lower = more flexible)
+  #   span = 0.3,
+  #   se = FALSE,
+  #   colour = "#F6AC50",
+  #   linewidth = 1
+  #   ) +
   # You can highlight regions using something like this
   #annotate("rect", xmin = as.Date("2025-04-25"), xmax = as.Date("2025-05-10"), ymin = 0, ymax = Inf, alpha = 0.1, fill = "orange")+
   labs(
@@ -155,12 +182,12 @@ escapement_vd |>
     x = "Date",
     y = "Fish / day"
   ) +
-  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
-  scale_y_continuous(
-    limits = c(0, max(escapement_vd$chigh, na.rm = TRUE)),
-    breaks = seq(0, max(escapement_vd$chigh, na.rm = TRUE), by = 1e4),
-    labels = scales::comma
-  ) +
+  # scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  # scale_y_continuous(
+  #   limits = c(0, max(escapement_vd$chigh, na.rm = TRUE)),
+  #   breaks = seq(0, max(escapement_vd$chigh, na.rm = TRUE), by = 1e4),
+  #   labels = scales::comma
+  # ) +
   theme(
     axis.text.x = element_text(
       angle = 45,
@@ -182,7 +209,7 @@ escapement_vd |>
 ## PH daily escapement
 ```{r escapement_ph}
 # Locate your CSV for counts
-path_to_counts_CSV <- "C:/Users/graylo/Documents/Powerhouse 2025 count data.csv"
+path_to_counts_CSV <- "C:/Users/graylo/OneDrive - DFO-MPO/Alosa/Counts/2026/Powerhouse 2026 Count data.csv"
 
 # Run escapement script
 # Note: arguments year, site, and channel don't matter when database = FALSE
@@ -226,7 +253,7 @@ escapement_ph |>
   scale_x_date(date_labels = "%b %d", date_breaks = "1 days") +
   scale_y_continuous(
     limits = c(0, max(escapement_ph$chigh, na.rm = TRUE)),
-    breaks = seq(0, max(escapement_ph$chigh, na.rm = TRUE), by = 100),
+    breaks = seq(0, max(escapement_ph$chigh, na.rm = TRUE), by = 1000),
     labels = scales::comma
   ) +
   theme(
@@ -248,6 +275,37 @@ escapement_ph |>
 #     )
 ```
 
+## PH cumulative
+```{r}
+escapement_ph |> 
+  arrange(date) |> 
+  mutate(cumulative_total = cumsum(total)) |> 
+  ggplot(aes(date, cumulative_total)) +
+  geom_path(alpha = 0.8, linewidth = 1, na.rm = TRUE)+
+  theme_bw() +
+  labs(
+    title = "Cumulative escapement of gaspereau at Powerhouse",
+    x = "Date",
+    y = "Total fish escaped"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, 1e4),
+    breaks = seq(0, 1e4, 1e3),
+    labels = scales::comma
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.key = element_blank()
+  ) +
+  guides(colour = guide_legend(override.aes = list(linewidth = 2)))
+```
+
 ## VD multi-year
 ```{r compare_vd}
 # Set up a function to haul data from the db for VD
@@ -263,7 +321,7 @@ get_VD_multiple_years <- function() {
     tryCatch({
       
       year_data <- onespecies.river.escapement(
-        filename = "dummy_file_name",
+        count.data = "dummy_file_name",
         fixtime = TRUE,
         downstream.migration = TRUE,
         database = TRUE,
@@ -306,30 +364,44 @@ multi_year_counts <- multi_year_counts |>
   mutate(year = as.character(year)) -> multi_year_counts
 
 multi_year_counts |> 
+  filter(year > 2020) -> temp_df
+
+up_to_date <- last(temp_df$date)
+
+temp_df |> 
   group_by(year) |> 
   ggplot(aes(date, total)) +
   geom_path(
     aes(colour = year),
-    alpha = if_else(multi_year_counts$year != current_year, 0.4, 0.9),
-    linewidth = if_else(multi_year_counts$year != current_year, 1, 2),
+    alpha = if_else(temp_df$year != 2026, 0.4, 0.8),
+    linewidth = if_else(temp_df$year != 2026, 1.3, 2),
     na.rm = TRUE
-  )+
+  ) +
+  geom_point(
+    aes(
+      x = temp_df |> filter(year == 2026) |> last() |> pull(date),
+      y = temp_df |> filter(year == 2026) |> last() |> pull(total),
+      fill = year
+      ),
+    size = 3,
+    pch = 21,
+    alpha = 0.1
+    ) +
   theme_bw() +
   labs(
-    title = "Gaspereau escapement at Lake Vaughan Dam",
+    title = paste0("Gaspereau escapement at Lake Vaughan Dam as of ", up_to_date),
     x = "Date",
     y = "Fish / day",
     colour = "Year",
-    #fill = "Year",
+    fill = "Year",
     linetype = "Location"
   ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
   scale_y_continuous(
-    limits = c(0, 120000),
-    breaks = seq(0, 120000, by = 10000),
+    limits = c(0, max(temp_df$total)),
+    breaks = seq(0, max(temp_df$total), by = 10000),
     labels = scales::comma
   ) + 
-  #scale_colour_brewer(palette = "Dark3") +
   theme(
     panel.grid.minor = element_blank(),
     axis.title = element_text(face = "bold"),
@@ -339,7 +411,10 @@ multi_year_counts |>
     plot.background = element_rect(fill = "grey95"),
     legend.key = element_blank()
   ) +
-  guides(colour = guide_legend(override.aes = list(linewidth = 2)))
+  guides(
+    colour = guide_legend(override.aes = list(linewidth = 2)),
+    fill = guide_legend(override.aes = list(size = 0))
+    )
 
 # plot_path <-
 #   paste0(output_folder, "/in_season_multi_year_counts_plot.png")
@@ -353,17 +428,93 @@ multi_year_counts |>
 # )
 ```
 
+## VD average
+```{r}
+temp_df |> 
+  mutate(flag = if_else(year < 2026, "2021 - 2025 Average", "2026")) |> 
+  group_by(flag, date) |> 
+  summarise(total = mean(total, na.rm = TRUE)) -> avg_esc_df
+
+avg_esc_df |> 
+  ggplot(aes(date, total)) +
+  geom_path(aes(colour = flag), size = 1.5, alpha = 0.8) +
+  theme_bw() +
+  labs(
+    title = "Average Gaspereau escapement at Lake Vaughan Dam",
+    x = "Date",
+    y = "Fish / day",
+    colour = "",
+    fill = "",
+    linetype = "Location"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(avg_esc_df$total)),
+    breaks = seq(0, max(avg_esc_df$total), by = 10000),
+    labels = scales::comma
+  ) + 
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.key = element_blank()
+  )
+```
+
+
 ## VD multi-year cumulative
 ```{r}
 # Multi-year cumulative counts
 
-multi_year_cum <- multi_year_counts %>%
-  group_by(year) %>%
-  arrange(date) %>%
+multi_year_cum <- multi_year_counts |> 
+  group_by(year) |> 
+  arrange(date) |> 
   mutate(cumulative_total = cumsum(total))
 
-multi_year_cum %>%
-  group_by(year) %>%
+# multi_year_cum |> 
+#   group_by(year)|> 
+#   ggplot(aes(date, cumulative_total)) +
+#   geom_path(
+#     aes(colour = year),
+#     alpha = 0.8,
+#     linewidth = 2,
+#     na.rm = TRUE
+#   )+
+#   #scale_colour_viridis_d(direction = -1)+
+#   theme_bw() +
+#   labs(
+#     title = "Cumulative escapement of gaspereau at Lake Vaughan Dam",
+#     subtitle = "LRP indicated by dashed line",
+#     x = "Date",
+#     y = "Total fish escaped",
+#     colour = "Year",
+#     fill = "Year",
+#     linetype = "Location"
+#   ) +
+#   scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+#   scale_y_continuous(
+#     limits = c(0, 2.5e6),
+#     breaks = seq(0, 2.5e6, 0.2e6),
+#     labels = scales::comma
+#   ) + 
+#   geom_hline(yintercept = 2.086e6, linetype = "dashed")+
+#   theme(
+#     panel.grid.minor = element_blank(),
+#     axis.title = element_text(face = "bold"),
+#     axis.title.x = element_blank(),
+#     axis.text.x = element_text(angle = 45, hjust = 1),
+#     legend.background = element_blank(),
+#     plot.background = element_rect(fill = "grey95"),
+#     legend.key = element_blank()
+#   ) +
+#   guides(colour = guide_legend(override.aes = list(linewidth = 2)))
+
+# Same plot but with the USR
+multi_year_cum |> 
+  group_by(year)|> 
   ggplot(aes(date, cumulative_total)) +
   geom_path(
     aes(colour = year),
@@ -372,6 +523,53 @@ multi_year_cum %>%
     na.rm = TRUE
   )+
   #scale_colour_viridis_d(direction = -1)+
+  theme_bw() +
+  labs(
+    title = "Cumulative escapement of gaspereau at Lake Vaughan Dam",
+    subtitle = "USR = dashed line, LRP = solid line",
+    x = "Date",
+    y = "Total fish escaped",
+    colour = "Year",
+    fill = "Year",
+    linetype = "Location"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, 3.4e6),
+    breaks = seq(0, 3.4e6, 0.25e6),
+    labels = scales::comma
+  ) + 
+  geom_hline(yintercept = 2.086e6, linetype = "solid")+
+  geom_hline(yintercept = 3.1e6, linetype = "dashed")+
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.key = element_blank()
+  ) +
+  guides(colour = guide_legend(override.aes = list(linewidth = 2)))
+```
+
+```{r}
+# Alternative plot with years as continuous variable to show how newer years are
+# getting lower (lighter colours)
+
+multi_year_cum <- multi_year_counts |> 
+  group_by(year) |> 
+  arrange(year, date) |> 
+  mutate(cumulative_total = cumsum(total), year = as.integer(year))
+
+multi_year_cum |> 
+  ggplot(aes(date, cumulative_total)) +
+  geom_path(
+    aes(colour = year, group = year),
+    alpha = 0.8,
+    linewidth = 2,
+    na.rm = TRUE
+  )+
   theme_bw() +
   labs(
     title = "Cumulative escapement of gaspereau at Lake Vaughan Dam",
@@ -398,6 +596,46 @@ multi_year_cum %>%
   ) +
   guides(colour = guide_legend(override.aes = list(linewidth = 2)))
 ```
+
+## VD cumulative with CI
+```{r}
+
+escapement_vd |> 
+  arrange(date) |> 
+  mutate(
+    ctotal = cumsum(total),
+    cclow = cumsum(clow),
+    cchigh = cumsum(chigh)
+    ) |>  
+  ggplot(aes(date, ctotal)) +
+  geom_ribbon(aes(ymin = cclow, ymax = cchigh), alpha = 0.4) +
+  geom_path(linewidth = 1, na.rm = TRUE) +
+  geom_path(aes(date, cchigh), linewidth = 0.5) +
+  geom_path(aes(date, cclow), linewidth = 0.5) +
+  theme_bw() +
+  labs(
+    title = "Cumulative escapement of gaspereau at Lake Vaughan Dam in 2026",
+    x = "Date",
+    y = "Total fish escaped"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 day") +
+  # scale_y_continuous(
+  #   limits = c(0, 3e5),
+  #   breaks = seq(0, 3e5, 2e4),
+  #   labels = scales::comma
+  # ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.background = element_blank(),
+    plot.background = element_rect(fill = "grey95"),
+    legend.key = element_blank()
+  ) +
+  guides(colour = guide_legend(override.aes = list(linewidth = 2)))
+```
+
 
 ## PH multi-year
 ```{r multi_year_ph}
