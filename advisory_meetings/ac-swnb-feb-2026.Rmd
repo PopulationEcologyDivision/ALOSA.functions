@@ -1,0 +1,213 @@
+# Setup
+```{r library_etc, warning=FALSE}
+# Library
+library(tidyverse)
+library(readxl)
+library(ROracle)
+
+# Source alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+# Here is the channel connection for when we haul things from the ALOSA db
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  username = "GASPEREA",
+  password = "gps983",
+  "PTRAN",
+  believeNRows = FALSE
+  )
+
+```
+
+# Landings - QC data
+```{r get_MARFIS_data, warning=FALSE}
+# This is where we store the MARFIS pulls:
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata
+
+# This function checks to see when the last pull was and asks if you'd like to
+# update the pull. It then loads the MARFIS data without changing anything.
+# If you decide to do a new MARFIS pull and there are new additions to the db
+# that were not in the last pull, you will be prompted to make changes to the
+# Master Rivername Database. This is located on the R drive here:'
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MASTER_RIVERNAME_DATABASE.csv
+#source(here("other_functions", "pull_marfis_data.R"))
+
+# You don't always have to pull the MARFIS data when working with it, that just
+# updates the copy of the data we have to the most up to date version. If you 
+# want to load MARFIS data that already exist, just load it from here:
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+
+# The function we use to clean the data is currently located here:
+
+# "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R"
+
+# This function contains data which CANNOT be stored on the unit github page
+# because it contains information that ostensibly could be used to glean how
+# much someone is earning, so we store it on the R drive, which seems a bit
+# extra. However, this is the rule (for now)
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS_error_cleaner.R")
+
+df <- marfis_error_cleaner(
+  catch = catch,
+  years = "all",
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+
+```
+
+# Setting up the data
+```{r}
+SJ_tribs <- c("SAINT JOHN","WASHADEMOAK LAKE","BELYEAS POINT","BELLEISLE BAY","DARLING'S ISLAND","DARLING'S LAKE","MORRELL RD","GRAND LAKE","KINGSTON CREEK","MILKISH CREEK","OROMOCTO","DOUGLAS HARBOUR","FRENCH LAKE","THE KEYHOLE","KEYHOLE LAKE","KENNEBECASIS","MAQUAPIT LAKE","INDIAN","GREY ROCK","CAP-PELE")
+
+non_SJ <-c("MAGAGUADAVIC", "TANTRAMAR", "SAINT CROIX", "AULAC", "MISSAQUASH", "SWAN LAKE", "PETITCODIAC")
+
+# We want to get the Saint John River licences separate from the rest and then
+# within the SJR we want to sort them into the harbour and non-harbour
+
+# We also want to exclude late logbook submissions because we haven't had a 
+# chance to QC them
+
+late_logs <- c(120050, 120052, 120056, 120079, 120088, 120154, 120157, 120292)
+
+df |> 
+  filter(YEAR >= 2020) |> 
+  filter(PROVINCE == "NB") |> 
+  # These were late submissions, have no scans yet, and therefore will be excluded
+  filter(!(YEAR == 2025 & LICENCE_ID %in% late_logs)) |> 
+  # Make new column for SJR / non-SJR
+  mutate(
+    CATEGORY = case_when(
+      RIVERNAME_CLEANED %in% SJ_tribs ~ "SJR",
+      RIVERNAME_CLEANED %in% non_SJ ~ "non-SJR",
+      TRUE ~ RIVERNAME_CLEANED
+    )
+  ) |> 
+  mutate(
+    CATEGORY = case_when(
+      CATEGORY == "SJR" & FV_GEAR_CODE == 41 ~ "SJH",
+      CATEGORY == "SJR" & FV_GEAR_CODE == 42 ~ "SJH",
+      TRUE ~ CATEGORY
+    )
+  ) -> swnb
+
+```
+
+# Historical landings plot
+```{r}
+swnb |> 
+  group_by(YEAR) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  summarise(
+    FV_WEIGHT = sum(FV_WEIGHT) / 1000,
+    N = n_distinct(LICENCE_ID)
+    ) |> 
+  ggplot(aes(YEAR, FV_WEIGHT)) +
+  geom_col(fill = "#7ECDBB", colour = "grey10", alpha = 0.8) +
+  theme_bw() +
+  scale_y_continuous(n.breaks = 10, labels = scales::comma) +
+  labs(
+    title = "Total Reported Landings for Gaspereau in SW New Brunswick",
+    subtitle = "n = number of licences reporting landings",
+    y = "Reported Landings (mt)",
+    x = "Year"
+    ) +
+  theme(panel.grid = element_blank()) +
+  geom_text(
+    aes(label = paste0("n = ", N)),
+    vjust = -0.25,
+    position = position_dodge(width = 1),
+    size = 4
+    )  
+
+#ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/swnb/swnb_landings_2026.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+
+```
+
+# Landings table
+```{r warning=FALSE, message=FALSE}
+library(flextable)
+
+swnb |> 
+  group_by(YEAR, CATEGORY) |> 
+  summarise(
+    FV_WEIGHT = round(sum(FV_WEIGHT) / 1000),
+    N = n_distinct(LICENCE_ID)
+    ) |> 
+  # Since non-SJR is < 5, we need to censor it to please the Lord
+  filter(CATEGORY != "non-SJR") |>
+  mutate(YEAR = as.factor(YEAR)) |> 
+  select(Year = YEAR, Region = CATEGORY, Landings = FV_WEIGHT) |> 
+  mutate(
+    Region = case_when(
+      Region == "SJH" ~ "Saint John Harbour", 
+      Region == "SJR" ~ "Saint John River"
+      )
+    ) |> 
+  pivot_wider(names_from = Year, values_from = Landings) |> 
+  flextable() |> 
+  autofit() |> 
+  save_as_docx(path = "R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/swnb/swnb_landings_table.docx")
+  
+  
+```
+
+```{r}
+
+# Get the list of licences for SWNB to compare to DNF dataframe
+read_xlsx("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/LA1040- Gaspereau Licences WITH SITE LOCATIONS 2025.xlsx") |> 
+  select(AREA = `Management Area Description (English)`, LICENCE_ID = `Licence Id`) |> 
+  filter(AREA == "SOUTHERN NEW BRUNSWICK") -> swnb_lics
+
+# Get total number of licences in SWNB. This probably changed a bit through the
+# years, but figuring out the total number of licences for each year would 
+# require multiple CSVs, so this is good enough for an estimate until I hear
+# otherwise
+n_lics = length(swnb_lics$LICENCE_ID)
+
+# Licences reporting landings
+swnb |> 
+  group_by(YEAR) |> 
+  summarise(n = n_distinct(LICENCE_ID)) |>
+  mutate(YEAR = as.factor(YEAR)) |> 
+  select(YEAR, Landings = n) -> swnb_lics_landings
+
+# SWNB lics reporting DNF
+didnotfish |> 
+  filter(YEAR %in% 2020:2025, NIL_REPORT_FLAG == "Y") |> 
+  semi_join(swnb_lics, by = "LICENCE_ID") |> 
+  group_by(YEAR) |> 
+  count() |> 
+  select(YEAR, DNF = n) -> swnb_lics_dnf
+
+# Bind them together
+swnb_lics_landings |> 
+  inner_join(swnb_lics_dnf, by = "YEAR") |> 
+  mutate(Reporting = Landings + DNF) |> 
+  mutate(Registered = n_lics, .after = Reporting) |> 
+  mutate(DNR = Registered - Reporting, .before = Registered) |> 
+  mutate(Rate = round(Reporting / Registered, 2)) |> 
+  rename(Year = YEAR) |> 
+  flextable() |> 
+  autofit()
+  
+```
+
+```{r}
+# Make a table of SJR vs SJH licence count
+swnb |> 
+  group_by(YEAR, CATEGORY) |> 
+  summarise(
+    FV_WEIGHT = round(sum(FV_WEIGHT) / 1000),
+    N = n_distinct(LICENCE_ID)
+    ) |> 
+  flextable() |> 
+  autofit() |> 
+  save_as_docx(path = "R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/swnb/swnb_SJH_table.docx")
+
+```
+
