@@ -543,3 +543,40 @@ legend("top",legend=c("First","Second","Third","Fourth"),
        fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
        title="Number of Spawnings - 2016",title.adj=0,xpd=TRUE,inset=c(0,0.02),horiz=T)
 ```
+```{r mean weight}
+bio.data<-get.bio.data(2025,3,3501,channel)
+count.data<-wr_2025
+
+bio.data$date=as.Date(paste(bio.data$DAY,bio.data$MON,bio.data$YEAR,sep="-"),
+                     format="%d-%m-%Y")
+
+#dayofyear uses "strftime" to evaluate which day of the year each date aligns with
+bio.data$dayofyear=as.numeric(strftime(bio.data$date, format="%j"))
+
+
+# scaledata=biodata[biodata$SCALE=="Y",]
+n.sampled<-aggregate(bio.data$dayofyear,by=list(bio.data$dayofyear),FUN=function(x){length(x[!is.na(x)])})
+
+colnames(n.sampled)=c("dayofyear","n.sampled")
+
+biodata.with.weights<-merge(bio.data,n.sampled,by="dayofyear",all.x=T)
+missingdays<-missing.days(bio.data)
+mergedays<-missingdays-1
+
+for(i in 1:length(missingdays)){
+  count.data$dayofyear[count.data$dayofyear==missingdays[i]]<-mergedays[i]
+}
+
+mergedcountdata=aggregate(count.data$total,by=list(count.data$dayofyear),FUN=sum)
+colnames(mergedcountdata)=c("dayofyear","merged.total")
+
+biodata.with.weights<-merge(biodata.with.weights,mergedcountdata[,c("dayofyear","merged.total")],
+                            by="dayofyear",all.x=T)
+
+
+biodata.with.weights$weighting<- biodata.with.weights$merged.total/biodata.with.weights$n.sampled
+
+weighted.mean(biodata.with.weights$WEIGHT,biodata.with.weights$weighting,na.rm=T)
+
+```
+

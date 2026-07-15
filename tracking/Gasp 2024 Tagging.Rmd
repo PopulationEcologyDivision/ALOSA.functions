@@ -206,8 +206,8 @@ for(i in 1:length(detsGNnana$id))
 wrcount<-onespecies.river.escapement(fixtime = T,downstream.migration = F,year = 2024,
                                     database = T,site = 3,channel = channel)
 #lm count data is already trimmed to the 21st of May, after which there is too much down stream migration
-lmcount<-onespecies.river.escapement(filename="R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024/Lanes Mills 2024 count data.csv",
-                                     fixtime = F,downstream.migration = F,year = 2024,
+lmcount.file<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2024/Lanes Mills 2024 count data.csv")
+lmcount<-onespecies.river.escapement(lmcount.file,fixtime = F,downstream.migration = F,year = 2024,
                                      database = F,site = 4,channel = channel)
 # LM dates are may 5 to 21
 
@@ -221,52 +221,8 @@ metadata.trim<-metadata[metadata$rdt<"2024-05-20",]
 ```
 
 
-```{r weight detections}
+```{r weighting detections}
 #weight fish based on release time####
-#arbitrary attempt 1
-#tag release days: "2024-05-03" "2024-05-06" "2024-05-08" "2024-05-13" "2024-05-14" "2024-05-15" "2024-05-16" "2024-05-17"
-g1<-sum(wrcount.trim$total[wrcount.trim$dayofyear<=125]) #start to may 4
-g2<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=126 & wrcount.trim$dayofyear<=128])
-g3<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=129 & wrcount.trim$dayofyear<=131])
-g4<-sum(wrcount.trim$total[wrcount.trim$dayofyear>=132 & wrcount.trim$dayofyear<=134])
-g5<-sum(wrcount.trim$total[wrcount.trim$dayofyear==135])
-g6<-sum(wrcount.trim$total[wrcount.trim$dayofyear==136])
-g7<-sum(wrcount.trim$total[wrcount.trim$dayofyear==137])
-g8<-sum(wrcount.trim$total[wrcount.trim$dayofyear==138])
-
-n1<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",])
-n2<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-06",])
-n3<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-08",])
-n4<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-13",])
-n5<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-14",])
-n6<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-15",])
-n7<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-16",])
-n8<-nrow(metadata.trim[metadata.trim$rdate=="2024-05-17",])
-
-w1<-g1/nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",])
-w2<-g2/nrow(metadata.trim[metadata.trim$rdate=="2024-05-06",])
-w3<-g3/nrow(metadata.trim[metadata.trim$rdate=="2024-05-08",])
-w4<-g4/nrow(metadata.trim[metadata.trim$rdate=="2024-05-13",])
-w5<-g5/nrow(metadata.trim[metadata.trim$rdate=="2024-05-14",])
-w6<-g6/nrow(metadata.trim[metadata.trim$rdate=="2024-05-15",])
-w7<-g7/nrow(metadata.trim[metadata.trim$rdate=="2024-05-16",])
-w8<-g8/nrow(metadata.trim[metadata.trim$rdate=="2024-05-17",])
-
-####scale detections to population, then back down to sample####
-trimdet<-exit_all[exit_all$dt<"2024-05-21 23:59:59",]
-tags.det<-unique(trimdet$id)
-
-#number of tags detected in each period
-d1<-length(unique(trimdet$id[trimdet$rdate=="2024-05-03"]))
-d2<-length(unique(trimdet$id[trimdet$rdate=="2024-05-06"]))
-d3<-length(unique(trimdet$id[trimdet$rdate=="2024-05-08"]))
-d4<-length(unique(trimdet$id[trimdet$rdate=="2024-05-13"]))
-d5<-length(unique(trimdet$id[trimdet$rdate=="2024-05-14"]))
-d6<-length(unique(trimdet$id[trimdet$rdate=="2024-05-15"]))
-d7<-length(unique(trimdet$id[trimdet$rdate=="2024-05-16"]))
-d8<-length(unique(trimdet$id[trimdet$rdate=="2024-05-17"]))
-
-#try with vectors
 #tag release days: "2024-05-03" "2024-05-06" "2024-05-08" "2024-05-13" "2024-05-14" "2024-05-15" "2024-05-16" "2024-05-17"
 g<-c(sum(wrcount.trim$total[wrcount.trim$dayofyear<=125]), #start to may 4
      sum(wrcount.trim$total[wrcount.trim$dayofyear>=126 & wrcount.trim$dayofyear<=128]),
@@ -290,6 +246,18 @@ n<-c(nrow(metadata.trim[metadata.trim$rdate=="2024-05-03",]),
 
 w<-g/n
 
+#rescale weights to 1
+w.1<-w/mean(w)
+
+#assign weights to tag groups
+metadata.trim$weighting<-ifelse(metadata.trim$rdate=="2024-05-03",w.1[1],
+                                ifelse(metadata.trim$rdate=="2024-05-06",w.1[2],
+                                       ifelse(metadata.trim$rdate=="2024-05-08",w.1[3],
+                                              ifelse(metadata.trim$rdate=="2024-05-13",w.1[4],
+                                                     ifelse(metadata.trim$rdate=="2024-05-14",w.1[5],
+                                                            ifelse(metadata.trim$rdate=="2024-05-15",w.1[6],
+                                                                ifelse(metadata.trim$rdate=="2024-05-16",w.1[7],w.1[8])))))))
+
 ####scale detections to population, then back down to sample####
 trimdet<-exit_all[exit_all$dt<"2024-05-21 23:59:59",]
 tags.det<-unique(trimdet$id)
@@ -312,6 +280,76 @@ D<-d*w
 dw<-sum(D)*sum(n)/sum(g)
 dw<-D*n/g
 
+####Weight based on sub gropu (tagger, ana)####
+
+#g will be the same for all, jsut change n
+metadata.trim.M.A<-metadata.trim[metadata.trim$tagger=="MB" & metadata.trim$ana=="Y",]
+n.M.A<-c(nrow(metadata.trim.M.A[metadata.trim$rdate=="2024-05-03",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-06",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-08",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-13",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-14",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-15",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-16",]),
+         nrow(metadata.trim.M.A[metadata.trim.M.A$rdate=="2024-05-17",])
+)
+
+w.M.A<-g/n.M.A
+
+####scale detections to population, then back down to sample####
+trimdet.M.A<-exit_all[exit_all$dt<"2024-05-21 23:59:59" & exit_all$tagger=="MB" & exit_all$ana=="Y",]
+
+#number of tags detected in each period
+d.M.A<-c(length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-03"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-06"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-08"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-13"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-14"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-15"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-16"])),
+         length(unique(trimdet.M.A$id[trimdet.M.A$rdate=="2024-05-17"]))
+)
+
+#scale each group up to the population
+D.M.A<-d.M.A*w.M.A
+
+dw<-sum(D.M.A,na.rm=T)*sum(n.M.A,na.rm=T)/sum(g[c(1,3,5,6,8)],na.rm=T)
+dw<-D.M.A*n.M.A/g
+
+
+##George
+metadata.trim.G.A<-metadata.trim[metadata.trim$tagger=="GN" & metadata.trim$ana=="Y",]
+n.G.A<-c(nrow(metadata.trim.G.A[metadata.trim$rdate=="2024-05-03",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-06",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-08",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-13",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-14",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-15",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-16",]),
+         nrow(metadata.trim.G.A[metadata.trim.G.A$rdate=="2024-05-17",])
+)
+
+w.G.A<-g/n.G.A
+
+####scale detections to population, then back down to sample####
+trimdet.G.A<-exit_all[exit_all$dt<"2024-05-21 23:59:59" & exit_all$tagger=="GN" & exit_all$ana=="Y",]
+
+#number of tags detected in each period
+d.G.A<-c(length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-03"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-06"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-08"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-13"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-14"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-15"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-16"])),
+         length(unique(trimdet.G.A$id[trimdet.G.A$rdate=="2024-05-17"]))
+)
+
+#scale each group up to the population
+D.G.A<-d.G.A*w.G.A
+
+dw<-sum(D.G.A,na.rm=T)*sum(n.G.A,na.rm=T)/sum(g[c(1,2,3,5,7,8)],na.rm=T)
+dw<-D.G.A*n.G.A/g
 #weighting this way results in only a corrected number of fish, losing the tagger/ana variables
 #by running a blr on the data and adding rows for every fish in the population,
 #we are assuming that there is no change in passage success as time goes on, and 
@@ -331,7 +369,7 @@ dw<-D*n/g
 #need to create a dataframe with a row for every fish in the population
 #start by subsetting tag data
 #using data trimmed only to the study window, for releases and detections
-tag.df<-subset(metadata.trim,select=c(id,ana,tagger))
+tag.df<-subset(metadata.trim,select=c(id,ana,tagger,weighting))
 tag.df$pass.success<-ifelse(tag.df$id %in% trimdet$id,1,0)
 
 #now, make a population dataframe
@@ -341,6 +379,7 @@ failN<-wrN-lmN #number of fish that passed WR but not LM
 pop.df<-data.frame(id=as.character(1:wrN),
                    tagger=rep("N",wrN),
                    ana=rep("N",wrN),
+                   weighting=rep(1,wrN),
                    pass.success=c(rep(1,lmN),rep(0,failN))
 )
 
@@ -351,9 +390,15 @@ all.df<-rbind(tag.df,pop.df)
 fit1<-glm(pass.success~tagger*ana,data=all.df,family="binomial")
 summary(fit1)
 
+fit1.weighted<-glm(pass.success~tagger*ana,weights = weighting, data=all.df,family="binomial")
+summary(fit1.weighted)
+
 #model with no interaction
 fit2<-glm(pass.success~0+tagger,data=all.df,family="binomial")
 summary(fit2)
+
+fit2.weighted<-glm(pass.success~0+tagger,weights = weighting, data=all.df,family="binomial")
+summary(fit2.weighted)
 
 #what if the tagged fish were just late?
 tag.df$pass.success.late<-ifelse(tag.df$id %in% exit_all$id,1,0) #

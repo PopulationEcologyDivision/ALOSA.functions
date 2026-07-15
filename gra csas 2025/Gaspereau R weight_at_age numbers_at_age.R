@@ -12,9 +12,9 @@ sourcery()
 channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 
-count.data<-onespecies.river.escapement(fixtime=T,database=T,year=2024,site=3,channel=channel)
+count.data<-onespecies.river.escapement(fixtime=T,database=T,year=2025,site=3,channel=channel)
 #bio.data<-get.bio.data(year=2023,siteID = 3,sppID=3501, channel)
-age.data<-get.age.data(year=2024,siteID = 3,sppID=3501, AgeStructure = T, PrimaryAger="Y", channel)
+age.data<-get.age.data(year=2025,siteID = 3,sppID=3501, AgeStructure = T, PrimaryAger="Y", channel)
 
 age.data$PREVIOUS_SPAWNS<-age.data$CURRENT_AGE-age.data$AGE_AT_FIRST_SPAWN
 age.datam<-age.data[age.data$SEX_ID==1,]
@@ -48,9 +48,9 @@ table(age.datam$CURRENT_AGE,age.datam$PREVIOUS_SPAWNS)
 table(age.dataf$CURRENT_AGE,age.dataf$PREVIOUS_SPAWNS)
 
 ##look at mean weight by year two ways
-year<-2021
+year<-2025
 
-count.data<-onespecies.river.escapement(fixtime = F,
+count.data<-onespecies.river.escapement(fixtime = T,
                                         downstream.migration = F,
                                         year = year,
                                         database = T,
@@ -58,7 +58,7 @@ count.data<-onespecies.river.escapement(fixtime = F,
                                         channel = channel
 )
 
-
+count25<-get.count.data(year,3,channel)
 bio.data<-get.bio.data(year,3,3501,channel)
 
 bio.data$date=as.Date(paste(bio.data$DAY,bio.data$MON,bio.data$YEAR,sep="-"),
@@ -92,10 +92,10 @@ biodata.with.weights$weighting<- biodata.with.weights$merged.total/biodata.with.
 
 print(weighted.mean(biodata.with.weights$WEIGHT,biodata.with.weights$weighting,na.rm=T))
 
-age.data<-get.age.data(year=2021,siteID = 3,sppID=3501, AgeStructure = T, PrimaryAger="Y", channel)
+age.data<-get.age.data(year=2025,siteID = 3,sppID=3501, AgeStructure = T, PrimaryAger="Y", channel)
 print(mean(age.data$WEIGHT,na.rm=T))
 
 
-all.fish.weight<-data.frame(year=c(2016,2017,2018,2019,2020,2021,2022,2023,2024),
-                            weight=c(217.9,NA,222.2,210.8,212.0,NA,230.0,204.7,230.1),
-                            weight.aged=c(214.7,NA,222.7,210.4,211.5,NA,231.5,204.6,230.5))
+all.fish.weight<-data.frame(year=c(2016,2017,2018,2019,2020,2021,2022,2023,2024,2025),
+                            weight=c(217.9,NA,222.2,210.8,NA,212.0,230.0,204.7,230.1,211.0),
+                            weight.aged=c(214.7,NA,222.7,210.4,NA,211.5,231.5,204.6,230.5,210.3))
