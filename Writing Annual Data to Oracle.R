@@ -20,9 +20,9 @@ sourcery()
 # First, define the filenames for each of the three csv and set the WD to 
 # where they are all stored.
 
-filename.biodata <- "TUSKET_2023_VAUGHAN_sppid.csv"
+filename.biodata <- "White Rock 2026 biocharacteristics data.csv"
 filename.agedata <- "GR_scales_to_age_2025_CLEANED.csv"
-filename.countdata <- "White Rock Counts - final.csv"
+filename.countdata <- "White Rock 2026 count data.csv"
 
 setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 

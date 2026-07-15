@@ -27,7 +27,7 @@ ageing.selection.test <- function(
     year,
     missingdays,
     mergedays,
-    seed = 42069,
+    seed,
     nsamples = 500,
     species = "A"
 )
@@ -36,8 +36,8 @@ ageing.selection.test <- function(
   biodata$date <- make_date(year = biodata$year, month = biodata$mon, day = biodata$day)
   countdata$date <- make_date(year = year, month = countdata$mon, day = countdata$day)
   if(weekly == TRUE){
-    biodata$weekofyear <- week(biodata$date)
-    countdata$weekofyear <- week(countdata$date)
+    biodata$weekofyear <- epiweek(biodata$date) #needs to be epiweek so it starts on sunday
+    countdata$weekofyear <- epiweek(countdata$date)
   }
   if(weekly == FALSE){
     biodata$dayofyear <- yday(biodata$date)

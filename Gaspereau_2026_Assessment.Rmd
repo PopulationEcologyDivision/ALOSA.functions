@@ -33,6 +33,7 @@ library(tidyverse)
 library(padr) # for dates
 library(ROracle)
 library(CloudBurglar)#for reading in from sharepoint
+library(readxl)
 ```
 
 ```{r source_ALOSA_functions}
@@ -75,7 +76,8 @@ make plots or tables to include in emails
 
 ```{r in_season_counts,include=FALSE}
 # setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2026")
-counts<-CloudBurglar::get_file("https://086gc.sharepoint.com/:x:/r/sites/msteams_74c888/Shared%20Documents/Alosa/Counts/2026/White%20Rock%202026%20count%20data.xlsx?d=wcf38570fa8344aefb34ae349e4a7b4c5&csf=1&web=1&e=XQ0fC6")
+counts<-CloudBurglar::get_file("https://086gc.sharepoint.com/:x:/r/sites/msteams_74c888/Shared%20Documents/Alosa/Counts/2026/White%20Rock%202026%20count%20data.xlsx?d=wcf38570fa8344aefb34ae349e4a7b4c5&csf=1&web=1&e=Xo6uvL")
+
 
 # x<-onespecies.river.escapement("White Rock 2026 count data.csv",fixtime=T,database=F,downstream.migration = F,2026,3,channel)
 x<-onespecies.river.escapement(counts,fixtime=T,database=F,downstream.migration = F,2026,3,channel)
@@ -86,24 +88,11 @@ x<-x[1:n-1,]
 
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
-```
-
-```{r}
-# remotes::install_github("PopulationEcologyDivision/CloudBurglar")
-vcount<-CloudBurglar::get_file("https://086gc.sharepoint.com/:x:/r/sites/msteams_74c888/Shared%20Documents/Alosa/Counts/2026/Vaughan%202026%20count%20data.xlsx?d=wbaf213b4e3a04b3aa3abdb1f2c847933&csf=1&web=1&e=C1ehyS")
-y<-onespecies.partial.river.escapement(vcount,fixtime=T,database=F,2026,2,channel)
-
-v.strata<-y$summary.data
-v.total<-y$daily.summary
-v.strata<-v.strata[order(v.strata$dayofyear),]
-
-
+# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
 ```
 
 
-
-```{r in_season_plot,include=FALSE}
+```{r in_season_plot, eval=FALSE, include=FALSE}
 #plot for in season emails
 old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
@@ -154,4 +143,168 @@ ageing selection
 recounts
 final versions of some plots
 
+```{r ageing_selection, include=FALSE}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2026")
+seed=546 #Seed used for scale selection. 
+nsamples=500  #Number of scale selected to be aged
+
+bio.data<-read.csv("White Rock 2026 biocharacteristics data.csv")
+
+#Check Bio data
+# checkers("White Rock 2026 biocharacteristics data.csv") # this file has the correct column names, same data as WE 2023 bio data.csv
+
+#combine extra columns into notes
+bio.data$notes<-paste(bio.data$samplers,bio.data$notes,sep=" ")
+bio.data$notes<-ifelse(bio.data$otolith=="y",paste0(bio.data$notes," otolith taken",sep=""),bio.data$notes)
+
+
+#need to do some testing that the age weighting is OK
+
+countdata<-daily.count<-x
+
+bio.data<-bio.data[,c(1:10,13)]
+# colnames(bio.data)<-c("SITE_ID", "YEAR", "DAY", "MON","FISH_ID", "SPECIES_ID",
+#                                        "SEX_ID","FORK_LENGTH","WEIGHT","SCALE","NOTES") 
+biodata<-bio.data
+
+#no missing days for 2026, doing weekly weighting instead
+# missingdays<-missing.days(bio.data)
+# mergedays<-missingdays-1 #in both cases the two previous days are most similar in count
+# For missing sample days, we merge the counts from two days
+# and use that in the weighting calculation. 
+# For example, ff day 112 is missing then decide if you want to merge the counts
+# with day 111 or 113. Do this for all the missing dates and provide the
+# replacement days in this vector. Length(mergedays)==Length(missingdays)
+
+
+#ran July 08th 2026 to get ages for scale mounting
+# ageing.selection.test(countdata,bio.data,weekly=TRUE,2026,seed=seed,nsamples=nsamples,species="A")
+
+
+```
+
+```{r prep data for upload}
+#clean up BIodata as above
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2026")
+bio.data<-read.csv("White Rock 2026 biocharacteristics data.csv")
+
+#Check Bio data
+checkers("White Rock 2026 biocharacteristics data.csv") #used to check for data entry errors, then corrections can be made to csv
+
+#combine extra columns into notes
+bio.data$notes<-paste(bio.data$samplers,bio.data$notes,sep=" ")
+bio.data$notes<-ifelse(bio.data$otolith=="y",paste0(bio.data$notes," otolith taken",sep=""),bio.data$notes)
+
+#file can be uploaded with additional columns, only those mathcing database will be uploaded
+#go to ALOSA.functions/Writing Annual Data to Oracle.R to upload
+
+
+```
+
+
+```{r flow data}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2026")
+flows26<-read_xlsx("Gaspereau River Apr-June 2026.xlsx",skip=4,col_names=c("TS","Water Level","Estimated Discharge m3s","Estimated Discharge cfs")) # skip the 4 lines to only read in the data. Manually code column names
+
+flows26<-flows26[-c(1:10),] #remove the first 10 data points per Gabriel's email
+
+par(mar=c(5,4,4,4)+0.1)
+plot(flows26$TS,flows26$`Estimated Discharge cfs`,type="l",
+     main="Gaspereau River Flows and Water Levels 2026",xlab="",ylab="",
+     yaxt="n",col="orange")
+axis(2,las=2) #for flow in cfs
+par(new=T)
+plot(flows26$TS,flows26$`Water Level`,type="l",,xlab="",ylab="",
+     yaxt="n",col="green")
+axis(4,las=2) #for flow in cfs
+legend("topright",col=c("orange","green"),legend=c("Estimated Discharge (cfs)","Water Level (m)"),lty=c(1,1))
+mtext("Date",1,line=3,cex=1.2)
+mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
+mtext("Water Level (m)",4,line=3,cex=1.2)
+
+
+#plot 2025 too
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025")
+flows25<-read_xlsx("Gaspereau River Apr-June 2025 flows.xlsx",skip=1,col_names=c("TS","Water Level","Estimated Discharge m3s","Estimated Discharge cfs"),col_types = c("date","numeric","numeric","numeric")) #Manually code column names and skip first row. specify column types to avoid issues
+
+flows25<-flows25[flows25$TS>"2025-04-13 00:00:00",] #trim to the day the river was lowered to install gear
+
+par(mar=c(5,4,4,4)+0.1)
+plot(flows25$TS,flows25$`Estimated Discharge cfs`,type="l",
+     main="Gaspereau River Flows and Water Levels 2025",xlab="",ylab="",
+     yaxt="n",col="orange")
+axis(2,las=2) #for flow in cfs
+par(new=T)
+plot(flows25$TS,flows25$`Water Level`,type="l",,xlab="",ylab="",
+     yaxt="n",col="green")
+axis(4,las=2) #for flow in cfs
+legend("topright",col=c("orange","green"),legend=c("Estimated Discharge (cfs)","Water Level (m)"),lty=c(1,1))
+mtext("Date",1,line=3,cex=1.2)
+mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
+mtext("Water Level (m)",4,line=3,cex=1.2)
+
+#look at flows and counts
+#setup count dates
+x$date<-as.Date(paste(x$day,x$mon,2026,sep="-"),format="%d-%m-%Y")
+
+#setup x axis limits with dates
+xlimdatetimes<-as_datetime(c("2026-04-13 00:00:00","2026-06-23 00:00:00"))
+xlimdates<-as.Date(c("2026-04-13","2026-06-23"))
+ylims=c(0,950) #max for 26 is 917, standard is 4% extra, 950 pretty close
+
+par(mar=c(5,4,4,4)+0.1)
+plot(flows26$TS,flows26$`Estimated Discharge cfs`,type="l",xlim=xlimdatetimes,ylim=ylims,
+     main="Gaspereau River Flows and Counts 2026",xlab="",ylab="",
+     yaxt="n",col="orange")
+axis(2,las=2) #for flow in cfs
+par(new=T)
+plot(x$date,x$total/1000,type="l",,xlab="",ylab="",xlim=xlimdates,
+     yaxt="n",col="black")
+axis(4,las=2) #for flow in cfs
+legend("topright",col=c("orange","black"),legend=c("Estimated Discharge (cfs)","Counts"),lty=c(1,1))
+mtext("Date",1,line=3,cex=1.2)
+mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
+mtext("Thousands of fish",4,line=3,cex=1.2)
+
+#2025 counts
+# wr_2025 <- onespecies.river.escapement(
+#   fixtime = TRUE,
+#   downstream.migration = FALSE,
+#   database = TRUE,
+#   year = 2025,
+#   site = 3,
+#   channel = channel
+# )
+wr_2025$date<-as.Date(paste(wr_2025$day,wr_2025$mon,2025,sep="-"),format="%d-%m-%Y")
+
+xlimdatetimes<-as_datetime(c("2025-04-13 00:00:00","2025-06-18 00:00:00"))
+xlimdates<-as.Date(c("2025-04-13","2025-06-18"))
+
+par(mar=c(5,4,4,4)+0.1)
+plot(flows25$TS,flows25$`Estimated Discharge cfs`,type="l",xlim=xlimdatetimes,ylim=ylims,
+     main="Gaspereau River Flows and Counts 2025",xlab="",ylab="",
+     yaxt="n",col="orange")
+axis(2,las=2) #for flow in cfs
+par(new=T)
+plot(wr_2025$date,wr_2025$total/1000,type="l",,xlab="",ylab="",xlim=xlimdates,
+     yaxt="n",col="black")
+axis(4,las=2) #for flow in cfs
+legend("topright",col=c("orange","black"),legend=c("Estimated Discharge (cfs)","Counts"),lty=c(1,1))
+mtext("Date",1,line=3,cex=1.2)
+mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
+mtext("Thousands of fish",4,line=3,cex=1.2)
+
+# look at flows on same plot
+# need to adjust dates, uses lubridate
+year(flows25$TS)<-2026
+
+plot(flows26$TS,flows26$`Estimated Discharge cfs`,type="l",
+     main="Gaspereau River Flows 2025 and 2026",xlab="",ylab="",
+     yaxt="n",col="orange")
+lines(flows25$TS,flows25$`Estimated Discharge cfs`,col="red")
+axis(2,las=2) #for flow in cfs
+mtext("Date",1,line=3,cex=1.2)
+mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
+legend("topright",col=c("orange","red"),legend=c("2026","2025"),lty=c(1,1))
+```
 
