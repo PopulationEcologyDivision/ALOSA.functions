@@ -2,8 +2,14 @@
 #'
 #' This function filters various MARFIS freshwater data tables based on user-specified criteria.
 #' It iteratively applies filters until no more rows are removed from the tables.
+#' 
+#' For it to work, the following tables MUST exist in your Global environment:  
+#' COMMUNITIES, COUNTIES, DISTRICTS, GEARS, LICENCE_PARTICIPANTS,
+#'   MARFLEETS_LIC, PARTICIPANTS, SD_LOG_EFF_STD_INFO, SD_LOG_ENTRD_DETS,
+#'   SD_LOG_SPC_STD_INFO, SD_LOGS, SUM_DOCS, VR_FRESHWATER
+#'   
+#' Please use filter_marfis_fw_setup.R if you need help loading them
 #'
-#' @param fwTbls A list of table names to filter (default: NULL)
 #' @param years A vector of years to filter by
 #' @param spp A vector of species codes to filter by
 #' @param sum_doc_defn_id A vector of sum document definition IDs to filter by
@@ -26,19 +32,37 @@
 #'                   gear_code = NULL)
 #'
 #' @note The function uses a while loop to iteratively apply filters until
-#'   no more rows are removed from the tables. It displays messages during
-#'   the filtering process.
-filter_marfis_fw <- function(fwTbls = NULL, years,  spp, sum_doc_defn_id, licences, sum_doc_id, doc_serial_num, sd_log_id, gear_code){
-  message("filtering")
+#'   no more rows are removed from the tables.
+filter_marfis_fw <- function(years = NULL,  
+                             spp = NULL, 
+                             sum_doc_defn_id = NULL, 
+                             licences = NULL, 
+                             sum_doc_id = NULL, 
+                             doc_serial_num = NULL, 
+                             sd_log_id = NULL, 
+                             gear_code = NULL){
+  fwTbls <-c("COMMUNITIES",
+             "COUNTIES",
+             "DISTRICTS",
+             "GEARS",
+             "LICENCE_PARTICIPANTS",
+             "MARFLEETS_LIC",
+             "PARTICIPANTS",
+             "SD_LOG_EFF_STD_INFO",
+             "SD_LOG_ENTRD_DETS",
+             "SD_LOG_SPC_STD_INFO",
+             "SD_LOGS",
+             "SUM_DOCS",
+             "VR_FRESHWATER")
+
+   message("filtering")
   LOOPAGAIN = T
   while (LOOPAGAIN){
     tblsPre <- lapply(fwTbls, get, envir=.GlobalEnv)
     precnt = sum(sapply(tblsPre, NROW))
-    
+    browser()  
     if (!is.null(sum_doc_defn_id)) SUM_DOCS <- subset(SUM_DOCS, SUM_DOC_DEFN_ID %in% sum_doc_defn_id)
     if (!is.null(sum_doc_id))      SUM_DOCS <- subset(SUM_DOCS, SUM_DOC_ID %in% sum_doc_id)
-
-    
     if (!is.null(licences)){
       MARFLEETS_LIC        <- subset(MARFLEETS_LIC, LICENCE_ID %in% licences)
       VR_FRESHWATER        <- subset(VR_FRESHWATER, LICENCE_ID %in% licences)
