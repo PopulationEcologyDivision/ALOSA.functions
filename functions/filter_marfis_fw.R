@@ -60,7 +60,6 @@ filter_marfis_fw <- function(years = NULL,
   while (LOOPAGAIN){
     tblsPre <- lapply(fwTbls, get, envir=.GlobalEnv)
     precnt = sum(sapply(tblsPre, NROW))
-    browser()  
     if (!is.null(sum_doc_defn_id)) SUM_DOCS <- subset(SUM_DOCS, SUM_DOC_DEFN_ID %in% sum_doc_defn_id)
     if (!is.null(sum_doc_id))      SUM_DOCS <- subset(SUM_DOCS, SUM_DOC_ID %in% sum_doc_id)
     if (!is.null(licences)){
