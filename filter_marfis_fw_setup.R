@@ -27,10 +27,10 @@ CXN <- ROracle::dbConnect(DBI::dbDriver("Oracle"), oracle.username, oracle.passw
 fw.data.dir <- "C:/Users/McMahonM/OneDrive - DFO-MPO/Support/Individuals/BillardM/fwData"
 
 YEARS  <- NULL
-SUM_DOC_ID <- NULL
 LICENCE <- NULL
-DOC_SERIAL  <- NULL
+SUM_DOC_ID <- NULL
 SD_LOG_ID  <- NULL
+DOC_SERIAL  <- NULL
 GEAR_CODE <- NULL
 
 if (F){
@@ -56,6 +56,7 @@ if (!exists("bkup")){
              "SD_LOGS",
              "SUM_DOCS",
              "VR_FRESHWATER")
+  
   Mar.utils::get_data_tables(cxn = CXN, schema = "MARFISSCI", data.dir = fw.data.dir, tables = fwTbls, quietly = FALSE, fuzzyMatch=FALSE)
   bkup <- lapply(fwTbls, function(x) get(x))
   names(bkup) <- fwTbls
@@ -63,7 +64,7 @@ if (!exists("bkup")){
   list2env(bkup, envir = globalenv())
 }
 
-filter_marfis_fw(fwTbls=fwTbls, years = YEARS, spp = 350, sum_doc_defn_id = 11, 
+filter_marfis_fw(years = YEARS, spp = 350, sum_doc_defn_id = 11, 
                  licences = LICENCE, 
                  sum_doc_id = SUM_DOC_ID, 
                  doc_serial_num = DOC_SERIAL, 
