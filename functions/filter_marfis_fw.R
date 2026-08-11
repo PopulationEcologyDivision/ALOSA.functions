@@ -54,8 +54,8 @@ filter_marfis_fw <- function(years = NULL,
              "SD_LOGS",
              "SUM_DOCS",
              "VR_FRESHWATER")
-
-   message("filtering")
+  
+  message("filtering")
   LOOPAGAIN = T
   while (LOOPAGAIN){
     tblsPre <- lapply(fwTbls, get, envir=.GlobalEnv)
@@ -116,7 +116,6 @@ filter_marfis_fw <- function(years = NULL,
     LICENCE_PARTICIPANTS <- subset(LICENCE_PARTICIPANTS, FIN %in% PARTICIPANTS$FIN)
     MARFLEETS_LIC        <- subset(MARFLEETS_LIC, LICENCE_ID %in% LICENCE_PARTICIPANTS$LICENCE_ID)
     COMMUNITIES          <- subset(COMMUNITIES, COMMUNITY_CODE %in% SUM_DOCS$COMMUNITY_CODE)
-
     
     tblsPost <- lapply(fwTbls, get, envir=.GlobalEnv)
     postcnt =  sum(sapply(tblsPost, NROW))
@@ -142,3 +141,4 @@ filter_marfis_fw <- function(years = NULL,
   assign("VR_FRESHWATER", VR_FRESHWATER, envir = .GlobalEnv)
   
 }    
+

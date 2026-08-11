@@ -440,8 +440,8 @@ mtext("Number of Fish (1000s)",2, outer=T,cex=1.5)
 ```{r ageplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyears=c(2016,2018,2019,2021)
 
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
-                  believeNRows=FALSE) 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE)  
 sql <- "SELECT * FROM ALOSA_FISH_AGE_DATA
                    LEFT JOIN ALOSA_FISH_BIO_DATA ON
                       ALOSA_FISH_BIO_DATA.FISH_ID= ALOSA_FISH_AGE_DATA.FISH_ID AND

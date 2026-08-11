@@ -27,13 +27,8 @@ current_year <- 2026
 source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 
-channel <- dbConnect(
-  DBI::dbDriver("Oracle"),
-  username = "GASPEREA",
-  password = "_REMOVED",
-  "PTRAN",
-  believeNRows = FALSE
-  )
+channel <- dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE) 
 
 # Useful to remember for plots
 #RColorBrewer::display.brewer.all()

@@ -21,9 +21,6 @@ if (file.exists(file_path)) {
     
     message("Updating the MARFIS pull")
     
-    # Connect to MARFIS db and pull
-    oracle.password <- "_REMOVED"
-    oracle.username <- "BILLARDM"
     
     channel <- dbConnect(
       DBI::dbDriver("Oracle"),
@@ -44,9 +41,6 @@ if (file.exists(file_path)) {
   message("MARFIS pull not found")
   message("Pulling data from MARFIS ...")
   
-  # Connect to MARFIS db and pull
-  oracle.password <- "_REMOVED"
-  oracle.username <- "BILLARDM"
   
   channel <- dbConnect(
     DBI::dbDriver("Oracle"),

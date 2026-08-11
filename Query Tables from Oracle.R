@@ -19,7 +19,7 @@ env <- attach(NULL, name = "myfunctions")
 source("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/functions.R",local=env)
 #-------------------------------------------------------------------------------
 #Set account name, password, and server
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 #-------------------------------------------------------------------------------
 # Forgot the Site_ID numbers? No worries, make yourself a reference.
