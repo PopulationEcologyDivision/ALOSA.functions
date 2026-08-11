@@ -28,7 +28,7 @@ df$age.mat<-df$age-df$spawns+1
 df<-df[df$age.mat>1 & df$age.mat<7,]
 
 
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 agedat<-get.age.data(year = 2021, siteID = 2, sppID = 3501, AgeStructure = T, channel = channel)
 

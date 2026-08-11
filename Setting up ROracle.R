@@ -17,20 +17,9 @@ devtools::find_rtools()
 require("ROracle") 
 
 
-ora.use="GASPEREA" 
-ora.pass="_REMOVED"
-ora.base="PTRAN"
-channel=dbConnect(DBI::dbDriver("Oracle"), ora.use, ora.pass, ora.base, believeNRows=FALSE) 
 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , believeNRows=FALSE) 
 
-
-#NOTE: In the above example, the connection parameters were defined in an R profile document as follows: 
-  
-ora.use="GASPEREA" 
-  
-ora.pass="_REMOVED"
-  
-ora.base="PTRAN"
 
 
 dbWriteTable(connection, 'IRIS', 

@@ -664,7 +664,7 @@ mtext(
 ```{r ageplot1,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyear=2019
 
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 sqlA <- "SELECT * FROM ALOSA_FISH_AGE_DATA
                    LEFT JOIN ALOSA_FISH_BIO_DATA ON
@@ -757,8 +757,8 @@ legend("topright",legend=c("First","Second","Third","Fourth"),
 ```{r ageplot2,echo=FALSE, fig.width = 7.5,fig.height = 9}
 plotyears=c(2021,2022)
 
-channel=dbConnect(DBI::dbDriver("Oracle"), "GASPEREA", "_REMOVED", "PTRAN" , 
-                  believeNRows=FALSE) 
+channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE)  
 sql <- "SELECT * FROM ALOSA_FISH_AGE_DATA
                    LEFT JOIN ALOSA_FISH_BIO_DATA ON
                       ALOSA_FISH_BIO_DATA.FISH_ID= ALOSA_FISH_AGE_DATA.FISH_ID AND
