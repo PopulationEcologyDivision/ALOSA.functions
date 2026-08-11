@@ -12,7 +12,7 @@ sourcery()
 channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 
-count.data<-onespecies.river.escapement(fixtime=T,database=T,year=2025,site=3,channel=channel)
+count.data<-onespecies.river.escapement(fixtime=T,database=T,year=2026,site=3,channel=channel)
 #bio.data<-get.bio.data(year=2023,siteID = 3,sppID=3501, channel)
 age.data<-get.age.data(year=2025,siteID = 3,sppID=3501, AgeStructure = T, PrimaryAger="Y", channel)
 
@@ -48,7 +48,7 @@ table(age.datam$CURRENT_AGE,age.datam$PREVIOUS_SPAWNS)
 table(age.dataf$CURRENT_AGE,age.dataf$PREVIOUS_SPAWNS)
 
 ##look at mean weight by year two ways
-year<-2025
+year<-2026
 
 count.data<-onespecies.river.escapement(fixtime = T,
                                         downstream.migration = F,
