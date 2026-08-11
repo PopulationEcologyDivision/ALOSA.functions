@@ -5,8 +5,9 @@
 # This should be added in in the future.
 #
 # Inputs:
-#        - filename: filename where escapement counts are
+#        - count.data: R dataframe of counts, OR filename where escapement counts are
 #        - fixtime=F: default is F but use T if the minutes/seconds columns are present
+#        - downstream.migration=F: if true sets all up-down=Total that are negative to 0
 #        - database=T: pull count data from database instead of local file (prefered method)
 #        - year: use if database=T
 #        - site: use if database=T
@@ -25,8 +26,9 @@
 #     - dplyr package
 
 
-twospecies.river.escapement<-function(filename,
+twospecies.river.escapement<-function(count.data,
                                       fixtime=T,
+                                      downstream.migration=F,
                                       database=T,
                                       year,
                                       site,
@@ -48,8 +50,8 @@ twospecies.river.escapement<-function(filename,
     names(count.data)[9]<-"seconds"
   }
   if(database==F){
-    count.data=read.csv(filename,header=T,
-                        stringsAsFactors = F)
+    #read in count data if only given a filename
+    if(is.character(count.data)==T){count.data = read.csv(count.data, header = T, stringsAsFactors = F)}
     
     if(fixtime==F){
       goodnames=(c("year","mon","day","time","strata","count.upstream",
@@ -100,14 +102,19 @@ twospecies.river.escapement<-function(filename,
   ##create output list before forloop
   out<-list()
 
-  for (i in 1:2){
-    if(i==1){
+  for (sp in 1:2){
+    if(sp==1){
       data=alewife.count.data}
-    if(i==2){
+    if(sp==2){
       data=blueback.count.data}
     
   data$total=data$count.upstream-data$count.downstream
   #date conversion amalgamates month and year columns into one format
+  
+  #set all negative totals (due to downstream migration) to 0
+  if(downstream.migration==T){
+    data$total<-ifelse(data$total<0,0,data$total)
+  }
   
   if(fixtime==T){
     data$total=round((data$total/
@@ -337,13 +344,13 @@ twospecies.river.escapement<-function(filename,
   daily.summary$total<-round(daily.summary$total,digits=1)
   
   # if(i==1){
-  #  assign('daily.summary.A',daily.summary,envir = .GlobalEnv) 
+  #  assign('daily.summary.A',daily.summary,envir = .GlobalEnv)
   # }
   # if(i==2){
-  #   assign('daily.summary.B',daily.summary,envir = .GlobalEnv) 
+  #   assign('daily.summary.B',daily.summary,envir = .GlobalEnv)
   # }
-  # 
-  out[[i]]<-daily.summary
+
+  out[[sp]]<-daily.summary
   
   }
   

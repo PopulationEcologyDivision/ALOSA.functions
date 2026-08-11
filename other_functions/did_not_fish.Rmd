@@ -1,0 +1,72 @@
+```{r}
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+
+didnotfish |> 
+  mutate(
+    DNF = if_else(NIL_REPORT_FLAG == "N", FALSE, TRUE)
+  ) -> dnf
+
+dnf
+```
+
+```{r}
+lics <- readxl::read_excel("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx", sheet = 1)
+
+lics |> 
+  select(STATUS, LICENCE_ID = `Licence Id`, TYPE = `Licence Type Description (English)`, COUNTY = `County Name 1`, AREA = `Management Area Description (English)`) |> 
+  mutate(PROVINCE = if_else(str_detect(AREA, "NEW BRUNSWICK"), "NB", "NS")) |> 
+  mutate(COUNTY = str_remove(COUNTY, fixed("(NB)"))) |> 
+  mutate(LICENCE_ID = as.factor(LICENCE_ID)) -> lics_df
+
+lics_df
+```
+
+```{r}
+lics_df |> 
+  left_join(dnf, by = "LICENCE_ID") |> 
+  drop_na() |> 
+  distinct() |> 
+  group_by(LICENCE_ID, COUNTY, AREA, PROVINCE, YEAR) |>
+  # We need to do this to get rid of instances where there are conflicting DNF
+  # reports for the same licence for a year
+  summarise(DNF = any(DNF), .groups = "drop") |> 
+  #select(LICENCE_ID, TYPE, COUNTY, AREA, PROVINCE, YEAR, DNF) |> 
+  arrange(LICENCE_ID, YEAR) -> dnf_info
+
+dnf_info
+```
+
+```{r}
+dnf_info |> 
+  pivot_wider(names_from = YEAR, values_from = DNF)
+```
+
+```{r}
+dnf_info |>
+  filter(COUNTY != "4VWX TIDAL") |> 
+  group_by(AREA, PROVINCE, YEAR) |> 
+  count(DNF) -> dnf_plot
+
+dnf_plot
+```
+
+```{r}
+dnf_plot |> 
+  filter(AREA != "SOUTHERN NEW BRUNSWICK") |> 
+  #filter(YEAR != 2025) |> 
+  filter(YEAR %in% c(2015:2024)) |> 
+  ggplot(aes(YEAR, n, fill = DNF)) +
+  geom_col() +
+  facet_wrap(~ AREA, ncol = 2) +
+  theme_bw() +
+  labs(title = "DNF reporting for gaspereau licences in NS", x = "", y = "Number of DNF") +
+  scale_y_continuous(n.breaks = 10) +
+  theme(
+      axis.text.x = element_text(size = 9, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      axis.title.y = element_text(size = 14),
+      panel.grid = element_blank(),
+      legend.background = element_blank(),
+      plot.title = element_text(size = 16)
+    )
+```

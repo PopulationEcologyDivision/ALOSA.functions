@@ -1,0 +1,138 @@
+# Description:
+#
+# Inputs:
+# - countdata = the daily.summary object from escapement script for site
+#   produced by the onespecies.river.escapement.R function
+# - biodata = the csv containing the physical measurements for the site
+# - weekly = whether or not you want to use weeks of the year to do the weighing
+#   or not; useful for when weekends were not sampled i.e. 2024
+# - missingdays = days where no biodata are collected, calculated from function
+#   missing.days.R. should be NA if doing weekly
+# - mergedays = days near missingdays when data were collected, and the daily 
+#   weights from the missingdays are attributed to these mergedays
+#   eg 5 fish smapled on day 1, 0 on day 2, weights are day1 count+day2 count/5
+# - year = the year of the observations
+# - seed = any number, it allows the sampling to be pseudo-random
+# - nsamples = the number of scale samples we want to look at (arbitrary)
+# - species = "A" or "B" for alewife or blueback
+#
+# This function is used by: Assessment_Script_River_YEAR
+#
+# This functions uses: 
+
+ageing.selection.test <- function(
+    countdata, 
+    biodata,
+    weekly = FALSE,
+    year,
+    missingdays,
+    mergedays,
+    seed,
+    nsamples = 500,
+    species = "A"
+)
+  {
+  library(lubridate)
+  biodata$date <- make_date(year = biodata$year, month = biodata$mon, day = biodata$day)
+  countdata$date <- make_date(year = year, month = countdata$mon, day = countdata$day)
+  if(weekly == TRUE){
+    biodata$weekofyear <- epiweek(biodata$date) #needs to be epiweek so it starts on sunday
+    countdata$weekofyear <- epiweek(countdata$date)
+  }
+  if(weekly == FALSE){
+    biodata$dayofyear <- yday(biodata$date)
+    countdata$dayofyear <- yday(countdata$date)
+  }
+  # only sample data with scale samples
+  scaledata <- biodata[biodata$scale == "Y", ]
+  # take out the species you want if determined
+  if(species == "A"){
+    A.names = c("Alewife", "Alewife ", "A", "a", "alewife", "ale", "Ale", "ALE", "AL")
+    scaledata <- scaledata %>% filter(species %in% A.names)
+    print("Only sampling Alewives")
+  } else if (species == "B"){
+    B.names = c("Blueback Herring", "blueback herring", "Blueback", "blueback", "BBH", "b", "B", "bbh", "Bbh", "Bb", "BB", "bb")
+    scaledata <- scaledata %>% filter(species %in% B.names)
+    print("Only sampling Bluebacks")
+  } #else {print("Sampling both species")}
+  # see how many samples were collected for each week
+  if(weekly == TRUE){
+    n.sampled <- aggregate(scaledata$weekofyear, by = list(scaledata$weekofyear), FUN = function(x){length(x[!is.na(x)])})
+    colnames(n.sampled) = c("weekofyear", "n.sampled")
+    biodata.with.weights <- merge(biodata, n.sampled, by = "weekofyear", all.x = T)
+    mergedcountdata = aggregate(countdata$total, by = list(countdata$weekofyear), FUN = sum)
+    colnames(mergedcountdata) = c("weekofyear", "merged.number.up")
+    biodata.with.weights <- merge(biodata.with.weights, mergedcountdata[, c("weekofyear", "merged.number.up")], by = "weekofyear", all.x = T)
+  }
+  if(weekly == FALSE){
+    n.sampled <- aggregate(scaledata$dayofyear, by = list(scaledata$dayofyear), FUN = function(x){length(x[!is.na(x)])})
+    colnames(n.sampled) = c("dayofyear", "n.sampled")
+    biodata.with.weights <- merge(biodata, n.sampled, by = "dayofyear", all.x = T)
+    for(i in 1:length(missingdays)){
+      countdata$dayofyear[countdata$dayofyear==missingdays[i]] <- mergedays[i]
+    }
+    mergedcountdata = aggregate(countdata$total, by = list(countdata$dayofyear), FUN = sum)
+    colnames(mergedcountdata) = c("dayofyear", "merged.number.up")
+    biodata.with.weights <- merge(biodata.with.weights, mergedcountdata[, c("dayofyear", "merged.number.up")], by = "dayofyear", all.x = T)
+  }
+  biodata.with.weights$weighting <- biodata.with.weights$merged.number.up / biodata.with.weights$n.sampled
+  # Remove infinite values from the weighting column
+  biodata.with.weights$weighting[biodata.with.weights$weighting == Inf] <- 0
+  # sample
+  set.seed(seed)
+  ladd.sample <- data.frame(
+    sample(
+      biodata.with.weights$sample[biodata.with.weights$scale == 'Y'],
+      nsamples,
+      replace = F,
+      prob = biodata.with.weights$weighting[biodata.with.weights$scale == 'Y']
+    )
+  )
+  colnames(ladd.sample) <- ("sample")
+  ladd.sample$to.be.aged <- "Y"
+  ladd.sample <- ladd.sample[with(ladd.sample, order(sample)), ]
+  out <- merge(biodata.with.weights, ladd.sample, by = "sample", all.y = T)
+  # To get the number of fish that are to be used for aging and to compare this
+  # to the number of fish that actually were sampled that day to see if we are
+  # over sampling i.e. if the number to be aged is the same as the number that
+  # were sampled (or close to it)
+  scales_sampled_per_time_unit <- out
+  
+  if(species == "A"){out$species <- "A"}
+  if(species == "B"){out$species <- "B"}
+  # if(species == "both"){out$species <- NA}
+  out$current.age = NA
+  out$age.at.first.spawn = NA
+  out$age.structure.sample = "T"
+  out <- out[ , c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample")]
+  names(out) <- c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample")
+  out$replacementfor.which.sample = NA
+  print("Writing scales to be aged to csv file in working directory")
+  write.csv(
+    out,
+    file = paste("scales_to_age_", year, ".csv", sep = ""),
+    row.names = F,
+    na = ""
+  )
+  
+  # Check to see if we sampled correctly
+  
+  # Choose the time column based on what exists in the data
+  time_col <- if ("weekofyear" %in% names(scales_sampled_per_time_unit)) {
+    sym("weekofyear")
+  } else {
+    sym("dayofyear")
+  }
+  
+  # Group and summarise using the selected time column
+  scales_sampled_per_time_unit <- scales_sampled_per_time_unit |> 
+    group_by(!!time_col) |> 
+    summarise(
+      count_to_be_aged = sum(!is.na(to.be.aged)),
+      n_sampled = first(n.sampled),
+      .groups = "drop"
+    )
+  
+  assign("scales_sampled_per_time_unit", scales_sampled_per_time_unit, envir = .GlobalEnv)
+  # return(scales_sampled_per_time_unit)
+}

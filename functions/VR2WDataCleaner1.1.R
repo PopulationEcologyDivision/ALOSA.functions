@@ -225,6 +225,10 @@ if(length(intersect(rec.meta.merge$rec.serial,stew.data$rec.serial))==0)
 
 ##Updated 11-30-2021 Mark Billard
 ##need to identify which receivers are deployed multiple times in different spots in a year
+##put this check in to skip this section if no multiple deployments exist
+##otherwise it makes r a full dataframe of NAs that breaks everything (MB 09 2023)
+if(any(table(rec.meta.merge$rec.serial)>1)==TRUE)
+{
 multi.deployed.recs<-names(which(table(rec.meta.merge$rec.serial)>1))
 
 #sub out data from a rec deployed multiple times
@@ -241,7 +245,8 @@ for(i in 1:length(multi.deployed.recs))
                          r$Station.Name[1],r$Station.Name[2])
   t<-merge(t,r,by=c("rec.serial","Station.Name"))
   t.ls[[i]]<-t
-}
+} #closes for loop
+
 stew.data2<-do.call("rbind",t.ls) #take the list of dataframes of multideployed receivers and bind into on df
 
 #Sub out the compliment of the above data. This df can be straight merged on rec.serial
@@ -253,6 +258,9 @@ stew.data1<-merge(test1,rec.meta.merge,by="rec.serial")
 
 #combine the multideployed rec df, and the compliment of single deployed recs df
 stew.data<-rbind(stew.data1,stew.data2)
+} #closes if statement
+else
+{stew.data<-merge(stew.data,rec.meta.merge,by="rec.serial")}
 
 
 

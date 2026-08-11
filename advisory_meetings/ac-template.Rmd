@@ -1,0 +1,1401 @@
+This Rmarkdown document serves as a template for advisory committee meetings
+for the gaspereau fishery in Nova Scotia and SW New Brunswick
+
+# SETUP
+```{r chunk_options, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE, # Suppress warnings
+  message = FALSE, # Suppress messages
+  include = FALSE  # Suppress code print out
+)
+```
+
+```{r libraries}
+library(tidyverse) # For data manipulation packages
+library(DBI) # For connecting to databases
+library(ROracle) # For connecting to databases
+```
+
+# FUNCTIONS
+```{r}
+
+get_escapement <- function(year, site) {
+  
+  tryCatch({
+    df <- onespecies.river.escapement(
+      "dummy",
+      fixtime = FALSE,
+      database = TRUE,
+      year = year,
+      site = site,
+      channel = channel
+    )
+    
+    if (nrow(df) == 0) {
+      # Check if the returned data frame is empty
+      message(paste("Skipping year", year, "- No data found."))
+      return(NULL)
+    }
+    
+    df$year <- year
+    df$date <-
+      make_date(year = df$year,
+                month = df$mon,
+                day = df$day)
+    return(df)
+    
+  }, error = function(e) {
+    message(paste("Skipping year", year, "- Error:", e$message))
+    return(NULL)  # Return NULL when an error occurs
+    
+  })
+  
+}
+
+# Source all the functions so we can use them
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+```
+
+```{r location_and_year}
+# This is where you can select the region for which you are doing a report
+# YS = Yarmouth / Shelburne
+# QL = Queens / Lunenburg
+# GR = Gaspereau River
+# SWNB = Southwest New Brunswick
+#loc <- "YS"
+
+# Prompt user
+valid_choices <- c("YS", "QL", "GR", "SWNB")
+
+repeat {
+  loc <- readline(prompt = "Select a location (YS, QL, GR, SWNB): ")
+  if (loc %in% valid_choices) break
+  cat("Invalid choice. Please enter one of:", paste(valid_choices, collapse = ", "), "\n")
+}
+
+# We need to indicate province because KINGS and QUEENS counties are similar
+# between NB and NS
+prov <- if_else(loc %in% c("YS", "QL", "GR"), "NS", "NB")
+
+# Based on the value of "loc" above, we can determine which counties need to 
+# get hauled from the MARFIS database ("catch")
+if (loc == "YS") {counties = c("YARMOUTH COUNTY", "SHELBURNE COUNTY")}
+if (loc == "QL") {counties = c("QUEENS COUNTY", "LUNENBURG COUNTY")}
+if (loc == "GR") {counties = c("KINGS COUNTY")}
+if (loc == "SWNB") {counties = c("CHARLOTTE COUNTY", "SAINT JOHN COUNTY", "KINGS COUNTY", "QUEENS COUNTY", "SUNBURY COUNTY", "MULTI")}
+
+# Select the year
+year <- 2024
+
+# Set the value for converting a kilogram of weight into count of fish
+fish_conv <- 0.24
+```
+
+# OUTPUT FOLDER
+```{r}
+
+# Create the file path for the output folder for this year / area combination
+output_folder <- paste0("~/git/ALOSA.functions/advisory_meetings/", loc, "_", year, "_output")
+
+# Check to see if the folder already exists, if not, create it
+if (!dir.exists(output_folder)) {dir.create(output_folder)}
+
+```
+
+# LOAD MARFIS DATA
+```{r load_MARFIS_data, include=FALSE, warning=FALSE}
+# This is where we keep our MARFIS pulls
+file_path <- "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata"
+
+# Check if the MARFIS pull exists
+if (file.exists(file_path)) {
+  
+  # Get the last modification date of the MARFIS pull
+  file_date <- file.info(file_path)$mtime
+  
+  # Get the current date
+  current_date <- Sys.Date()
+  
+  # Prompt the user whether or not to update the MARFIS pull
+  response <- readline(prompt = paste0("The last MARFIS pull is from ", as.Date(file.info(file_path)$mtime), ". Would you like to update it? (y / n): "))
+  
+  # Process user response
+  if (tolower(response) == "y" | tolower(response) == "yes") {
+    
+    message("Updating the MARFIS pull")
+    
+    # Connect to MARFIS db and pull
+    oracle.password <- "_REMOVED"
+    oracle.username <- "BILLARDM"
+    
+    channel <- dbConnect(
+      DBI::dbDriver("Oracle"),
+      username = oracle.username,
+      password = oracle.password,
+      dbname = "PTRAN",
+      believeNRows = FALSE
+    )
+    
+    source("~/git/ALOSA.functions/MARFIS_all in one.R")
+    save(catch, didnotfish, licencerenewals, file = file_path)
+    
+  } else {
+  message(paste0("Using previous MARFIS pull from ", as.Date(file.info(file_path)$mtime)))
+  }
+  
+} else {
+  message("MARFIS pull not found")
+  message("Pulling data from MARFIS ...")
+  
+  # Connect to MARFIS db and pull
+  oracle.password <- "_REMOVED"
+  oracle.username <- "BILLARDM"
+  
+  channel <- dbConnect(
+    DBI::dbDriver("Oracle"),
+    username = oracle.username,
+    password = oracle.password,
+    dbname = "PTRAN",
+    believeNRows = FALSE
+  )
+  source("~/git/ALOSA.functions/MARFIS_all in one.R")
+  save(catch, didnotfish, licencerenewals, file = file_path)
+  message("Updated MARFIS pull saved")
+
+}
+
+# Load in the data
+load(file_path)
+message("MARFIS data loaded")
+
+# Clean the data
+message("Cleaning MARFIS data ...")
+# source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
+catch <- marfis_error_cleaner(
+  catch,
+  years = "all",
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+message("MARFIS data cleaned")
+
+# Convert any landings listed as pounds to kilograms
+# message("Converting catch units to kilograms ...")
+# catch <- convert.KGS(catch)
+# catch <- subset(catch, select = -FV_WEIGHT)
+# catch <- catch |> rename(FV_WEIGHT = KGS)
+# message("Units converted")
+
+```
+
+# LANDINGS
+```{r landings_and_licences}
+# Filter the catch data based on the criteria from location.
+# We keep all years of data here in case we want to plot data from multiple 
+# years later.
+
+catch |> 
+  # filter(YEAR == year) |> 
+  filter(PROVINCE == prov) |>
+  filter(COUNTY %in% counties) |> 
+  select(LICENCE_ID, COUNTY, RIVERNAME = RIVERNAME_CLEANED, YEAR, FV_DATE_FISHED, FV_HOURS_FISHED, GEAR = GEAR_DESCRIPTION, FV_GEAR_CODE, FV_WEIGHT) -> landings
+
+# Get some data about the individual licences reporting landings for the year
+landings |> 
+  filter(YEAR == year) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  select(LICENCE_ID, COUNTY, RIVERNAME, GEAR) |> 
+  arrange(LICENCE_ID) |> 
+  mutate(LICENCE_ID = as.factor(LICENCE_ID)) -> lics
+
+```
+
+```{r landings_by_area}
+# It is often more helpful to group the landings into areas instead of rivers.
+# This chunk aims to do that. Names will likely have to be added to this list
+# as new places could be fished in future years. These are some of the places
+# we have identified in prior years and the general groups (areas) that I have
+# put them in before. The groupings like Tusket, Annis, Argyle, etc can just
+# be made to have their own group in the mutate function with case_when; they
+# don't need a list of areas made before hand to make things easier like the
+# following do:
+
+if (loc == "YS") {
+  
+  # Areas
+  kiack_eel <- c("KIACK BROOK", "EEL LAKE", "BELLEVILLE")
+  
+  shel_county <- c(
+    "BAKERS FLATS",
+    "BARRINGTON",
+    "BLACK'S BROOK",
+    "CLYDE",
+    "DEXTER BROOK",
+    "JORDAN RIVER",
+    "PORT SAXON",
+    "ROSEWAY"
+  )
+  
+  yar_county_other <- c(
+    "ARCADIA",
+    "BEAVER RIVER",
+    "CHEBOGUE",
+    "CHEGGOGIN",
+    "DUNN",
+    "GRANVILLE",
+    "GREENVILLE",
+    "HIPSON'S BROOK",
+    "ISLAND POND",
+    "MELBOURNE",
+    "MILTON",
+    "OHIO MILLSTREAM",
+    "PEMBROKE",
+    "PEMBROOKE",
+    "PORCUPINE BROOK",
+    "PORT MAITLAND",
+    "PUBNICO",
+    "SANDFORD",
+    "SHORT BEACH",
+    "STINK PLANT",
+    "YARMOUTH HARBOUR"
+  )
+  
+  # Landings partitioned by areas defined above
+  landings |> 
+    mutate(
+      AREA = case_when(
+        RIVERNAME == "TUSKET" | RIVERNAME == "HUBBARDS POINT" ~ "TUSKET",
+        RIVERNAME == "ARGYLE" ~ "ARGYLE",
+        RIVERNAME == "ANNIS" ~ "ANNIS",
+        RIVERNAME %in% kiack_eel ~ "KIACK BROOK / EEL LAKE",
+        RIVERNAME %in% shel_county ~ "SHELBURNE COUNTY",
+        RIVERNAME %in% yar_county_other ~ "YARMOUTH COUNTY (OTHER)",
+        TRUE ~ NA_character_
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    distinct(LICENCE_ID, .keep_all = TRUE) |> 
+    count() |> 
+    arrange(desc(n)) -> temp1
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        RIVERNAME == "TUSKET" | RIVERNAME == "HUBBARDS POINT" ~ "TUSKET",
+        RIVERNAME == "ARGYLE" ~ "ARGYLE",
+        RIVERNAME == "ANNIS" ~ "ANNIS",
+        RIVERNAME %in% kiack_eel ~ "KIACK BROOK / EEL LAKE",
+        RIVERNAME %in% shel_county ~ "SHELBURNE COUNTY",
+        RIVERNAME %in% yar_county_other ~ "YARMOUTH COUNTY (OTHER)",
+        TRUE ~ RIVERNAME
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+    arrange(desc(FV_WEIGHT)) -> temp2
+  
+  left_join(temp2, temp1, by = c("YEAR", "AREA")) |> 
+    mutate(FV_WEIGHT = FV_WEIGHT / 1000) |> # get metric tonnes
+    arrange(YEAR, AREA) |> 
+    select(YEAR, AREA, n, FV_WEIGHT) -> landings_by_area
+  
+  rm(temp1, temp2)
+  
+  # Plot the data for last several years
+  landings_by_area |> 
+    filter(YEAR >= year - 4) |> 
+    filter(!(AREA == "UNKNOWN")) |> 
+    ungroup() |> # Need this for the reorder of the area factor
+    mutate(AREA = fct_reorder(AREA, FV_WEIGHT, .desc = FALSE)) |> 
+    ggplot(aes(YEAR, FV_WEIGHT, fill = AREA)) +
+    geom_col(colour = "grey20", alpha = 0.9) +
+    labs(
+      title = "Total annual reported landings of gaspereau for Yarmouth / Shelburne",
+      y = "Landings (mt)"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 900),
+      breaks = seq(0, 900, 100),
+      labels = scales::label_comma()
+    ) +
+    scale_fill_viridis_d(direction = 1) +
+    theme_bw() +
+    theme(
+      legend.position = "right",
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+  
+}
+
+if (loc == "QL") {
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "QUEENS COUNTY" ~ "QUEENS",
+        COUNTY == "LUNENBURG COUNTY" ~ "LUNENBURG",
+        TRUE ~ NA_character_
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    distinct(LICENCE_ID, .keep_all = TRUE) |> 
+    count() |> 
+    arrange(desc(n)) -> temp1
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "QUEENS COUNTY" ~ "QUEENS",
+        COUNTY == "LUNENBURG COUNTY" ~ "LUNENBURG",
+        TRUE ~ NA_character_
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+    arrange(desc(FV_WEIGHT)) -> temp2
+  
+  left_join(temp2, temp1, by = c("YEAR", "AREA")) |> 
+    mutate(FV_WEIGHT = FV_WEIGHT / 1000) |> # get metric tonnes
+    arrange(YEAR, AREA) |> 
+    select(YEAR, AREA, n, FV_WEIGHT) -> landings_by_area
+  
+  rm(temp1, temp2)
+  
+  # Plot the data for last several years
+  landings_by_area |> 
+    filter(YEAR >= year - 4) |> 
+    filter(!(AREA == "UNKNOWN")) |> 
+    ungroup() |> # Need this for the reorder of the area factor
+    mutate(AREA = fct_reorder(AREA, FV_WEIGHT, .desc = FALSE)) |> 
+    ggplot(aes(YEAR, FV_WEIGHT, fill = AREA)) +
+    geom_col(colour = "grey20", alpha = 0.9) +
+    labs(
+      title = "Total annual reported landings of gaspereau for Lunenburg / Queens",
+      y = "Landings (mt)"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 400),
+      breaks = seq(0, 400, 50),
+      labels = scales::label_comma()
+    ) +
+    scale_fill_viridis_d(direction = 1) +
+    theme_bw() +
+    theme(
+      legend.position = "right",
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+  
+}
+
+if (loc == "GR") {
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "KINGS COUNTY" ~ "KINGS",
+        TRUE ~ NA_character_
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    distinct(LICENCE_ID, .keep_all = TRUE) |> 
+    count() |> 
+    arrange(desc(n)) -> temp1
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "KINGS COUNTY" ~ "KINGS",
+        TRUE ~ NA_character_
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+    arrange(desc(FV_WEIGHT)) -> temp2
+  
+  left_join(temp2, temp1, by = c("YEAR", "AREA")) |> 
+    mutate(FV_WEIGHT = FV_WEIGHT / 1000) |> # get metric tonnes
+    arrange(YEAR, AREA) |> 
+    select(YEAR, AREA, n, FV_WEIGHT) -> landings_by_area
+  
+  rm(temp1, temp2)
+  
+  # Plot the data for last several years
+  landings_by_area |> 
+    filter(YEAR >= year - 4) |> 
+    filter(!(AREA == "UNKNOWN")) |> 
+    ungroup() |> # Need this for the reorder of the area factor
+    mutate(AREA = fct_reorder(AREA, FV_WEIGHT, .desc = FALSE)) |> 
+    ggplot(aes(YEAR, FV_WEIGHT, fill = AREA)) +
+    geom_col(colour = "grey20", alpha = 0.7) +
+    labs(
+      title = "Total annual reported landings of gaspereau for Gaspereau River",
+      y = "Landings (mt)"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 500),
+      breaks = seq(0, 500, 50),
+      labels = scales::label_comma()
+    ) +
+    scale_fill_viridis_d(direction = -1) +
+    theme_bw() +
+    theme(
+      legend.position = "none",
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+  
+}
+
+if (loc == "SWNB") {
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "CHARLOTTE COUNTY"  ~ "CHARLOTTE",
+        COUNTY == "SAINT JOHN COUNTY"  ~ "SAINT JOHN",
+        COUNTY == "MULTI" ~ "MULTI",
+        COUNTY == "KINGS COUNTY"  ~ "KINGS",
+        COUNTY == "QUEENS COUNTY"  ~ "QUEENS",
+        COUNTY == "SUNBURY COUNTY"  ~ "SUNBURY",
+        TRUE ~ RIVERNAME
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    distinct(LICENCE_ID, .keep_all = TRUE) |> 
+    count() |> 
+    arrange(desc(n)) -> temp1
+  
+  landings |> 
+    mutate(
+      AREA = case_when(
+        COUNTY == "CHARLOTTE COUNTY"  ~ "CHARLOTTE",
+        COUNTY == "SAINT JOHN COUNTY"  ~ "SAINT JOHN",
+        COUNTY == "MULTI" ~ "MULTI",
+        COUNTY == "KINGS COUNTY"  ~ "KINGS",
+        COUNTY == "QUEENS COUNTY"  ~ "QUEENS",
+        COUNTY == "SUNBURY COUNTY"  ~ "SUNBURY",
+        TRUE ~ RIVERNAME
+        )
+    ) |> 
+    group_by(AREA, YEAR) |> 
+    summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+    arrange(desc(FV_WEIGHT)) -> temp2
+  
+  left_join(temp2, temp1, by = c("YEAR", "AREA")) |> 
+    mutate(FV_WEIGHT = FV_WEIGHT / 1000) |> # get metric tonnes
+    arrange(YEAR, AREA) |> 
+    select(YEAR, AREA, n, FV_WEIGHT) -> landings_by_area
+  
+  rm(temp1, temp2)
+  
+  # Plot the data for last several years
+  landings_by_area |> 
+    filter(YEAR >= year - 4) |> 
+    filter(!(AREA == "UNKNOWN")) |> 
+    ungroup() |> # Need this for the reorder of the area factor
+    mutate(AREA = fct_reorder(AREA, FV_WEIGHT, .desc = FALSE)) |> 
+    ggplot(aes(YEAR, FV_WEIGHT, fill = AREA)) +
+    geom_col(colour = "grey20", alpha = 0.7) +
+    labs(
+      title = "Total annual reported landings of gaspereau for Southwest NB",
+      y = "Landings (mt)"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 3500),
+      breaks = seq(0, 3500, 500),
+      labels = scales::label_comma()
+    ) +
+    scale_fill_viridis_d(direction = -1) +
+    theme_bw() +
+    theme(
+      legend.position = "right",
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+  
+}
+
+ggsave(paste0(output_folder, "/landings_by_area.png"), width = 9, height = 6, units = c("in"))
+
+```
+
+```{r landings_by_area_table}
+landings_by_area |> 
+  filter(YEAR == year) |> 
+  mutate(FISH = round(FV_WEIGHT * 1000 / fish_conv, -3)) |> 
+  mutate(FV_WEIGHT = round(FV_WEIGHT)) |> 
+  arrange(desc(FV_WEIGHT)) -> landings_by_area_csv
+
+write_csv(landings_by_area_csv, paste0(output_folder, "/landings_by_area.csv"))
+```
+
+# REPORTING RATE
+
+```{r reporting_rate}
+# Need more information on what licences exist and where they exist before 
+# we can create something standardised here
+```
+
+# ESCAPEMENT (YS & GR ONLY)
+```{r lake_vaughan_escapement}
+# Connect to GASPEREA db for this part
+oracle.password.GASP <- "_REMOVED"
+oracle.username.GASP <- "GASPEREA"
+
+# Set up the connection to the database
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  username = oracle.username.GASP,
+  password = oracle.password.GASP,
+  dbname = "PTRAN",
+  believeNRows = FALSE
+)
+
+# Species split for bluebacks --------------------------------------------------
+# We use this to get the 
+# We us a linear interpolation to inform the species split function how to 
+# partition the observations of escapement into each species.
+
+if (loc == "YS") {
+  
+  proportions <- split_species(
+    year = year,
+    siteID = 2,
+    channel = channel
+  )
+  
+}
+
+if (loc == "GR") {
+  
+  proportions <- split_species(
+    year = year,
+    siteID = 3,
+    channel = channel
+  )
+  
+}
+
+# Use padr to "pad" the data set with NAs where we are missing observations. 
+# We can flag which data were observed and which were modeled.
+# We are using licear interpolation because the GLM gives positive values for
+# blueback proportions early in the season when we know they are not there.
+
+if (loc == "GR" | loc == "YS") {
+  
+  pp <- padr::pad(proportions, interval = "day")
+  pp$observation <- is.na(pp$total_fish)
+  pp <- pp |> mutate(observation = if_else(observation == TRUE, "Modeled", "Observed"))
+  pp <- pp |> select(date, BBprop, observation)
+  pp <- imputeTS::na_interpolation(pp |> select(date, BBprop, observation)) # Linear interpolation
+  pp$mon <- month(pp$date) # this column is needed by twospecies.river.escapement
+  pp$day <- day(pp$date) # this column is needed by twospecies.river.escapement
+
+  # Sanity check with plot -------------------------------------------------------
+  
+  pp |>
+    ggplot(aes(date, BBprop))+
+    geom_path(colour = "grey50", linewidth = 0.5, linetype = "dashed")+
+    geom_point(aes(fill = observation), shape = 21, colour = "black", size = 2)+
+    theme_bw()+
+    labs(
+      title = "Proportion of blueback herring in biodata with values for missing dates from GLM",
+      y = "Proportion of fish",
+      fill = "Estimate"
+    ) +
+    scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+    scale_y_continuous(
+      limits = c(0, 1),
+      breaks = seq(0, 1, by = .1),
+      labels = scales::comma
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+      plot.background = element_rect(fill = "grey95"),
+      axis.title.x = element_blank(),
+      legend.background = element_blank(),
+      legend.key = element_blank()
+    )
+  
+  ggsave(paste0(output_folder, "/blueback_estimates.png"), width = 9, height = 6, units = c("in"))
+
+}
+
+# Escapement estimates for Lake Vaughan and the Powerhouse ---------------------
+
+if (loc == "YS") {
+  
+  vd <- twospecies.river.escapement(
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = year,
+  site = 2,
+  species.split = pp,
+  channel = channel
+  )
+
+  vd_ale <- as.data.frame(vd[1])
+  vd_ale$species <- "Alewife"
+  vd_ale$location <- "Lake Vaughan"
+  
+  vd_bb <- as.data.frame(vd[2])
+  vd_bb$species <- "Blueback"
+  vd_bb$location <- "Lake Vaughan"
+  
+  ph <- twospecies.river.escapement(
+    path_to_counts_CSV,
+    fixtime = TRUE,
+    downstream.migration = FALSE,
+    database = TRUE,
+    year = 2024,
+    site = 14,
+    species.split = pp,
+    channel = channel
+  )
+  
+  ph_ale <- as.data.frame(ph[1])
+  ph_ale$species <- "Alewife"
+  ph_ale$location <- "Powerhouse"
+  
+  ph_bb <- as.data.frame(ph[2])
+  ph_bb$species <- "Blueback"
+  ph_bb$location <- "Powerhouse"
+  
+  # Bind the counts into a single dataframe
+  counts <- rbind(vd_ale, vd_bb, ph_ale, ph_bb)
+  
+}
+
+if (loc == "GR") {
+  # Put escapement script for GR here
+  
+  gr <- twospecies.river.escapement(
+    fixtime = TRUE,
+    downstream.migration = FALSE,
+    database = TRUE,
+    year = year,
+    site = 3,
+    species.split = pp,
+    channel = channel
+  )
+  
+  gr_ale <- as.data.frame(gr[1])
+  gr_ale$species <- "Alewife"
+  gr_ale$location <- "White Rock"
+  gr_bb <- as.data.frame(gr[2])
+  gr_bb$species <- "Blueback"
+  gr_bb$location <- "White Rock"
+  
+  counts <- rbind(gr_ale, gr_bb)
+
+}
+
+if (loc == "GR" | loc == "YS") {
+  
+  # Remove NAs and NaNs in the clow and chigh
+  counts <- counts %>% 
+    mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+  
+  # Add dates so we can plot the thing
+  counts <- counts |> 
+    mutate(date = make_date(year = 2024, month = mon, day = day)) |> 
+    select(date, location, species, total, clow, chigh)
+  
+}
+
+
+# Plot two species escapement --------------------------------------------------
+
+if (loc == "YS") {
+  
+  counts |>
+    group_by(location) |>
+    ggplot(aes(date, total, colour = species, fill = species))+
+    facet_wrap(~location, scales = "fixed", ncol = 1)+
+    geom_path(
+      data = counts |> filter(location == "Lake Vaughan"),
+      #aes(colour = location),
+      alpha = 0.7,
+      linewidth = 1.25
+    )+
+    geom_ribbon(
+      data = counts |> filter(location == "Lake Vaughan"),
+      aes(ymin = clow, ymax = chigh),
+      alpha = 0.5
+    )+
+    geom_path(
+      data = counts |> filter(location == "Powerhouse"),
+      #aes(colour = location),
+      alpha = 0.7,
+      linewidth = 1.25
+    )+
+    geom_ribbon(
+      data = counts |> filter(location == "Powerhouse"),
+      aes(ymin = clow, ymax = chigh),
+      alpha = 0.5
+    )+
+    theme_bw() +
+    labs(
+      title = paste("Daily escapement estimates for gaspereau on the Tusket River in", year),
+      y = "Escapement (fish / day)",
+      colour = "Species",
+      fill = "Species"
+      )+
+    scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
+    scale_y_continuous(
+      limits = c(0, max(counts$chigh)),
+      breaks = seq(0, max(counts$chigh), by = 2e4),
+      labels = scales::comma
+    )+
+    theme(
+      axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 12),
+      axis.text.y = element_text(size = 12),
+      axis.title.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.minor.y = element_blank()
+    )
+  
+}
+
+if (loc == "GR") {
+  
+  counts |>
+  group_by(location) |>
+  ggplot(aes(date, total, colour = species, fill = species))+
+  geom_path(
+    alpha = 0.7,
+    linewidth = 1.25
+  )+
+  geom_ribbon(
+    aes(ymin = clow, ymax = chigh),
+    alpha = 0.5
+  )+
+  theme_bw() +
+  labs(
+    title = paste("Daily escapement estimates for gaspereau on Gaspereau River in", year),
+    y = "Escapement (fish / day)",
+    colour = "Species",
+    fill = "Species"
+    )+
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
+  scale_y_continuous(
+    limits = c(0, max(counts$chigh * 1.2)),
+    breaks = seq(0, max(counts$chigh * 1.2), by = 1e4),
+    labels = scales::comma
+  )+
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
+  
+}
+
+  ggsave(paste0(output_folder, "/two_species_escapement.png"), width = 9, height = 6, units = c("in"))
+
+# Species escapement values ----------------------------------------------------
+
+if (loc == "GR" | loc == "YS") {
+  
+  counts |> 
+  group_by(species, location) |> 
+  summarise(total = sum(total)) -> species_escapement_by_site
+  
+  write_csv(species_escapement_by_site, paste0(output_folder, "/species_escapement_by_site.csv"))
+  
+}
+```
+
+# STOCK STATUS (YS & GR ONLY)
+
+```{r exploitation_rates}
+
+if (loc == "YS") {
+  
+  # Total Tusket landings as count of fish -------------------------------------
+  landings |>
+    filter(YEAR == year) |> 
+    filter(RIVERNAME == "TUSKET") |> 
+    summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+    mutate(FISH_CAUGHT = FV_WEIGHT / fish_conv) -> fish_caught
+  
+  fish_caught <- fish_caught$FISH_CAUGHT
+  
+  # Total fish escaped ---------------------------------------------------------
+  counts |> 
+    summarise(FISH_ESCAPED = sum(total)) -> fish_escaped
+  
+  fish_escaped <- fish_escaped$FISH_ESCAPED
+  
+  # Total bluebacks escaped ----------------------------------------------------
+  counts |> 
+    filter(species == "Blueback") |> 
+    summarise(total_escaped = sum(total)) -> blueback_escaped
+  
+  blueback_escaped <- blueback_escaped$total_escaped
+  
+  # Total alewives escaped -----------------------------------------------------
+  alewives_escaped <- fish_escaped - blueback_escaped
+  
+  # Blueback catch -------------------------------------------------------------
+  
+  # I am creating two new dataframes from the proportions data frame, one for
+  # each of the gear types. The bluebacks arrive seven days prior to our first
+  # observation at the gill netters and three days prior to the dippers. To make 
+  # the catches use the correct proportion I offset the dates for each gear type.
+  
+  gill_bb_props <- pp |> 
+    select(date, BBprop) |> 
+    mutate(date = date - 7) |> 
+    rename(FV_DATE_FISHED = date)
+
+  dip_bb_props <- pp |> 
+    select(date, BBprop) |> 
+    mutate(date = date - 3) |> 
+    rename(FV_DATE_FISHED = date)
+
+  # The date of our first blueback observation was on May 23, so catches one week
+  # prior to this onward need to be considered for blueback catches for gill
+  # netters and three days prior for dippers
+  landings |>
+    filter(YEAR == 2024 & RIVERNAME == "TUSKET" & GEAR == "GILL NET (SET OR FIXED)") |> 
+    filter(FV_DATE_FISHED >= date("2024-05-23") - 7) |> # 7 days for gill nets
+    filter(!(LICENCE_ID %in% c(120318, 120330))) |> # need to remove these problematic licences
+    left_join(gill_bb_props, by = "FV_DATE_FISHED") |> 
+    select(FV_DATE_FISHED, FV_WEIGHT, BBprop) |>
+    mutate(
+      CATCH_FISH = FV_WEIGHT / fish_conv, 
+      BB_CATCH_FISH = CATCH_FISH * BBprop
+      ) |> 
+    summarise(BB_CATCH_FISH = sum(BB_CATCH_FISH)) -> tusket_gill
+
+  landings |>
+    filter(YEAR == 2024 & RIVERNAME == "TUSKET" & GEAR == "DIP NET") |> 
+    filter(FV_DATE_FISHED >= date("2024-05-23") - 3) |> # 3 days for dip nets
+    left_join(gill_bb_props, by = "FV_DATE_FISHED") |> 
+    select(FV_DATE_FISHED, FV_WEIGHT, BBprop) |> 
+    mutate(
+      CATCH_FISH = FV_WEIGHT / fish_conv, 
+      BB_CATCH_FISH = CATCH_FISH * BBprop
+      ) |> 
+    summarise(BB_CATCH_FISH = sum(BB_CATCH_FISH)) -> tusket_dip
+  
+  # Add the two figures together to get the estimate of total bluebacks caught
+  bluebacks_caught <- tusket_dip$BB_CATCH_FISH + tusket_gill$BB_CATCH_FISH
+
+}
+
+if (loc == "GR") {
+  
+  # Add code here to calculate the blueback catch in GR
+ 
+}
+
+if (loc == "YS" | loc == "GR") {
+  
+  # Blueback exploitation rate ---------------------------------------------------
+  blueback_ER <- bluebacks_caught / (bluebacks_caught + blueback_escaped)
+  
+  # Alewives exploitation rate ---------------------------------------------------
+  alewives_caught <- fish_caught - bluebacks_caught
+  alewive_ER <- alewives_caught / (alewives_escaped + alewives_caught)
+  
+  # Total exploitation rate ------------------------------------------------------
+  total_ER <- fish_caught / (fish_caught + fish_escaped)
+  
+  # Table of ERs -----------------------------------------------------------------
+  ER <- tibble(
+    alewives = alewive_ER,
+    bluebacks = blueback_ER,
+    total = total_ER
+  )
+  
+  # Summary for "river summaries all years" CSV
+  
+  tibble(
+    year = c(year, year, year),
+    species = c("All", "A", "B"),
+    escaped = c(fish_escaped, alewives_escaped, blueback_escaped),
+    caught = c(fish_caught, alewives_caught, bluebacks_caught),
+    total = escaped + caught,
+    ER = c(ER$total, ER$alewives, ER$bluebacks),
+    river = rep(if_else(loc == "YS", "Tusket", "Gaspereau"), 3)
+    ) -> summary_table
+  
+  write_csv(summary_table, paste0(output_folder, "/summary_table.csv"))
+  
+}
+
+```
+
+```{r YS_stock_status_plot}
+
+if (loc == "YS") {
+  
+  # NOTE: this is going to need some work, specifically on the powerhouse data
+  # if we are to get this to run smoothly every year without having to provide CSV
+  # data to it
+  
+  # Get landings for tusket for years >= 2021 ------------------------------------
+  
+  landings |> 
+    filter(RIVERNAME == "TUSKET") |> 
+    filter(YEAR >= 2021) |> 
+    mutate(
+      # Name the gear nicer names
+      GEAR = case_when(str_detect(GEAR, "DIP") ~ "DIP NET", TRUE ~ GEAR),
+      # Some times the gill nets are mislabeled as SQUARE
+      GEAR = case_when(str_detect(GEAR, "SQUARE") ~ "GILL NET (SET OR FIXED)", TRUE ~ GEAR)
+      ) |>
+    mutate(
+      YEAR = as.factor(YEAR),
+      GEAR = as.factor(GEAR)
+      ) |>
+    group_by(YEAR) |>
+    summarise(TOTAL_FISH_CAUGHT = sum(FV_WEIGHT) / fish_conv) -> tusket
+  
+  # Get escapement for multiple years --------------------------------------------
+  
+  # For Lake Vaughan
+  escapement_df <- data.frame()
+  
+  for (year_i in c(2021:year)){
+    
+    df <- get_escapement(year_i, site = 2)
+    
+    escapement_df <- rbind(escapement_df, df)
+    
+  }
+  
+  escapement_df <- escapement_df |>
+    select(year, date, total_esc = total, sd, clow, chigh)
+  
+  escapement_df$location <- "Lake Vaughan"
+  
+  # For Powerhouse
+  
+  # I do the powerhouse data this way because getting it to work from the database
+  # is not fun, so it's from CSV for now
+  
+  ph_2022 <- onespecies.partial.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts/Powerhouse Count Sheet Cleaned 2022.csv",
+    fixtime = FALSE,
+    database = FALSE,
+    2022,
+    14,
+    channel
+  )
+  
+  ph_2023 <- onespecies.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets/Powerhouse 2023 count data1.csv",
+    fixtime = FALSE,
+    downstream.migration = FALSE,
+    database = FALSE,
+    2023,
+    14,
+    channel
+  )
+  
+  ph_2024 <- onespecies.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv",
+    fixtime = TRUE,
+    downstream.migration = FALSE,
+    database = TRUE,
+    2024,
+    14,
+    channel
+  )
+  
+  ph_2022$year <- "2022"
+  ph_2023$year <- "2023"
+  ph_2024$year <- "2024"
+  
+  ph <- rbind(ph_2022, ph_2023, ph_2024)
+  ph$location <- "Powerhouse"
+  ph$date <- make_date(year = ph$year, month = ph$mon, day = ph$day)
+  ph <- ph |> select(year, date, total_esc = total, sd, clow, chigh, location)
+  
+  # Combine locations, summarise data, and plot ----------------------------------
+  escaped <- rbind(escapement_df, ph)
+  
+  # Group by date and sum the escapement
+  escaped <- escaped |>
+    group_by(year) |>
+    summarise(total_esc = sum(total_esc)) |>
+    mutate(YEAR = as.factor(year)) |>
+    rename(TOTAL_ESC = total_esc) |>
+    select(YEAR, TOTAL_ESC)
+  
+  # Join the catch data and escapement data into a single table
+  tusket |>
+    left_join(escaped, by = "YEAR") |>
+    group_by(YEAR) |>
+    mutate(ER = TOTAL_FISH_CAUGHT / (TOTAL_FISH_CAUGHT + TOTAL_ESC)) |> 
+    mutate(ESC_USR = TOTAL_ESC / 3.098e6) |>
+    mutate(MU = ER / 0.53) -> status
+  
+  # Make the status plot
+  status |>
+    ggplot(aes(ESC_USR, MU, shape = YEAR)) +
+    geom_point(size = 4, colour = "grey30")+
+    theme_bw() +
+    labs(
+      title = "Stock status",
+      # y = expression("µ / µ"["RR"]),
+      y = expression(mu / mu[RR]),
+      x = expression("Esc / Esc"["USR"]),
+      shape = "YEAR"
+      ) +
+    scale_x_continuous(limits = c(0, 1.6), breaks = seq(0, 1.6, 0.2)) +
+    scale_y_continuous(limits = c(0, 1.6), breaks = seq(0, 1.6, 0.2)) +
+    # first vertical line
+    geom_vline(xintercept = 2.086e6 / 3.098e6, linetype = "dotted", size = 3/5) +
+    # second vertical line
+    geom_vline(xintercept = 1, linetype = "dotted", size = 3/5) +
+    # first horizontal line
+    geom_hline(yintercept = 0.35 / 0.53, linetype = "dotted", size = 3/5) +
+    # second horizontal line
+    geom_hline(yintercept = 1, linetype = "dotted", size = 3/5) +
+    # right hand side labels
+    annotate("text", x = 0.32, y = 1.6,  label = "Critical", size = 5) +
+    annotate("text", x = 0.84, y = 1.6,  label = "Cautious", size = 5) +
+    annotate("text", x = 1.4,  y = 1.6,  label = "Healthy", size = 5) +
+    # labels on top
+    annotate("text", x = 1.6,  y = 1.3,  label = "Over \n exploited", angle = 90, size = 5) +
+    annotate("text", x = 1.6,  y = 0.82, label = "Fully \n exploited", angle = 90, size = 5) +
+    annotate("text", x = 1.6,  y = 0.3,  label = "Partially \n exploited", angle = 90, size = 5) +
+    theme(
+      plot.title = element_text(size = 18),
+      axis.title.y = element_text(size = 16),
+      axis.title.x = element_text(size = 16),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      legend.text = element_text(size = 12)
+    )
+  
+  ggsave(paste0(output_folder, "/stock_status.png"), width = 9, height = 6, units = c("in"))
+  
+}
+
+```
+
+```{r GR_stock_status_plot}
+
+if (loc == "GR") {
+  
+  # Get landings for Gaspereau River for years >= 2021 ---------------------------
+
+  landings |> 
+    filter(RIVERNAME == "GASPEREAU") |> 
+    filter(YEAR >= 2021) |>
+    mutate(YEAR = as.factor(YEAR)) |>
+    group_by(YEAR) |>
+    summarise(TOTAL_FISH_CAUGHT = sum(FV_WEIGHT) / fish_conv) -> gaspereau
+  
+  # For Lake Vaughan
+  escaped <- data.frame()
+  
+  for (year_i in c(2021:year)){
+    
+    df <- get_escapement(year_i, site = 3)
+    
+    escaped <- rbind(escaped, df)
+    
+  }
+  
+  escaped <- escaped |>
+    select(year, date, total_esc = total, sd, clow, chigh)
+  
+  escaped$location <- "White Rock"
+  
+  
+  # Summarise data, and plot ----------------------------------
+  
+  # Group by date and sum the escapement
+  escaped <- escaped |>
+    group_by(year) |>
+    summarise(total_esc = sum(total_esc)) |>
+    mutate(YEAR = as.factor(year)) |>
+    rename(TOTAL_ESC = total_esc) |>
+    select(YEAR, TOTAL_ESC)
+  
+  # Join the catch data and escapement data into a single table
+  gaspereau |>
+    left_join(escaped, by = "YEAR") |>
+    group_by(YEAR) |>
+    mutate(ER = TOTAL_FISH_CAUGHT / (TOTAL_FISH_CAUGHT + TOTAL_ESC)) |> 
+    mutate(ESC_USR = TOTAL_ESC / 3.098e6) |>
+    mutate(MU = ER / 0.53) -> status
+  
+  # Make the status plot
+  # status |>
+  #   ggplot(aes(ESC_USR, MU, shape = YEAR)) +
+  #   geom_point(size = 4, colour = "grey30")+
+  #   theme_bw() +
+  #   labs(
+  #     title = "Stock status",
+  #     # y = expression("µ / µ"["RR"]),
+  #     y = expression(mu / mu[RR]),
+  #     x = expression("Esc / Esc"["USR"]),
+  #     shape = "YEAR"
+  #     ) +
+  #   scale_x_continuous(limits = c(0, 1.6), breaks = seq(0, 1.6, 0.2)) +
+  #   scale_y_continuous(limits = c(0, 1.6), breaks = seq(0, 1.6, 0.2)) +
+  #   geom_vline(xintercept = 2.086e6 / 3.098e6, linetype = "dotted", size = 3/5) +
+  #   geom_vline(xintercept = 1, linetype = "dotted", size = 3/5) +
+  #   geom_hline(yintercept = 0.35 / 0.53, linetype = "dotted", size = 3/5) +
+  #   geom_hline(yintercept = 1, linetype = "dotted", size = 3/5) +
+  #   annotate("text", x = 0.32, y = 1.6,  label = "Critical", size = 5) +
+  #   annotate("text", x = 0.84, y = 1.6,  label = "Cautious", size = 5) +
+  #   annotate("text", x = 1.4,  y = 1.6,  label = "Healthy", size = 5) +
+  #   annotate("text", x = 1.6,  y = 1.3,  label = "Over \n exploited", angle = 90, size = 5) +
+  #   annotate("text", x = 1.6,  y = 0.82, label = "Fully \n exploited", angle = 90, size = 5) +
+  #   annotate("text", x = 1.6,  y = 0.3,  label = "Partially \n exploited", angle = 90, size = 5) +
+  #   theme(
+  #     plot.title = element_text(size = 18),
+  #     axis.title.y = element_text(size = 16),
+  #     axis.title.x = element_text(size = 16),
+  #     axis.text.x = element_text(size = 12),
+  #     axis.text.y = element_text(size = 12),
+  #     legend.text = element_text(size = 12)
+  #   )
+  
+}
+
+```
+
+# ESCAPEMENT HISTORICAL (YS & GR ONLY)
+
+```{r historical_escapement}
+
+if (loc == "YS") {
+  
+  # For Lake Vaughan
+  escapement_df <- data.frame()
+  
+  for (year_i in c(2014:year)){
+    
+    df <- get_escapement(year_i, site = 2)
+    
+    escapement_df <- rbind(escapement_df, df)
+    
+  }
+  
+  escapement_df <- escapement_df |>
+    select(year, date, total_esc = total, sd, clow, chigh)
+  
+  escapement_df$location <- "Lake Vaughan"
+
+  # For Powerhouse
+  
+  # I do the powerhouse data this way because getting it to work from the database
+  # is not fun, so it's from CSV for now
+  
+  ph_2022 <- onespecies.partial.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts/Powerhouse Count Sheet Cleaned 2022.csv",
+    fixtime = FALSE,
+    database = FALSE,
+    2022,
+    14,
+    channel
+  )
+  
+  ph_2023 <- onespecies.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2023/Data Sheets/Powerhouse 2023 count data1.csv",
+    fixtime = FALSE,
+    downstream.migration = FALSE,
+    database = FALSE,
+    2023,
+    14,
+    channel
+  )
+  
+  ph_2024 <- onespecies.river.escapement(
+    "R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/Data Sheets/Powerhouse 2024 count data.csv",
+    fixtime = TRUE,
+    downstream.migration = FALSE,
+    database = TRUE,
+    2024,
+    14,
+    channel
+  )
+  
+  ph_2022$year <- "2022"
+  ph_2023$year <- "2023"
+  ph_2024$year <- "2024"
+  
+  ph <- rbind(ph_2022, ph_2023, ph_2024)
+  ph$location <- "Powerhouse"
+  ph$date <- make_date(year = ph$year, month = ph$mon, day = ph$day)
+  ph <- ph |> select(year, date, total_esc = total, sd, clow, chigh, location)
+  
+  # Combine locations, summarise data, and plot --------------------------------
+  escaped <- rbind(escapement_df, ph)
+  
+  # Group by date and sum the escapement
+  escaped |>
+    group_by(year) |>
+    summarise(total_esc = sum(total_esc)) |>
+    mutate(YEAR = as.factor(year)) |>
+    rename(TOTAL_ESC = total_esc) |>
+    select(YEAR, TOTAL_ESC) -> escaped
+  
+  # Add data not on database ---------------------------------------------------
+  escaped <- bind_rows(
+    escaped,
+    tibble(
+      YEAR = as.factor(c(2014, 2015, 2016, 2017, 2018, 2020)),
+      TOTAL_ESC = c(2358125, 2517215, NA, NA, 712509, NA)
+      )
+    )
+
+  escaped |> 
+    mutate(YEAR = as.character(YEAR)) |> 
+    arrange(YEAR) |> 
+    mutate(YEAR = as.factor(YEAR)) -> escaped
+  
+  # Plot escapement with stock zones ---------------------------------------------
+  escaped |> 
+    # Convert escapement to millions of fish
+    mutate(TOTAL_ESC_MIL = TOTAL_ESC / 1e6) |> 
+    ggplot(aes(YEAR, TOTAL_ESC_MIL)) +
+    geom_col(fill = "#54BDC2", colour = "grey20", alpha = 0.9) +
+    #geom_hline(yintercept = 3.3, linetype = "dotted", size = 3/5) +
+    geom_hline(yintercept = 2.6, linetype = "dotted", size = 3/5) +
+    geom_hline(yintercept = 2.1, linetype = "dotted", size = 3/5) +
+    annotate("text", x = 5.5, y = 2.95,  label = "Healthy", size = 5, alpha = 0.7, colour = "green4") +
+    annotate("text", x = 5.5, y = 2.35,  label = "Cautious", size = 5, alpha = 0.7, colour = "orange2") +
+    annotate("text", x = 5.5,  y = 1.55,  label = "Critical", size = 5, alpha = 0.7, colour = "red4") +
+    labs(
+      title = "Estimated escapement for gaspereau at Lake Vaughan Dam",
+      subtitle = "Estimates prior to 2021 do not include fish escaping via the Powerhouse ladder",
+      y = "Millions of fish"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 3.3),
+      breaks = seq(0, 3.3, 0.5),
+      labels = scales::label_comma()
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+
+ggsave(paste0(output_folder, "/historic_escapement.png"), width = 9, height = 6, units = c("in"))
+
+}
+
+if (loc == "GR") {
+  
+  escaped <- data.frame()
+  
+  for (year_i in c(2014:year)){
+    
+    df <- get_escapement(year_i, site = 2)
+    
+    escaped <- rbind(escaped, df)
+    
+  }
+  
+  escaped <- escaped |>
+    select(year, date, total_esc = total, sd, clow, chigh)
+  
+  escaped |>
+    group_by(year) |>
+    summarise(total_esc = sum(total_esc)) |>
+    mutate(YEAR = as.factor(year)) |>
+    rename(TOTAL_ESC = total_esc) |>
+    select(YEAR, TOTAL_ESC) -> escaped
+  
+  # Add data not on database ---------------------------------------------------
+  escaped <- bind_rows(
+    escaped,
+    tibble(
+      YEAR = as.factor(c(1970, 1982, 1983, 1984, 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2020)),
+      TOTAL_ESC = c(60527, 50400, 114800, 111100, 126933, 95433, 171639, 81326, 98883, 238842, 310746, 435832, 222622, 299910, 242078, 158387, 149682, NA, 438874, 454800, 1114450, 1061688, NA)
+      )
+    )
+
+  escaped |> 
+    mutate(YEAR = as.character(YEAR)) |> 
+    arrange(YEAR) |> 
+    mutate(YEAR = as.factor(YEAR)) -> escaped
+  
+  # Plot escapement with stock zones ---------------------------------------------
+  escaped |> 
+    # Convert escapement to millions of fish
+    mutate(TOTAL_ESC_MIL = TOTAL_ESC / 1e6) |> 
+    ggplot(aes(YEAR, TOTAL_ESC_MIL)) +
+    geom_col(fill = "#54BDC2", colour = "grey20", alpha = 0.9) +
+    #geom_hline(yintercept = 0.5, linetype = "dotted", size = 3/5) +
+    geom_hline(yintercept = 0.32, linetype = "dotted", size = 3/5) +
+    geom_hline(yintercept = 0.175, linetype = "dotted", size = 3/5) +
+    annotate("text", x = 1.5, y = 0.4,  label = "Healthy", size = 3, alpha = 0.7, colour = "green4") +
+    annotate("text", x = 1.5, y = 0.28,  label = "Cautious", size = 3, alpha = 0.7, colour = "orange2") +
+    annotate("text", x = 1.5,  y = 0.15,  label = "Critical", size = 3, alpha = 0.7, colour = "red4") +
+    labs(
+      title = "Estimated escapement for gaspereau at White Rock Ladder",
+      y = "Millions of fish"
+      ) +
+    scale_y_continuous(
+      limits = c(0, 3.3),
+      breaks = seq(0, 3.3, 0.25),
+      labels = scales::label_comma()
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(size = 16),
+      axis.title.x = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
+      axis.text.x = element_text(size = 9, angle = 45, vjust = 1, hjust = 1),
+      axis.text.y = element_text(size = 12),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank()
+      ) +
+    xlab("")
+  
+}
+
+```

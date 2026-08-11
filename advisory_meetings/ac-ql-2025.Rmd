@@ -1,0 +1,249 @@
+# SETUP
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,     # Suppress warnings
+  message = FALSE     # Suppress messages
+)
+```
+
+```{r libraries_et_al}
+library(tidyverse)
+
+# Source all the functions so we can use them
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+```
+
+# LOAD DATA
+```{r load_MARFIS_data, include=FALSE, warning=FALSE}
+
+# Load in the data
+load("C:/Users/graylo/Documents/data/marfis_pull.Rdata")
+
+# Clean the data
+# source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R")
+source("~/MARFIS.error.cleaner.R")
+
+# Convert weights to kilograms
+catch <- convert.KGS(catch)
+catch <- subset(catch, select = -FV_WEIGHT)
+catch <- catch |> rename(FV_WEIGHT = KGS)
+
+# Get the licence data provided by RM
+licences <- readxl::read_excel("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx")
+
+# We can use this to grab data for what licences are not reporting
+licences |> 
+  select(
+    LICENCE_ID = `Licence Id`,
+    LICENCE_TYPE = `Licence Type Description (English)`,
+    COUNTY = `County Name 1`,
+    PROVINCE = `Province Abbrev (English)`,
+    GEAR_DESCRIPTION = `Gear Description (English)`,
+    RIVERNAME = `RIVER CONFIRMED`
+    ) |> 
+  filter(COUNTY == "QUEENS (NS)" | COUNTY == "LUNENBURG") |> 
+  distinct(LICENCE_ID, COUNTY) |> 
+  arrange(LICENCE_ID) -> ql_licences_2023
+
+```
+
+# LANDINGS
+
+Get some information about where the catch reports are coming from
+```{r}
+
+catch |> 
+  filter(YEAR == 2024) |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(LICENCE_ID %in% ql_licences_2023$LICENCE_ID) |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  select(LICENCE_ID, RIVERNAME, COUNTY) -> ql_licences_catch_2024_info
+
+ql_licences_catch_2024_info
+```
+
+Get the actual landings data
+```{r}
+catch |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR == 2024) |> 
+  filter(COUNTY == "QUEENS COUNTY" | COUNTY == "LUNENBURG COUNTY") |> 
+  group_by(YEAR, COUNTY) |> 
+  mutate(COUNTY = str_remove(COUNTY, " COUNTY")) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000, 1)) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  arrange(desc(FV_WEIGHT_MT))
+
+```
+
+Plot them
+```{r}
+# This is the break down of all the SWNB landings for each year since 2019
+catch|> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR >= 2019) |> 
+  filter(PROVINCE == "NS") |> 
+  filter(COUNTY == "QUEENS COUNTY" | COUNTY == "LUNENBURG COUNTY") |> 
+  group_by(COUNTY, YEAR) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000)) |> 
+  mutate(YEAR = as.factor(YEAR)) -> ql_catch
+
+ql_catch 
+
+ql_catch |> 
+  ggplot(aes(YEAR, FV_WEIGHT_MT, fill = COUNTY)) +
+  geom_col(position = position_dodge(), colour = "#2F4F4F") +
+  labs(
+    title = "Annual reported gaspereau landings for Queens and Lunenburg",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 3e2),
+    breaks = seq(0, 3e2, 50),
+    labels = scales::label_comma()
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "top",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("")
+
+ggsave("landings_ql.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+
+```
+
+```{r}
+# This is the break down of all the SWNB landings for each year since 2019
+catch|> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(YEAR == 2024) |> 
+  filter(PROVINCE == "NS") |> 
+  filter(COUNTY == "QUEENS COUNTY" | COUNTY == "LUNENBURG COUNTY") |> 
+  group_by(RIVERNAME, YEAR) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  mutate(FV_WEIGHT_MT = round(FV_WEIGHT / 1000)) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  mutate(RIVERNAME = as.factor(RIVERNAME)) |> 
+  ungroup() |> # Ungroup here so that the refactoring of the RIVERNAME works
+  mutate(RIVERNAME = fct_reorder(RIVERNAME, FV_WEIGHT_MT, .fun = max, .desc = TRUE)) |> 
+  filter(FV_WEIGHT_MT > 1) -> ql_catch_river
+
+ql_catch_river |> arrange(desc(FV_WEIGHT_MT))
+# It looks like the rivers are sorted alphabetically, but this is just a
+# coincidence, they are actually sorted by max weight and the alphabetical
+# nature is coincidental
+ql_catch_river |> 
+  ggplot(aes(RIVERNAME, FV_WEIGHT_MT)) +
+  geom_col(position = position_dodge(), colour = "#2F4F4F", fill = "#66CDAA") +
+  labs(
+    title = "Annual reported gaspereau landings for Queens and Lunenburg in 2024",
+    y = "Landings (mt)"
+    ) +
+  scale_y_continuous(
+    limits = c(0, 3e2),
+    breaks = seq(0, 3e2, 50),
+    labels = scales::label_comma()
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 16),
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    panel.grid.minor = element_blank()
+    ) +
+  xlab("")
+
+ggsave("landings_ql_river.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300)
+
+```
+
+# REPORTING RATE
+
+I need to do a few things:
+1. Figure out how many licences exist in QL via RM CSV
+
+```{r reporting_rate}
+# Total licences renewed in 2023 for NB
+licences |> 
+  select(STATUS, LICENCE_ID = `Licence Id`, RENEWED = Renewed, COUNTY = `County Name 1`, PROVINCE = `Province Abbrev (English)`, LICENCE_TYPE = `Licence Type Description (English)`) |> 
+  filter(RENEWED == 2023 & PROVINCE == "NS") |> 
+  filter(COUNTY == "LUNENBURG" | COUNTY == "QUEENS (NS)") |> 
+  distinct(LICENCE_ID, .keep_all = TRUE) |> 
+  arrange(LICENCE_ID) |> 
+  mutate(LICENCE_ID = as.factor(LICENCE_ID)) -> ql_licences_2023
+
+# Based on some sleuthing, all the licences appear to be good, so no need to
+# filter out any inactive licences etc
+```
+
+2. See which of these submitted catch records in 2024 (i.e. subset catch)
+
+```{r}
+# This is a list of the licences that reported catch in 2024
+catch |> 
+  filter(YEAR == 2024) |> 
+  select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+  filter(LICENCE_ID %in% ql_licences_2023$LICENCE_ID) |> 
+  distinct(LICENCE_ID) -> ql_licences_catch_2024
+
+ql_licences_catch_2024$status <- "Catch"
+
+ql_licences_catch_2024
+```
+
+3. See which of these submitted DNF (i.e. subset didnotfish)
+
+```{r}
+didnotfish |> 
+  filter(YEAR == 2024 & NIL_REPORT_FLAG == "Y") |> 
+  arrange(LICENCE_ID) |> 
+  select(LICENCE_ID) -> dnf
+
+# Get a summary of how many licences reported catch, dnf, or did not report
+ql_licences_2023 |> filter(LICENCE_ID %in% dnf$LICENCE_ID) -> ql_licences_dnf
+
+ql_licences_dnf$status <- "DNF"
+
+ql_licences_dnf
+```
+
+4. Assume the remainder are DNR
+
+```{r}
+ql_licences_catch_2024 |> 
+  full_join(ql_licences_dnf) -> ql_licences_reported
+
+ql_licences_reported
+```
+
+```{r}
+ql_licences_2023 |> 
+  anti_join(ql_licences_reported, by = "LICENCE_ID") |> 
+  distinct() |> 
+  mutate(status = "DNR") -> ql_licences_DNR
+
+ql_licences_DNR
+```
+
+```{r}
+ql_licences_reported |> 
+  full_join(ql_licences_DNR) -> ql_lic_df
+
+ql_lic_df |> 
+  count(status) |> 
+  mutate(proportion = n / sum(n)) |> 
+  arrange(desc(proportion))
+```

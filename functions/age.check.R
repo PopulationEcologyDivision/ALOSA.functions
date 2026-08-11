@@ -14,9 +14,9 @@
 age.check<-function(filename){
   data=read.csv(filename, header=T, stringsAsFactors = F)
   
-  goodnames<-(c("year","sample","species","current.age","age.at.first.spawn")) 
+  goodnames<-(c("year","sample","species","current.age","age.at.first.spawn","notes","age.structure.sample")) 
   missingnames=goodnames[!goodnames%in%(names(data))]
-  if (length(missingnames>0)){
+  if(length(missingnames>0)){
     cat("Missing column name(s):","\n", missingnames,"\n")
     stop("Please fix column names before continuing")
   }
@@ -30,6 +30,12 @@ age.check<-function(filename){
     cat("Duplicated sample numbers found:", "\n", "\n")
     print(data[data$sample%in%duplicates,])
     cat("\n", "\n")
+  }
+  
+  #check for current age older than age at first spawn
+  ps<-data$current.age-data$age.at.first.spawn #number of previous spawns must be 0 or greater
+  if(any(ps<0)){
+    cat("Age at first spawn greater than current age for sample ",data$sample[which(ps<0)])
   }
   
   A.names=c("Alewife","A","a","alewife","ale","Ale","ALE")
@@ -50,10 +56,11 @@ age.check<-function(filename){
   cat("\n","Youngest Alewife:", min(data$current.age[data$species%in%A.names]), "\n")
   cat(" Oldest Alewife:", max(data$current.age[data$species%in%A.names]), "\n","\n")
   
-  if (n.B>0){
+  if(n.B>0){
     cat("Blueback Ages:")
     print(table(data$xx[data$species%in%B.names]))
     cat("\n","Youngest Blueback:", min(data$current.age[data$species%in%B.names]), "\n")
     cat(" Oldest Blueback:", max(data$current.age[data$species%in%B.names]), "\n","\n")
   }
+
 }

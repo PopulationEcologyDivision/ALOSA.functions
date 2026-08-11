@@ -11,7 +11,6 @@
 #...............................................................................
 require(ROracle)
 #-------------------------------------------------------------------------------
-setwd(choose.dir(caption = "Navigate to Desired WORKING DIRECTORY"))
 #...............................................................................
 #...............................................................................
 #
@@ -28,10 +27,10 @@ channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password
 #i.forgot.the.siteIDs(channel)
 #...............................................................................
 #### Season setup ####
-#Only run at beginning of season!
-blank.datasheets(seed=114,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
-                 year=2023,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
-make.count.filename.textfile("White Rock 2023 count data.csv","WRock",2023)
+# Only run at beginning of season!
+# blank.datasheets(seed=114,startmonth=4,endmonth=6,startday=15,rivername="White Rock",
+#                  year=2023,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("White Rock 2023 count data.csv","WRock",2023)
 #...............................................................................
 #### In Season Count ####
 setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023")
@@ -43,16 +42,20 @@ setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau Rive
 # site=3
 # channel=channel
 
-x<-onespecies.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
+# x<-onespecies.river.escapement("White Rock Counts - final.csv",fixtime=T,database=F,2023,3,channel)
+
+# x<-onespecies.partial.river.escapement("White Rock Counts - Sheet1.csv",fixtime=T,database=F,2023,3,channel)
 
 x<-round(x)
 n<-dim(x)[1]
-x$dayofyear<-as.numeric(as.character(x$dayofyear))
+# x<-x[1:n-1,]
+
 print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
 
-write.csv(x,file="inseasonsummary.csv",row.names=F)
-#plot
-old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/data for multi year tusket plot.csv")
+write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+
+#plot for in season emails
+old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
 
 old.data$date=as.Date(paste(old.data$day,old.data$mon,2023,sep="-"),
                       format="%d-%m-%Y")
@@ -60,64 +63,130 @@ old.data$date=as.Date(paste(old.data$day,old.data$mon,2023,sep="-"),
 #dayofyear uses "strftime" to evaluate which day of the year each date aligns with
 old.data$dayofyear=as.numeric(strftime(old.data$date, format="%j"))
 
-plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear),min(x$dayofyear)+80), ylim=c(0,120000),lwd=2)
-lines(old.data$dayofyear,old.data$Total2014,type="l",col="red")
-lines(old.data$dayofyear,old.data$Total2015,type="l",col="orange")
-lines(old.data$dayofyear,old.data$Total2018,type="l",col="yellow")
-lines(old.data$dayofyear,old.data$Total2019,type="l",col="green")
-lines(old.data$dayofyear,old.data$Total2021,type="l",col="blue")
-lines(old.data$dayofyear,old.data$Total2022,type="l",col="purple")
-segments(119,0,119,120000)
-segments(133,0,133,120000)
-legend(100, 100000, legend=c("2014", "2015", "2018", "2019", "2021", "2022", "2023"),
-       col=c("red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
-#...............................................................................
+plot(x$dayofyear[1:51],x$total[1:51],type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,120000),lwd=2,
+     ylab="Number of Fish",xlab="Day of Year")
+lines(x$dayofyear[52:55],x$total[52:55],lwd=2)
+lines(x$dayofyear[56:63],x$total[56:63],lwd=2)
+lines(old.data$dayofyear,old.data$Total2015,type="l",col="red")
+lines(old.data$dayofyear,old.data$Total2016,type="l",col="orange")
+lines(old.data$dayofyear,old.data$Total2017,type="l",col="yellow")
+lines(old.data$dayofyear,old.data$Total2018,type="l",col="green")
+lines(old.data$dayofyear,old.data$Total2019,type="l",col="blue")
+lines(old.data$dayofyear,old.data$Total2021,type="l",col="purple")
+lines(old.data$dayofyear,old.data$Total2022,type="l",col="brown")
+# segments(130,0,130,120000)
+# segments(137,0,137,120000)
+legend(110, 100000, legend=c("2015", "2016", "2017", "2018", "2019", "2021", "2022", "2023"),
+       col=c("red", "orange", "yellow", "green", "blue", "purple", "brown", "black"), lty=1, cex=0.8)
+
+#### FFHPP plot ####
+flow.gate<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023/White Rock flows April 1 to June 30 2023_DFO.csv")
+##clean it up##
+flow.gate$Time.of.change[9]<-"16:30" # these are all gueses
+flow.gate$Time.of.change[10]<-"17:30"
+flow.gate$Time.of.change[11]<-"18:30"
+flow.gate$Time.of.change[12]<-"19:30"
+flow.gate$Time.of.change[28]<-"16:00"
+flow.gate$Time.of.change[31]<-"16:58"
+flow.gate$Time.of.change[32]<-"16:58"
+flow.gate$Date[4]<-"29-May-23"
+flow.gate$Date<-ifelse(flow.gate$Date=="",NA,flow.gate$Date)
+for(i in 1:nrow(flow.gate)) ##fill in blanks with the last date
+{
+  if(is.na(flow.gate$Date[i])==F){next()}
+  flow.gate$Date[i]<-flow.gate$Date[i-1]
+}
+flow.gate$Date<-sub("May","05",flow.gate$Date)
+flow.gate$Date<-sub("Jun","06",flow.gate$Date)
+flow.gate$Date<-sub("-23","-2023",flow.gate$Date)
+flow.gate$datetime<-paste(flow.gate$Date,flow.gate$Time.of.change, sep=" ")
+flow.gate$datetime<-as.POSIXct(flow.gate$datetime,tryFormats="%d-%m-%Y %H:%M")
+
+
+test<-flow.gate
+test$datetime<-test$datetime-1
+test$Flow..cfs.[2:nrow(test)]<-test$Flow..cfs.[1:nrow(test)-1]
+flow.gate<-merge(flow.gate,test,all=T)
+flow.gate<-flow.gate[order(flow.gate$datetime),]
+
+flow.gen<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2023/White Rock flows April 1 to June 30 2023_DFO_Generator.csv",nrows=91)
+names(flow.gen)[1]<-"Date"
+flow.gen<-flow.gen[,1:5]
+flow.gen$Date<-sub("Apr","04",flow.gen$Date)
+flow.gen$Date<-sub("May","05",flow.gen$Date)
+flow.gen$Date<-sub("Jun","06",flow.gen$Date)
+flow.gen$Date<-sub("-23","-2023",flow.gen$Date)
+flow.gen$Date<-ifelse(nchar(flow.gen$Date)==9,paste("0",flow.gen$Date,sep=""),flow.gen$Date)
+flow.gen$datetime<-paste(flow.gen$Date,flow.gen$Time.of.change, sep=" ")
+flow.gen$datetime<-as.POSIXct(flow.gen$datetime,tryFormats="%d-%m-%Y")
+flow.gen$conversion.to.cfs[flow.gen$conversion.to.cfs<0]<-0
+
+##get date object for counts
+x$Date<-as.Date(paste(2023,x$mon,x$day,sep="-"))
+x$Date<-as.POSIXlt(x$Date)
+x$Date<-as.POSIXct(x$Date)
+flow.scaler<-30
+
+#actually plot
+png(filename="Gaspereau River 2023 Escapement and flows.png",width=800,height=600)
+par(mar=c(5,4,4,6))
+plot(x$Date,x$total,type="l", xlim=c(min(as.integer(x$Date)),max(as.integer(x$Date))), ylim=c(0,90000),lwd=1,
+     ylab="Thousands of Fish",xlab="Date",xaxt="n",yaxt="n")
+lines(x$Date,x$chigh,lty=3)
+lines(x$Date,x$clow,lty=3)
+segments(x$Date[27],0,x$Date[27],120000,lwd=2) #season closure
+lines(flow.gate$datetime,flow.gate$Flow..cfs.*flow.scaler,col="blue")
+lines(flow.gen$datetime,flow.gen$conversion.to.cfs*flow.scaler,col="red")
+date.key<-c(as.integer(x$Date[8]),as.integer(x$Date[17]),as.integer(x$Date[27]),as.integer(x$Date[39]),as.integer(x$Date[48]),as.integer(x$Date[55])+86400)
+axis(1,at=date.key,labels=c("1","10","20","1","10","20"))
+axis(2,at=c(20000,40000,60000,80000),labels=c("20","40","60","80"),las=2)
+axis(4,at=c(0,200,400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000)*flow.scaler,
+     labels=c(0,200,400,600,800,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000),las=2)
+mtext("Flow (cfs)",4,3)
+mtext("May",1,2,adj=0.25)
+mtext("June",1,2,adj=0.72)
+dev.off()
+
+
+#### post season meeting plot####
+plot(x$dayofyear[1:51],x$total[1:51],type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,90000),lwd=1,
+     ylab="Number of Fish",xlab="May                                      June",xaxt="n")
+lines(x$dayofyear[52:55],x$total[52:55],lwd=1)
+lines(x$dayofyear[56:63],x$total[56:63],lwd=1)
+lines(x$dayofyear[1:51],x$chigh[1:51],lty=3)
+lines(x$dayofyear[52:55],x$chigh[52:55],lty=3)
+lines(x$dayofyear[56:63],x$chigh[56:63],lty=3)
+lines(x$dayofyear[1:51],x$clow[1:51],lty=3)
+lines(x$dayofyear[52:55],x$clow[52:55],lty=3)
+lines(x$dayofyear[56:63],x$clow[56:63],lty=3)
+axis(1,at=c(121,130,140,152,161,171),labels=c("1","10","20","1","10","20"))
+
 #### Post season ####
-year<-year
-site<-sitenumber # Main ones are 3=Gaspereau River at White Rock, 
-#                  1=Carleton and 2=Vaughan. Use 'i.forgot.the.siteIDs(channel) for other locations
-nspp<-nspecies # Either 1 or 2
-sppID<-sppID #Either 3501 for Alewife or 3502 for BB
-seed=seed #Seed used for scale selection. 
+seed=666 #Seed used for scale selection. 
 nsamples=500  #Number of scale selected to be aged
 
-# If needed:
-species.split<-split.spp(year,site,channel,"accessory_data.csv")
+x<-onespecies.river.escapement(fixtime=T,database=T,year=2023,site=3,channel=channel)
 
-
-if(nspp==1){
-  daily.count<-onespecies.river.escapement(year=year,
-                              site=site,
-                              channel=channel) }
-if(nspp==2){
-  daily.count<-twospecies.river.escapement(year=year,
-                                  site=site,
-                                  channel=channel)  }
+#Check Bio data
+checkers("White Rock 2023 biocharacteristics data.csv") # this file has the correct column names, same data as WE 2023 bio data.csv
 
 #Get bio data from DB
 bio.data<-get.bio.data(year=year,siteID = site,sppID=species, channel)
+bio.data<-read.csv("WR 2023 bio data.csv") # read in csv because wasn't in data base yet
+daily.count<-x
 
 missingdays<-missing.days(bio.data)
-mergedays<- c() # For missing sample days, we merge the counts from two days
+missingdays<-NA
+mergedays<-NA
+c() # For missing sample days, we merge the counts from two days
                 # and use that in the weighting calculation. 
                 # For example, ff day 112 is missing then decide if you want to merge the counts
                 # with day 111 or 113. Do this for all the missing dates and provide the
                 # replacement days in this vector. Length(mergedays)==Length(missingdays)
-            
-ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
 
-
-
-
-
-
-
-
-
-
-
-
-
+#ran July 4th 2023 to get ages for student work      
+# ageing.selection(daily.count,bio.data,missingdays,mergedays,seed,nsamples)
+# scale.age<-read.csv("to be aged_rename this file.csv")
 
 
 
@@ -298,7 +367,7 @@ mean.firstspawnage.r=mean(agedata$AGE_AT_FIRST_SPAWN[agedata$CURRENT_AGE>agedata
   boxplot(weight~current.age,data=speciesdata)
   boxplot(fork.length~current.age,data=speciesdata)
   with(speciesdata,plot(weight,fork.length))
-}
+
 
 
 

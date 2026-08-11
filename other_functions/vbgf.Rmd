@@ -1,0 +1,117 @@
+```{r, warning=FALSE}
+# Library
+library(tidyverse)
+library(ROracle)
+
+# Source alosa functions
+source("C:/Users/graylo/Documents/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+# Here is the channel connection for when we haul things from the ALOSA db
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  username = "GASPEREA",
+  password = "_REMOVED",
+  "PTRAN",
+  believeNRows = FALSE
+  )
+```
+
+```{r}
+# Get the biodata
+bio <- dbReadTable(channel, "ALOSA_FISH_BIO_DATA")
+age <- dbReadTable(channel, "ALOSA_FISH_AGE_DATA")
+
+bio |> 
+  full_join(age, by = c("FISH_ID", "YEAR", "SITE_ID")) |> 
+  select(FORK_LENGTH, CURRENT_AGE, SITE_ID, YEAR) |> 
+  filter(!is.na(CURRENT_AGE)) |> 
+  filter(!is.na(FORK_LENGTH)) |> 
+  filter(SITE_ID == 3) |> 
+  filter(YEAR %in% c(1997:2002, 2016:2024)) -> age_length_df
+
+age_length_df |> 
+  #filter(FORK_LENGTH > 15) |> 
+  #filter(CURRENT_AGE > 2) |> 
+  mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) |> 
+  ggplot(aes(CURRENT_AGE, FORK_LENGTH)) +
+  geom_jitter(pch = 21, colour = "grey20", fill = "#41B7C4", alpha = 0.6) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+    ) +
+  labs(y = "Fork Length (cm)", x = "Age (years)")
+```
+
+```{r}
+bio |> 
+  full_join(age, by = c("FISH_ID", "YEAR", "SITE_ID")) |> 
+  select(FORK_LENGTH, WEIGHT, CURRENT_AGE, AGE_AT_FIRST_SPAWN) |> 
+  filter(!is.na(CURRENT_AGE)) |> 
+  mutate(
+    PREVIOUS_SPAWN = CURRENT_AGE - AGE_AT_FIRST_SPAWN,
+    VIRGIN_FISH = if_else(PREVIOUS_SPAWN == 0, "Virgin", "Previously spawned") 
+  ) -> spawns
+
+spawns |> 
+  filter(FORK_LENGTH > 15) |> 
+  filter(CURRENT_AGE > 2) |> 
+  mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) |> 
+  ggplot(aes(CURRENT_AGE, FORK_LENGTH, fill = VIRGIN_FISH)) +
+  geom_jitter(pch = 21, colour = "grey20", alpha = 0.6, size = 0.1) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+    ) +
+  labs(y = "Fork Length (cm)", x = "Age (years)")
+```
+
+```{r}
+bio |> 
+  select(FORK_LENGTH) |> 
+  filter(!is.na(FORK_LENGTH)) |>  
+  filter(FORK_LENGTH > 15) |> 
+  ggplot(aes(x = "", FORK_LENGTH)) +
+  #geom_point(pch = 21, colour = "grey20", fill = "#41B7C4", alpha = 0.7, size = 0.1) +
+  geom_jitter(pch = 21, colour = "grey20", fill = "#41B7C4", alpha = 0.7, size = 0.1, width = 1) +
+  scale_y_continuous(n.breaks = 10) +
+  theme_bw() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+    ) +
+  labs(y = "Fork Length (cm)", x = "") +
+  coord_cartesian(ylim = c(22, 30))
+```
+
+```{r}
+# We want to use Taylor's approximation for tmax where tmax is defined as 95%
+# the "infinite" length ie the asymptotic length for the fish which can be thought
+# of as the largest value ever reported as length or something similar to it
+# tmax ~ t0 + 3/K
+# tmax = maximum age
+# t0 = age when length of the fish would have been 0 (and offset)
+# K = growth rate (1/year)
+
+# The starting value for Linf is just the length of the largest fish we have 
+# ever measured 
+# Linf <- max(age_length_df$FORK_LENGTH)
+
+skimr::skim(age_length_df |> mutate(YEAR = as.factor(YEAR), SITE_ID = as.factor(SITE_ID)))
+
+fit <- nls(
+  FORK_LENGTH ~ Linf * (1 - exp(-K * (CURRENT_AGE - t0))),
+  start = list(Linf = 31.5, K = 0.2, t0 = 0),
+  control = nls.control(maxiter = 1e4),
+  data = age_length_df
+  )
+
+fit
+est_tmax <- coef(fit)["t0"] + (3 / coef(fit)["K"])
+names(est_tmax) <- "tmax"
+est_tmax
+```

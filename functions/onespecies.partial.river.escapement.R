@@ -5,7 +5,7 @@
 # This should be added in in the future.
 #
 # Inputs:
-#        - filename: filename where escapement counts are
+#        - count.data: R dataframe of counts, OR filename where escapement counts are
 #        - fixtime=F: default is F but use T if the minutes/seconds columns are present
 #        - database=T: pull count data from database instead of local file (prefered method)
 #        - year: use if database=T
@@ -25,7 +25,7 @@
 # setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2022/Data Sheets/Counts")
 # filename="Carleton Count Sheet Cleaned 2022.csv"
   
-onespecies.partial.river.escapement<-function(filename,
+onespecies.partial.river.escapement<-function(count.data,
                                       fixtime=F,
                                       database=T,
                                       year,
@@ -45,8 +45,8 @@ onespecies.partial.river.escapement<-function(filename,
     names(count.data)[9]<-"seconds"
   }
   if(database==F){
-    count.data=read.csv(filename,header=T,
-                        stringsAsFactors = F)
+    #read in count data if only given a filename
+    if(is.character(count.data)==T){count.data = read.csv(count.data, header = T, stringsAsFactors = F)}
     
     if(fixtime==F){
       goodnames=(c("year","mon","day","time","strata","count.upstream",
@@ -151,59 +151,68 @@ onespecies.partial.river.escapement<-function(filename,
   #merge and order by strata
   summary.data<-merge(junk2,min5.periods,by="strata") 
   
-  #--- UNCOUNTABLE TIME UNITS AND EXTRAPOLATION ---
-  
-  # Check for missing strata
-  #Initialize df with all days/strata:
-  alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=5),
-                     Group.2=rep(1:5,times=length(start.end[1]:start.end[2])))
-  
-  #merge with n.counts dataframe from previous section.
-  alldays=merge(alldays,strata.n,all.x = T)
-  names(alldays)=c("dayofyear","strata","n.counts")
-  # Check for any NAs or counts less than 2:
-  table(alldays$n.counts)
-  length(alldays$n.counts[is.na(alldays$n.counts)|alldays$n.counts<=1])
-  
-  ##butcher data
-  ##this splits the data into two, counts before a day was missed,
-  ##and counts after the last day is missed.
-  test<-aggregate(alldays,by=list(alldays$dayofyear),FUN=sum)
-  no.count.days<-test$Group.1[test$n.counts==0]
-  
-  days<-start.end[1]:start.end[2]
-  count.days<-setdiff(days,no.count.days)
-  butcher.ls<-list()
-  butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]
-  for(i in 2:length(no.count.days))
-  {
-    butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
-                                    summary.data$dayofyear<no.count.days[i],]
-  }
-  butcher.ls[[length(no.count.days)+1]]<-summary.data[summary.data$dayofyear>max(no.count.days),]
-  
-  
-  # summary.data1<-summary.data[summary.data$dayofyear<min(no.count.days),]
-  # summary.data2<-summary.data[summary.data$dayofyear>max(no.count.days),]
-  # start.end1<-c(min(summary.data1$dayofyear),max(summary.data1$dayofyear))
-  # start.end2<-c(min(summary.data2$dayofyear),max(summary.data2$dayofyear))
-  
-  if(length(alldays$n.counts[is.na(alldays$n.counts)|alldays$n.counts<=1])>0){
-    cat("Missing Strata:","\n")
-    print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
-    # fill in missing mean count, n.counts, sample.var, and sd for
-    # missing strata.
-    filled.butcher.ls<-list()
-    for(i in 1:length(butcher.ls))
-    {
-      if(nrow(butcher.ls[[i]])==0){next()}#skip iterations where dataframes are empty
-      start.end<-c(min(butcher.ls[[i]]$dayofyear),max(butcher.ls[[i]]$dayofyear))
-      filled.butcher.ls[[i]]=missingstrata(butcher.ls[[i]],start.end,n.strata)
-    }
-  }
-  
-  ##put the bits back together
-  summary.data<-do.call(rbind,filled.butcher.ls)
+  # #--- UNCOUNTABLE TIME UNITS AND EXTRAPOLATION ---
+  # 
+  # # Check for missing strata
+  # #Initialize df with all days/strata:
+  # alldays=data.frame(Group.1=rep(start.end[1]:start.end[2],each=5),
+  #                    Group.2=rep(1:5,times=length(start.end[1]:start.end[2])))
+  # 
+  # #merge with n.counts dataframe from previous section.
+  # alldays=merge(alldays,strata.n,all.x = T)
+  # names(alldays)=c("dayofyear","strata","n.counts")
+  # # Check for any NAs or counts less than 2:
+  # table(alldays$n.counts)
+  # length(alldays$n.counts[is.na(alldays$n.counts)|alldays$n.counts<=1])
+  # 
+  # ##butcher data
+  # ##this splits the data into two, counts before a day was missed,
+  # ##and counts after the last day is missed.
+  # test<-aggregate(alldays,by=list(alldays$dayofyear),FUN=sum)
+  # no.count.days<-test$Group.1[test$n.counts==0]
+  # 
+  # days<-start.end[1]:start.end[2]
+  # count.days<-setdiff(days,no.count.days)
+  # butcher.ls<-list()
+  # for(i in 1:length(no.count.days))
+  # {
+  #   if(i==1){butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]}
+  #   else {
+  #     butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
+  #                                     summary.data$dayofyear<no.count.days[i],]
+  #   }
+  # }
+  # butcher.ls[[length(no.count.days)+1]]<-summary.data[summary.data$dayofyear>max(no.count.days),]
+  # # butcher.ls[[1]]<-summary.data[summary.data$dayofyear<min(no.count.days),]
+  # # for(i in 2:length(no.count.days))
+  # # {
+  # #   butcher.ls[[i]]<-summary.data[summary.data$dayofyear>no.count.days[i-1] & 
+  # #                                   summary.data$dayofyear<no.count.days[i],]
+  # # }
+  # # butcher.ls[[length(no.count.days)+1]]<-summary.data[summary.data$dayofyear>max(no.count.days),]
+  # 
+  # 
+  # # summary.data1<-summary.data[summary.data$dayofyear<min(no.count.days),]
+  # # summary.data2<-summary.data[summary.data$dayofyear>max(no.count.days),]
+  # # start.end1<-c(min(summary.data1$dayofyear),max(summary.data1$dayofyear))
+  # # start.end2<-c(min(summary.data2$dayofyear),max(summary.data2$dayofyear))
+  # 
+  # if(length(alldays$n.counts[is.na(alldays$n.counts)|alldays$n.counts<=1])>0){
+  #   cat("Missing Strata:","\n")
+  #   print(alldays[alldays$n.counts<2 | is.na(alldays$n.counts),])
+  #   # fill in missing mean count, n.counts, sample.var, and sd for
+  #   # missing strata.
+  #   filled.butcher.ls<-list()
+  #   for(i in 1:length(butcher.ls))
+  #   {
+  #     if(nrow(butcher.ls[[i]])==0){next()}#skip iterations where dataframes are empty
+  #     start.end<-c(min(butcher.ls[[i]]$dayofyear),max(butcher.ls[[i]]$dayofyear))
+  #     filled.butcher.ls[[i]]=missingstrata(butcher.ls[[i]],start.end)
+  #   }
+  # }
+  # 
+  # ##put the bits back together
+  # summary.data<-do.call(rbind,filled.butcher.ls)
   # If number of strata with counts >= 1 is >0 stop and use lm to 
   # extrapolate counts of missing strata. If the entire day is missing,
   # there is no way to fill in missing counts. 
@@ -213,15 +222,15 @@ onespecies.partial.river.escapement<-function(filename,
   summary.data$total<-summary.data$mean*summary.data$n.periods 
   
   #Determine the proportion of fish that escaped in each stratum
-  print(paste("Strata 1 total:",strata.percent(1,summary.data)))
-  print(paste("Strata 2 total:",strata.percent(2,summary.data)))
-  print(paste("Strata 3 total:",strata.percent(3,summary.data)))
-  print(paste("Strata 4 total:",strata.percent(4,summary.data)))
-  print(paste("Strata 5 total:",strata.percent(5,summary.data)))
-  
-  if(n.strata==6){
-    print(paste("Strata 6 total:",strata.percent(6,summary.data)))
-  }
+  # print(paste("Strata 1 total:",strata.percent(1,summary.data)))
+  # print(paste("Strata 2 total:",strata.percent(2,summary.data)))
+  # print(paste("Strata 3 total:",strata.percent(3,summary.data)))
+  # print(paste("Strata 4 total:",strata.percent(4,summary.data)))
+  # print(paste("Strata 5 total:",strata.percent(5,summary.data)))
+  # 
+  # if(n.strata==6){
+  #   print(paste("Strata 6 total:",strata.percent(6,summary.data)))
+  # }
   
   #---
   # TOTAL ESCAPEMENT, VARIANCE AND CONFIDENCE INTERVAL(2 way stratified)
@@ -242,20 +251,20 @@ onespecies.partial.river.escapement<-function(filename,
   esc.var<-sum(runVAR.term(summary.data))
   print(esc.var)
   
-  # 3B: Degrees of Freedom and Critical Values (2WS)
-  ##satterthwaite approximation of degrees and freedom
-  ##formula from nelson 2006
-  summary.data.df<-summary.data[summary.data$n.counts>1,] ##this is a work around
-  ##for counts strata with only a single count, which prevents the df calculation
-  ## and therefore the total CI calculation.
-  
-  df2<-satterthwaite.approx.df(summary.data)
-  alpha<-0.05
-  crit<-qt(1-alpha/2, df2)
-  
-  # 4A: Confidence Interval 
-  print("CI around escapement estimate:")
-  print(esc.est+c(-crit,crit)*sqrt(esc.var)) 
+  # # 3B: Degrees of Freedom and Critical Values (2WS)
+  # ##satterthwaite approximation of degrees and freedom
+  # ##formula from nelson 2006
+  # summary.data.df<-summary.data[summary.data$n.counts>1,] ##this is a work around
+  # ##for counts strata with only a single count, which prevents the df calculation
+  # ## and therefore the total CI calculation.
+  # 
+  # df2<-satterthwaite.approx.df(summary.data)
+  # alpha<-0.05
+  # crit<-qt(1-alpha/2, df2)
+  # 
+  # # 4A: Confidence Interval 
+  # print("CI around escapement estimate:")
+  # print(esc.est+c(-crit,crit)*sqrt(esc.var)) 
   
   # DAILY VARIANCE AND STANDARD DEVIATION (1WS) 
   
@@ -280,58 +289,59 @@ onespecies.partial.river.escapement<-function(filename,
   daily.summary<-cbind(daily.total,daily.var[,2], daily.sd)
   colnames(daily.summary)=c("dayofyear","total","variance","sd")
   
-  
   # DAILY DEGREES OF FREEDOM AND CONFIDENCE INTERVALS (1WS) ---
   
   ##Need tp redo start and end days, they got overwritten when butchering the data
   ##this onyl applies to the partial escapement function
-  start.end<-c(min(levels(daily.summary$dayofyear)),max(levels(daily.summary$dayofyear)))
-  
-  for(i in start.end[1]:start.end[2]){
-    daily.summary$df1[daily.summary$dayofyear==i]<-
-      satterthwaite.approx.df(summary.data[summary.data$dayofyear==i,])
-  }
+  # start.end<-c(min(levels(daily.summary$dayofyear)),max(levels(daily.summary$dayofyear)))
+  # 
+  # for(i in start.end[1]:start.end[2]){
+  #   daily.summary$df1[daily.summary$dayofyear==i]<-
+  #     satterthwaite.approx.df(summary.data[summary.data$dayofyear==i,])
+  # }
+  # 
+  # daily.summary$dayofyear<-as.integer(as.character(daily.summary$dayofyear))
   
   #Set alpha value and find critical value
-  alpha<-0.05
-  
-  daily.summary$clow<-daily.summary$total-
-    qt(1-alpha/2, daily.summary$df1)*sqrt(daily.summary$var) 
-  
-  daily.summary$chigh<-daily.summary$total+
-    qt(1-alpha/2, daily.summary$df1)*sqrt(daily.summary$var) 
-  
-  #Preventing negative C.I. values 
-  daily.summary$clow<-ifelse(daily.summary$clow<0,0,daily.summary$clow) 
-  
+  # alpha<-0.05
+  # 
+  # daily.summary$clow<-daily.summary$total-
+  #   qt(1-alpha/2, daily.summary$df1)*sqrt(daily.summary$var) 
+  # 
+  # daily.summary$chigh<-daily.summary$total+
+  #   qt(1-alpha/2, daily.summary$df1)*sqrt(daily.summary$var) 
+  # 
+  # #Preventing negative C.I. values 
+  # daily.summary$clow<-ifelse(daily.summary$clow<0,0,daily.summary$clow) 
+  # 
   # Daily summary table
   daily.summary<-merge(daily.summary,
                        unique(count.data[,c("mon","day","dayofyear")]),
                        by="dayofyear",all.x=T)
   daily.summary<-(daily.summary[,c("mon","day","dayofyear",
-                                   "total","sd","clow","chigh")])
+                                   "total","sd")])
   
   
-  print(paste("First Fish on:",paste(daily.summary$mon
-                                     [which(daily.summary$total > 0)[1]],
-                                     daily.summary$day
-                                     [which(daily.summary$total > 0)[1]],
-                                     sep="-")))
-  print(paste("Last Fish on:",paste(daily.summary$mon
-                                    [max(which(daily.summary$total > 0))],
-                                    daily.summary$day
-                                    [max(which(daily.summary$total > 0))],
-                                    sep="-")))
-  
-  print(paste("Peak of Run on:",
-              paste(daily.summary$mon
-                    [daily.summary$total==max(daily.summary$total)],
-                    daily.summary$day
-                    [daily.summary$total==max(daily.summary$total)],
-                    sep="-"),"with",max(daily.summary$total),"fish"))
-  
+  # print(paste("First Fish on:",paste(daily.summary$mon
+  #                                    [which(daily.summary$total > 0)[1]],
+  #                                    daily.summary$day
+  #                                    [which(daily.summary$total > 0)[1]],
+  #                                    sep="-")))
+  # print(paste("Last Fish on:",paste(daily.summary$mon
+  #                                   [max(which(daily.summary$total > 0))],
+  #                                   daily.summary$day
+  #                                   [max(which(daily.summary$total > 0))],
+  #                                   sep="-")))
+  # 
+  # print(paste("Peak of Run on:",
+  #             paste(daily.summary$mon
+  #                   [daily.summary$total==max(daily.summary$total)],
+  #                   daily.summary$day
+  #                   [daily.summary$total==max(daily.summary$total)],
+  #                   sep="-"),"with",max(daily.summary$total),"fish"))
+  # 
   
   daily.summary$total<-round(daily.summary$total,digits=1)
-  return(daily.summary)
+  return(list(daily.summary=daily.summary,summary.data=summary.data))
   ##End of function::  
 } 

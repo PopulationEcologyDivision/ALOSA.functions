@@ -54,8 +54,8 @@ if(nspp==2){
 
 ##the list outputs as 172 long because of all the print objects. if the stuff 
 ##printed in the function changes, the below will not work
-daily.summary.B<-out[[170]]
-daily.summary.A<-out[[172]] ##This still has dayofyear out of order
+daily.summary.A<-out[[1]]
+daily.summary.B<-out[[2]] ##This still has dayofyear out of order
 #Get bio data from DB
 bio.data.A<-get.bio.data(year=year,siteID = site, sppID=3501, channel)
 bio.data.B<-get.bio.data(year=year,siteID = site, sppID=3502, channel)

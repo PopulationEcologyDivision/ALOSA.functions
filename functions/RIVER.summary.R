@@ -74,4 +74,5 @@ RIVER.summary<-function(rivername,plot=T,writeplot=F,
   assign(paste("annualcatch",substr(rivername,1,3),sep="."),annualcatch,envir = .GlobalEnv)
   assign(paste("licencereportsummary",substr(rivername,1,3),sep="."),river.reports,envir = .GlobalEnv)
   assign(paste("reportcounts",substr(rivername,1,3),sep="."),reportcounts,envir = .GlobalEnv)
+  return(river.reports)
 } 

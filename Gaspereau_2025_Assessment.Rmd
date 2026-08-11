@@ -1,0 +1,582 @@
+---
+title: "Gaspereau_2024_Assessment"
+output: html_document
+---
+
+# Purpose
+
+This markdown file is to have a place where we can:
+- prep the data sheets pre-season
+- deal with data and do plots in-season for communications
+- do analysis and plots for communications post-season
+
+This Rmd file replaces the old "Assessment_Script_RIVER_YEAR.R" scripts
+
+Ideally, this file can be used between years and rivers without much changing, 
+where the
+year previous to the current one acts as a template. We can use the chunk option
+`include=FALSE` to turn a chunk on or off so that we can run the entire file
+by clicking the "Run" button at the top of the file in Rstudio.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,    # Hide code
+  results = 'hide',# Hide results
+  warning = FALSE, # Hide warnings
+  message = FALSE  # Hide messages
+)
+```
+
+```{r library_and_connection}
+# Library
+library(tidyverse)
+library(padr) # for dates
+library(ROracle)
+```
+
+```{r source_ALOSA_functions}
+# Source necessary functions from the Alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+```
+
+```{r database_connection}
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+```
+
+# Pre-season
+
+Only run this at the beginning of the season to generate the files we will be
+filling out with data throughout the season. Set `include=TRUE` for when you
+want to create sheets, other wise it should always be set to FALSE.
+
+```{r create_data_sheets, include=FALSE}
+
+# Creates blank data sheets for counts, biodata, and ages for specified sites
+# blank.datasheets(seed=116,startmonth=4,endmonth=6,startday=22,rivername="White Rock",
+#                  year=2025,recordtime=T,speciesID=T,strata=5,samplesperstrata=5)
+# make.count.filename.textfile("White Rock 2025 count data.csv","WRock",2025)
+# 
+
+
+```
+
+# In-season
+
+run count scripts to get count totals for in season updates
+make plots or tables to include in emails
+
+```{r in_season_counts,include=FALSE}
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025")
+
+x<-onespecies.river.escapement("White Rock 2025 count data.csv",fixtime=T,database=F,downstream.migration = F,2025,3,channel)
+
+x<-round(x)
+# n<-dim(x)[1]
+# x<-x[1:n-1,]
+
+print(paste0("Total escapement as of ",x$mon[n],"-",x$day[n]," is ",sum(x$total),sep=""))
+
+# write.csv(x,file="inseasonsummary.csv",row.names=F) # for in season emails
+```
+
+```{r in_season_plot,include=FALSE}
+#plot for in season emails
+old.data<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/data for multi year gaspereau plot.csv")
+
+old.data$date=as.Date(paste(old.data$day,old.data$mon,2025,sep="-"),
+                      format="%d-%m-%Y")
+
+#dayofyear uses "strftime" to evaluate which day of the year each date aligns with
+old.data$dayofyear=as.numeric(strftime(old.data$date, format="%j"))
+
+plot(x$dayofyear,x$total,type="l", xlim=c(min(x$dayofyear)-4,min(x$dayofyear)+65), ylim=c(0,120000),lwd=2,
+     ylab="Number of Fish",xlab="Day of Year")
+lines(old.data$dayofyear,old.data$Total2017,type="l",col="brown")
+lines(old.data$dayofyear,old.data$Total2018,type="l",col="red")
+lines(old.data$dayofyear,old.data$Total2019,type="l",col="orange")
+lines(old.data$dayofyear,old.data$Total2021,type="l",col="yellow")
+lines(old.data$dayofyear,old.data$Total2022,type="l",col="green")
+lines(old.data$dayofyear,old.data$Total2023,type="l",col="blue")
+lines(old.data$dayofyear,old.data$Total2024,type="l",col="purple")
+
+legend("topleft",legend=c("2017", "2018", "2019", "2021", "2022", "2023", "2024", "2025"),
+       col=c("brown", "red", "orange", "yellow", "green", "blue", "purple", "black"), lty=1, cex=0.8)
+
+```
+
+# Post-Season
+
+clean and prep data for upload
+ageing selection
+recounts
+final versions of some plots
+
+```{r ageing_selection_fishery, include=FALSE}
+#first part simulates some data and reads in made up landings data
+#second part runs the sampling script on the aggregated data, looping over the three sites
+#should be able to swap out the simualted data for real stuff, in the same format,
+#to select scales from real data
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025")
+seed=681:683 #Seed used for scale selection. 
+nsamples=300  #Number of scale selected to be aged
+sites<-c("LOWER","MIDDLE","UPPER")
+#dates set manually for 2025
+date.df<-data.frame(fishing.day=1:24,
+                    month=c(rep(4,6),rep(5,18)),
+                    day=c(21,22,24,25,28,29,01,02,05,06,08,09,12,13,15,16,19,20,22,23,26,27,29,30)
+)
+
+real.bio.data<-read.csv("Gaspereau_fishingsites_biocharacterisitcs.csv")
+real.bio.data<-merge(real.bio.data,date.df)
+
+daily.landings.all<-read.csv("Gaspereau River 2025 fishery landings.csv")
+daily.landings.all<-merge(daily.landings.all,date.df)
+daily.landings.all$number.fish<-ifelse(daily.landings.all$unit=="lbs",
+                                       daily.landings.all$landings*2,
+                                       daily.landings.all$landings*4.4)
+
+###sample it in a for loop for each site
+sample.nums<-list()
+for(j in 1:3)
+{
+  #subset to site
+  ind<-sites[j] #idk why but it doesn;t work indexing to sites[j]
+  daily.landings<-daily.landings.all[daily.landings.all$Location==ind,]
+  bio.data<-real.bio.data[real.bio.data$Location==ind,]
+  
+  n.sampled <- aggregate(bio.data$fishing.day, by = list(bio.data$fishing.day), FUN = function(x){length(x[!is.na(x)])})
+  colnames(n.sampled) = c("fishing.day", "n.sampled")
+  biodata.with.weights <- merge(bio.data, n.sampled, by = "fishing.day", all.x = T)
+  mergedcountdata = aggregate(daily.landings$number.fish, by = list(daily.landings$fishing.day), FUN = sum)
+  colnames(mergedcountdata) = c("fishing.day", "merged.number.up")
+  biodata.with.weights<-merge(biodata.with.weights, mergedcountdata[,c("fishing.day","merged.number.up")], by="fishing.day", all.x = T)
+  
+  biodata.with.weights$weighting <- biodata.with.weights$merged.number.up / biodata.with.weights$n.sampled
+  # Remove infinite values from the weighting column
+  biodata.with.weights$weighting[biodata.with.weights$weighting == Inf] <- 0
+  # sample
+  set.seed(seed[j])
+  ladd.sample <- data.frame(
+    sample(biodata.with.weights$sample[biodata.with.weights$scale == 'Y'],
+          nsamples,
+          replace = F,
+          prob = biodata.with.weights$weighting[biodata.with.weights$scale == 'Y']
+          )
+  )
+  colnames(ladd.sample) <- ("sample")
+  ladd.sample$Location <- sites[j]
+  sample.nums[[j]] <- ladd.sample[with(ladd.sample, order(sample)), ]
+}
+
+sample.nums.all<-do.call("rbind",sample.nums)
+# write.csv(sample.nums.all,file="GR fishery samples to be aged 2025.csv",row.names=F)
+
+#check for days where all samples are selected (bad)
+real.bio.data$to.be.aged<-ifelse(real.bio.data$sample %in% sample.nums.all,1,0)
+out<-list()
+for(j in 1:3)
+{
+  ind<-sites[j] #idk why but it doesn;t work indexing to sites[j]
+  bio.data<-real.bio.data[real.bio.data$Location==ind,]
+  sampled.for.ageing <- aggregate(bio.data$to.be.aged, by = list(bio.data$fishing.day), FUN = mean)
+  colnames(sampled.for.ageing) = c("fishing.day", "sampled.for.ageing")
+  sampled.for.ageing$site<-sites[j]
+  out[[j]]<-sampled.for.ageing
+}
+sampled.for.ageing<-do.call("rbind",out)
+```
+
+```{r final counts}
+wr_2025 <- onespecies.river.escapement(
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = 2025,
+  site = 3,
+  channel = channel
+)
+
+#write out counts to include in daily counts all years all rivers
+
+```
+```{r fishery and ladder ages}
+#get summary data
+multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
+                   header=T,stringsAsFactors = F)
+GR=multiyear[multiyear$river=="Gaspereau" & multiyear$species=="A",]
+
+channel = dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+) 
+
+wrl25<-get.age.data(2025,siteID = 3,sppID = 3501,AgeStructure = T,PrimaryAger = "Y",channel)
+
+age.prop.ladd.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=wrl25[wrl25$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(wrl25)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.ladd.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.ladd.matrix=GR$escape[GR$year==2025 & !is.na(GR$escape)]*age.prop.ladd.matrix/1000
+
+#get fishery age and bio data
+grf25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Ageing/GR fishery samples aged_LILY.csv")
+grf25<-grf25[-c(4,7,8,9)]
+colnames(grf25)<-c("YEAR","FISH_ID","SITE_ID","CURRENT_AGE","AGE_AT_FIRST_SPAWN")
+
+grfbio25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau_fishingsites_biocharacteristics.csv")
+grfbio25<-grfbio25[c(2,3,4,5,7,8,9,11)]
+colnames(grfbio25)<-c("YEAR","DAY","MON","FISH_ID","SEX_ID","FORK_LENGTH","WEIGHT","SITE_ID")
+
+#merge ages and bio dataframe to get day and month
+grf25<-merge(grf25,grfbio25,by=c("YEAR","FISH_ID","SITE_ID"))
+
+#weight fishery ages
+grf.landings25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau River 2025 fishery landings.csv")
+colnames(grf.landings25)<-c("YEAR","MON","DAY","SITE_ID","LANDINGS","UNIT")
+grf.landings25$LANDINGSFISH<-ifelse(grf.landings25$UNIT=="lbs",grf.landings25$LANDINGS*2,grf.landings25$LANDINGS/0.227)
+
+grf.landings25$DATE<-make_date(year = grf.landings25$YEAR, month = grf.landings25$MON, day = grf.landings25$DAY)
+grf.landings25$DOY<-yday(grf.landings25$DATE)
+
+grf25<-merge(grf25,grf.landings25,by=c("YEAR","MON","DAY","SITE_ID"))
+
+grf.numbers.at.age<-function(samp.ages,landings)
+{
+  grf25<-samp.ages
+  grf.landings25<-landings
+  #we will scale the aged sample up to the get the total number of aged a,ps fish at each site
+  #then scale it back down to the sample size, in numbers-at-age,ps
+  
+  #treat fishery as single point
+  #daily weights
+  n.sampled <- aggregate(grf25$DOY, by = list(grf25$DOY), FUN = function(x){length(x[!is.na(x)])})
+  #fish caught
+  n.caught <- aggregate(grf.landings25$LANDINGSFISH, by = list(grf.landings25$DOY), FUN = "sum")
+  weights.df<-merge(n.sampled,n.caught,by="Group.1")
+  colnames(weights.df)<-c("DOY","sampled","caught")
+  weights.df$age.weight<-weights.df$caught/weights.df$sampled
+  
+  #merge back with all data to get numbers-at-age
+  grf25<-merge(grf25,weights.df[,c(1,4)],by="DOY")
+  return(grf25)
+}  
+grf25.ages<-grf.numbers.at.age(grf25,grf.landings25)
+
+
+#stolen code
+age.prop.fish.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf25.ages[grf25.ages$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN","age.weight")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion.weighted=sum(spawngroup$age.weight,na.rm=T)/sum(grf25.ages$age.weight)
+    if(proportion.weighted>0)age.prop.fish.matrix[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.fish.matrix=GR$catch[GR$year==2025 & !is.na(GR$catch)]*age.prop.fish.matrix/1000
+
+#plot
+par(mfrow=c(1,2),oma=c(1,0,3,0),xpd=TRUE)
+par(mar=c(4.2,5,2,1))
+barplot(age.num.ladd.matrix[1:4,],ylim=c(0,800),
+        xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("White Rock Ladder",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+barplot(age.num.fish.matrix[1:4,],ylim=c(0,800),
+        xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("Fishery",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("top",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of Spawnings - 2025",title.adj=0,xpd=TRUE,inset=c(0,0.02),horiz=T)
+```
+```{r numbers at age all three sites}
+#get fishery age and bio data
+grf25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Ageing/GR fishery samples aged_LILY.csv")
+grf25<-grf25[-c(4,7,8,9)]
+colnames(grf25)<-c("YEAR","FISH_ID","SITE_ID","CURRENT_AGE","AGE_AT_FIRST_SPAWN")
+
+grfbio25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau_fishingsites_biocharacteristics.csv")
+grfbio25<-grfbio25[c(2,3,4,5,7,8,9,11)]
+colnames(grfbio25)<-c("YEAR","DAY","MON","FISH_ID","SEX_ID","FORK_LENGTH","WEIGHT","SITE_ID")
+
+#merge ages and bio dataframe to get day and month
+grf25<-merge(grf25,grfbio25,by=c("YEAR","FISH_ID","SITE_ID"))
+
+#weight fishery ages
+grf.landings25<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau River 2025 fishery landings.csv")
+colnames(grf.landings25)<-c("YEAR","MON","DAY","SITE_ID","LANDINGS","UNIT")
+grf.landings25$LANDINGSFISH<-ifelse(grf.landings25$UNIT=="lbs",grf.landings25$LANDINGS*2,grf.landings25$LANDINGS/0.227)
+
+grf.landings25$DATE<-make_date(year = grf.landings25$YEAR, month = grf.landings25$MON, day = grf.landings25$DAY)
+grf.landings25$DOY<-yday(grf.landings25$DATE)
+
+grf25<-merge(grf25,grf.landings25,by=c("YEAR","MON","DAY","SITE_ID"))
+
+#separate out sites for later
+grf25l<-grf25[grf25$SITE_ID=="LOWER",]
+grf25m<-grf25[grf25$SITE_ID=="MIDDLE",]
+grf25u<-grf25[grf25$SITE_ID=="UPPER",]
+
+grf.landings25l<-grf.landings25[grf.landings25$SITE_ID=="LOWER",]
+grf.landings25m<-grf.landings25[grf.landings25$SITE_ID=="MIDDLE",]
+grf.landings25u<-grf.landings25[grf.landings25$SITE_ID=="UPPER",]
+
+grf.numbers.at.age<-function(samp.ages,landings)
+{
+  grf25<-samp.ages
+  grf.landings25<-landings
+  #we will scale the aged sample up to the get the total number of aged a,ps fish at each site
+  #then scale it back down to the sample size, in numbers-at-age,ps
+  
+  #treat fishery as single point
+  #daily weights
+  n.sampled <- aggregate(grf25$DOY, by = list(grf25$DOY), FUN = function(x){length(x[!is.na(x)])})
+  #fish caught
+  n.caught <- aggregate(grf.landings25$LANDINGSFISH, by = list(grf.landings25$DOY), FUN = "sum")
+  weights.df<-merge(n.sampled,n.caught,by="Group.1")
+  colnames(weights.df)<-c("DOY","sampled","caught")
+  weights.df$age.weight<-weights.df$caught/weights.df$sampled
+  
+  #merge back with all data to get numbers-at-age
+  grf25<-merge(grf25,weights.df[,c(1,4)],by="DOY")
+  return(grf25)
+} 
+
+grf25.agesl<-grf.numbers.at.age(grf25l,grf.landings25l)
+grf25.agesm<-grf.numbers.at.age(grf25m,grf.landings25m)
+grf25.agesu<-grf.numbers.at.age(grf25u,grf.landings25u)
+grf25.ages<-grf.numbers.at.age(grf25,grf.landings25)
+
+
+#stolen code
+#LOWER
+age.prop.low.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf25.agesl[grf25.agesl$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN","age.weight")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion.weighted=sum(spawngroup$age.weight,na.rm=T)/sum(grf25.agesl$age.weight)
+    if(proportion.weighted>0)age.prop.low.matrix[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.low.matrix=GR$catch[GR$year==2025 & !is.na(GR$catch)]*age.prop.low.matrix/1000
+
+#MIDDLE
+age.prop.mid.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf25.agesm[grf25.agesm$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN","age.weight")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion.weighted=sum(spawngroup$age.weight,na.rm=T)/sum(grf25.agesm$age.weight)
+    if(proportion.weighted>0)age.prop.mid.matrix[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.mid.matrix=GR$catch[GR$year==2025 & !is.na(GR$catch)]*age.prop.mid.matrix/1000
+
+#UPPER
+age.prop.upp.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf25.agesu[grf25.agesu$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN","age.weight")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion.weighted=sum(spawngroup$age.weight,na.rm=T)/sum(grf25.agesu$age.weight)
+    if(proportion.weighted>0)age.prop.upp.matrix[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.upp.matrix=GR$catch[GR$year==2025 & !is.na(GR$catch)]*age.prop.upp.matrix/1000
+
+age.prop.all.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf25.ages[grf25.ages$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN","age.weight")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion.weighted=sum(spawngroup$age.weight,na.rm=T)/sum(grf25.ages$age.weight)
+    if(proportion.weighted>0)age.prop.all.matrix[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.all.matrix=GR$catch[GR$year==2025 & !is.na(GR$catch)]*age.prop.all.matrix/1000
+
+#plot
+par(mfrow=c(2,2),oma=c(2.5,0.5,4,0),xpd=TRUE)
+par(mar=c(2.5,4,0,1))
+barplot(age.num.low.matrix[1:4,],ylim=c(0,600),
+        xlab="",ylab="Thousands of Fish",cex.lab=1,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("Lower",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+barplot(age.num.mid.matrix[1:4,],ylim=c(0,600),
+        xlab="",ylab="",cex.lab=1,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("Middle",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+barplot(age.num.upp.matrix[1:4,],ylim=c(0,600),
+        xlab="",ylab="Thousands of Fish",cex.lab=1,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("Upper",3,line=-1.5,las=1,cex=1,adj=0.95)
+mtext("Age",1,line=3)
+box()
+barplot(age.num.all.matrix[1:4,],ylim=c(0,600),
+        xlab="",ylab="",cex.lab=1,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("All",3,line=-1.5,las=1,cex=1,adj=0.95)
+mtext("Age",1,line=3)
+box()
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("top",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of Spawnings - 2025",title.adj=0,xpd=TRUE,inset=c(0,0.02),horiz=T)
+```
+
+
+```{r fishery and ladder ages 2016}
+#get summary data
+multiyear=read.csv("//ent.dfo-mpo.ca/atlshares/Science/Population Ecology Division/DFD/Alosa/Assessment Results/river summaries all years.csv",
+                   header=T,stringsAsFactors = F)
+GR=multiyear[multiyear$river=="Gaspereau" & multiyear$species=="A",]
+
+channel = dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+) 
+
+wrl16<-get.age.data(2016,siteID = 3,sppID = 3501,AgeStructure = T,PrimaryAger = "Y",channel)
+
+age.prop.ladd.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=wrl16[wrl16$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(wrl16)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.ladd.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+age.num.ladd.matrix=GR$escape[GR$year==2016 & !is.na(GR$escape)]*age.prop.ladd.matrix/1000
+
+#get fishery age data
+#2016 fishery ages do not require weighting, so treat same as ladder ages
+grf16<-read.csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2016/Biological characteristics datasheet commercial 05302016 Master withage.csv")
+grf16<-grf16[,c(1,2,3,4,6,7,8,11,12)]
+colnames(grf16)<-c("DAY","MON","YEAR","FISH_ID","SEX_ID","FORK_LENGTH","WEIGHT","CURRENT_AGE","AGE_AT_FIRST_SPAWN")
+grf16<-grf16[complete.cases(grf16[,8]), ] # get rid of trailing NAs
+grf16$YEAR<-2016
+grf16.ages<-grf16
+
+age.prop.fish.matrix=matrix(rep(0,20),nrow=4, ncol=5,
+                       dimnames=list(c("First","Second","Third","Fourth"),
+                                     c("3","4","5","6","7")))
+for (i in 3:7){
+  CurrentAge=grf16.ages[grf16.ages$CURRENT_AGE==i,c("CURRENT_AGE","AGE_AT_FIRST_SPAWN")]
+  for (j in i:3){
+    spawngroup=CurrentAge[CurrentAge$AGE_AT_FIRST_SPAWN==j,]
+    proportion=dim(spawngroup)[1]/(dim(grf16.ages)[1])
+    #proportion.weighted=sum(spawngroup$age.weight)/sum(age.dat$age.weight)
+    if(proportion>0)age.prop.fish.matrix[(i-(j-1)),(i-2)]=proportion
+    #if(proportion.weighted>0)age.prop.matrix.weighted[(i-(j-1)),(i-2)]=proportion.weighted
+  }
+}
+
+age.num.fish.matrix=GR$catch[GR$year==2016 & !is.na(GR$catch)]*age.prop.fish.matrix/1000
+
+#plot
+par(mfrow=c(1,2),oma=c(1,0,3,0),xpd=TRUE)
+par(mar=c(4.2,5,2,1))
+barplot(age.num.ladd.matrix[1:4,],ylim=c(0,800),
+        xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("White Rock Ladder",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+barplot(age.num.fish.matrix[1:4,],ylim=c(0,800),
+        xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,las=1,
+        col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+mtext("Fishery",3,line=-1.5,las=1,cex=1,adj=0.95)
+box()
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("top",legend=c("First","Second","Third","Fourth"),
+       fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+       title="Number of Spawnings - 2016",title.adj=0,xpd=TRUE,inset=c(0,0.02),horiz=T)
+```
+```{r mean weight}
+bio.data<-get.bio.data(2025,3,3501,channel)
+count.data<-wr_2025
+
+bio.data$date=as.Date(paste(bio.data$DAY,bio.data$MON,bio.data$YEAR,sep="-"),
+                     format="%d-%m-%Y")
+
+#dayofyear uses "strftime" to evaluate which day of the year each date aligns with
+bio.data$dayofyear=as.numeric(strftime(bio.data$date, format="%j"))
+
+
+# scaledata=biodata[biodata$SCALE=="Y",]
+n.sampled<-aggregate(bio.data$dayofyear,by=list(bio.data$dayofyear),FUN=function(x){length(x[!is.na(x)])})
+
+colnames(n.sampled)=c("dayofyear","n.sampled")
+
+biodata.with.weights<-merge(bio.data,n.sampled,by="dayofyear",all.x=T)
+missingdays<-missing.days(bio.data)
+mergedays<-missingdays-1
+
+for(i in 1:length(missingdays)){
+  count.data$dayofyear[count.data$dayofyear==missingdays[i]]<-mergedays[i]
+}
+
+mergedcountdata=aggregate(count.data$total,by=list(count.data$dayofyear),FUN=sum)
+colnames(mergedcountdata)=c("dayofyear","merged.total")
+
+biodata.with.weights<-merge(biodata.with.weights,mergedcountdata[,c("dayofyear","merged.total")],
+                            by="dayofyear",all.x=T)
+
+
+biodata.with.weights$weighting<- biodata.with.weights$merged.total/biodata.with.weights$n.sampled
+
+weighted.mean(biodata.with.weights$WEIGHT,biodata.with.weights$weighting,na.rm=T)
+
+```
+

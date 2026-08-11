@@ -1,0 +1,223 @@
+# Setup
+```{r library_etc, warning=FALSE}
+# Library
+library(tidyverse)
+library(readxl)
+library(ROracle)
+
+# Source alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+# Here is the channel connection for when we haul things from the ALOSA db
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  username = "GASPEREA",
+  password = "_REMOVED",
+  "PTRAN",
+  believeNRows = FALSE
+  )
+
+```
+
+# Landings - QC data
+```{r get_MARFIS_data, warning=FALSE}
+# This is where we store the MARFIS pulls:
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata
+
+# This function checks to see when the last pull was and asks if you'd like to
+# update the pull. It then loads the MARFIS data without changing anything.
+# If you decide to do a new MARFIS pull and there are new additions to the db
+# that were not in the last pull, you will be prompted to make changes to the
+# Master Rivername Database. This is located on the R drive here:'
+# R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MASTER_RIVERNAME_DATABASE.csv
+#source(here("other_functions", "pull_marfis_data.R"))
+
+# You don't always have to pull the MARFIS data when working with it, that just
+# updates the copy of the data we have to the most up to date version. If you 
+# want to load MARFIS data that already exist, just load it from here:
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+
+# The function we use to clean the data is currently located here:
+
+# "R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS.error.cleaner.R"
+
+# This function contains data which CANNOT be stored on the unit github page
+# because it contains information that ostensibly could be used to glean how
+# much someone is earning, so we store it on the R drive, which seems a bit
+# extra. However, this is the rule (for now)
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS_error_cleaner.R")
+
+df <- marfis_error_cleaner(
+  catch = catch,
+  years = "all",
+  convert_to_kgs = TRUE,
+  tidy_data = TRUE,
+  correct_eel_pot = TRUE,
+  unknown_rivers_are_na = TRUE,
+  unknown_gear_are_na = TRUE
+  )
+
+```
+
+```{r}
+df |> 
+  filter(YEAR >= 2020) |> 
+  filter(RIVERNAME_CLEANED == "GASPEREAU") |> 
+  group_by(YEAR) |> 
+  summarise(
+    FV_WEIGHT = round(sum(FV_WEIGHT) / 1000),
+    N = n_distinct(LICENCE_ID)
+  ) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  ggplot(aes(YEAR, FV_WEIGHT)) +
+  geom_col(fill = "#7ECDBB", colour = "grey10", alpha = 0.8) +
+  theme_bw() +
+  scale_y_continuous(n.breaks = 10, labels = scales::comma) +
+  labs(
+    title = "Total Reported Gaspereau Landings for Gaspereau River",
+    subtitle = "n = number of licences reporting landings",
+    y = "Reported Landings (mt)",
+    x = "Year"
+    ) +
+  theme(panel.grid = element_blank()) +
+  geom_text(
+    aes(label = paste0("n = ", N)),
+    vjust = -0.25,
+    position = position_dodge(width = 1),
+    size = 4
+    )  
+```
+
+```{r}
+df |> 
+  filter(YEAR >= 2020) |> 
+  filter(RIVERNAME_CLEANED == "GASPEREAU") |> 
+  group_by(YEAR) |> 
+  summarise(
+    FV_WEIGHT = round(sum(FV_WEIGHT) / .227),
+    N = n_distinct(LICENCE_ID)
+  ) |> 
+  mutate(YEAR = as.factor(YEAR)) |> 
+  ggplot(aes(YEAR, FV_WEIGHT)) +
+  geom_col(fill = "#7ECDBB", colour = "grey10", alpha = 0.8) +
+  theme_bw() +
+  scale_y_continuous(n.breaks = 10, labels = scales::comma) +
+  labs(
+    title = "Total Reported Gaspereau Landings for Gaspereau River",
+    subtitle = "n = number of licences reporting landings",
+    y = "Reported Landings (fish)",
+    x = "Year"
+    ) +
+  theme(panel.grid = element_blank()) +
+  geom_text(
+    aes(label = paste0("n = ", N)),
+    vjust = -0.25,
+    position = position_dodge(width = 1),
+    size = 4
+    )  
+```
+
+```{r}
+# Get escapement and landings data and combine them for a plot
+year_input <- 2025
+
+onespecies.river.escapement(
+  filename = "dummy",
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = year_input,
+  site = 3,
+  channel = channel
+  ) |> 
+  mutate(date = make_date(year = year_input, month = mon, day = day)) |> 
+  select(date, total, clow, chigh) -> gr_esc
+  
+df |> 
+  filter(RIVERNAME_CLEANED == "GASPEREAU") |> 
+  filter(YEAR == year_input) |> 
+  mutate(DATE = make_date(year = year(FV_DATE_FISHED), month = month(FV_DATE_FISHED), day = day(FV_DATE_FISHED))) |> 
+  group_by(DATE) |> 
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
+  select(date = DATE, landings_kg = FV_WEIGHT) -> gr_landings
+
+gr_esc |> 
+  full_join(gr_landings, by = "date") |> 
+  arrange(date) |> 
+  # We want escapement and landings in the same unit, so I convert landings into
+  # number of fish using 0.227 conversion factor
+  mutate(landings_fish = round(landings_kg / 0.227)) -> gr_df
+
+gr_df
+sum(gr_df$clow, na.rm = TRUE)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# fill = "#54BDC2"
+# colour = "#24693D"
+gr_df |> 
+  ggplot(aes(date)) +
+  geom_ribbon(aes(ymin = clow, ymax = chigh, fill = "Daily Escapement"), alpha = 0.6, show.legend = FALSE)  +
+  geom_line(aes(y = total, colour = "Daily Escapement"), linewidth = 1, alpha = 1) +
+  geom_col(aes(y = landings_fish, fill = "Daily Landings"), colour = "grey10", alpha = 0.6) +
+  scale_colour_manual(name = "", values = c("Daily Escapement" = "#24693D")) +
+  scale_fill_manual(name = "", values = c("Daily Landings" = "#54BDC2")) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b %d") +
+  scale_y_continuous(n.breaks = 10, labels = scales::comma) +
+  labs(
+    title = "Reported Landings and Escapement on Gaspereau River in 2025",
+    subtitle = "Shading around escapement estimates indicates the 95% confidence interval",
+    x = "",
+    y = "Number of fish"
+    ) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    legend.position = "top",
+    legend.justification = "left"
+  )
+```
+
+```{r}
+df |> 
+  filter(RIVERNAME_CLEANED == "GASPEREAU") |> 
+  filter(YEAR == 2025) |> 
+  distinct(LICENCE_ID)
+
+# QC / QA
+# 120101 - checked
+# 120123 - checked
+# 120124 - checked
+# 120146 - checked
+# 120233 - checked
+# 120236 - checked
+# 120242 - checked
+# 120246 - checked
+# 120255 - checked
+# 120258 - checked
+# 120315 - checked
+# 120341 - no log, marfis looks legit
+# 120381 - checked
+# 120753 - checked
+# 120755 - no log, marfis looks legit
+
+catch |>
+filter(LICENCE_ID == 120755 & YEAR == 2025) |>
+select(LICENCE_ID, FV_DATE_FISHED, RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_GEAR_CODE, GEAR_DESCRIPTION, FV_HOURS_FISHED, FV_WEIGHT, MEASUREMENT_UNIT) |>
+arrange(FV_DATE_FISHED)
+
+licences |>
+filter(`Licence Id` == 120755) |>
+select(`Licence Id`, STATUS, `COUNTY CONFIRMED`, `Community Name`, `RIVER CONFIRMED`, `Name (Last, First)`, `Gear Code`, `Gear Description (English)`, Renewed) 
+
+```
+
+```{r}
+sum(gr_df$landings_fish, na.rm = TRUE) / (sum(gr_df$landings_fish, na.rm = TRUE) + sum(gr_df$total, na.rm = TRUE)) -> ER
+
+-log(1 - ER)
+
+```

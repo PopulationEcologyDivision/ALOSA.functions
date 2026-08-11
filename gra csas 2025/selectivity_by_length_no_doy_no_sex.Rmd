@@ -1,0 +1,183 @@
+```{r, warning=FALSE}
+require(ROracle)
+library(tidyverse)
+
+source("~/git/ALOSA.functions/functions/sourcery.R")
+
+sourcery()
+
+#Set account name, password, and server
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+```
+
+
+# Fishery data
+```{r}
+# Get the biocharacteristics data from the fishery for 2025
+# We only want lengths of the fish that were aged from the fishery
+read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Ageing/GR fishery samples aged_LILY.csv") |> 
+  arrange(sample) |> 
+  pull(sample) -> fishery_ages
+
+# Here we get the lengths of the fish that had their ages estimated and put them
+# into the same bins we put the aged ladder fish into
+read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau_fishingsites_biocharacteristics.csv") |> 
+  filter(sample %in% fishery_ages) |> 
+  select(LOCATION = Location, FORK_LENGTH = fork.length) |> 
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) -> fishery_lengths
+
+# We need to make categories for length and summarise how many fish from the 
+# fishery and the ladder were in each category. It looks like the aged fish from
+# the fishery had a larger range of lengths than the aged fish from the ladder,
+# so we will use the ranges observed in the fishery to determine the length bins
+# as these same bins will also be used on the ladder fish.
+
+# There is an error in the fishery lengths data
+fishery_lengths[fishery_lengths$FORK_LENGTH == 2400, "FORK_LENGTH"] <- 240
+
+# Now we can calculate the range of lengths to get some bins
+length_range <- range(fishery_lengths$FORK_LENGTH)[2] - range(fishery_lengths$FORK_LENGTH)[1]
+n_bins <- 10
+bin_width <- length_range / n_bins
+
+# Now we want to bin the fishery data
+fishery_lengths |> 
+  mutate(
+    LENGTH_BIN = cut(
+      FORK_LENGTH,
+      breaks = seq(min(FORK_LENGTH, na.rm = TRUE), max(FORK_LENGTH, na.rm = TRUE) + bin_width, by = bin_width),
+      right = FALSE
+      )
+    ) |>
+  group_by(LENGTH_BIN) |>
+  summarise(N = n(), .groups = "drop") |> 
+  select(LENGTH_BIN, N) -> fishery_lengths_binned
+
+# Get the landings from the fishery for 2025 so we can use them to weight the
+# binned length data from the fishery
+fish_per_lb <- 0.227
+
+# Get the landings for all three fishing sites
+read_csv("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Gaspereau River/Gaspereau 2025/Gaspereau River 2025 fishery landings.csv") |> 
+  select(LOCATION = Location, LANDINGS = landings, UNIT = unit) |> 
+  mutate(LANDINGS_FISH = if_else(UNIT == "lbs", LANDINGS * 2, LANDINGS / fish_per_lb)) |> 
+  summarise(LANDINGS_FISH = sum(round(LANDINGS_FISH))) |> 
+  pull(LANDINGS_FISH) -> site_landings_in_fish
+
+# Merge the binned fishery length data with the fishery landings data by DOY and
+# multiply the number of fish observed in each bin by the number caught in that
+# bin to get the number of fish total that fall into each length bin in the fishery
+fishery_lengths_binned |> 
+  mutate(N_SUM = sum(N)) |> 
+  mutate(N_PROP = N / N_SUM) |> 
+  mutate(TOTAL_FISH_IN_BIN = round(site_landings_in_fish * N_PROP)) |> 
+  select(LENGTH_BIN, N, TOTAL_FISH_IN_BIN) -> fishery_lengths_binned_totals
+
+fishery_lengths_binned_totals
+
+# Now we want to correct for the entire fishery since we only looked at three 
+# sites. We know how many pounds total fish were reported as caught, so we can
+# convert this to total fish caught and then get the proportion of total fish
+# that these three stands represent
+
+# Convert the total reported landings (from RM) in pounds to fish
+total_landings <- 336873 * 2
+
+# The LANDINGS_FISH column is in total fish, so if we sum it for all DOY and
+# divide it by the total_landings, we will get the proportion of the fishery
+# represented by the three sites
+landings_corr <- site_landings_in_fish / total_landings
+
+# If we divide by this, we will get the total fish for the whole fishery
+fishery_lengths_binned_totals |> 
+  mutate(FISHERY_CORRECTED = round(TOTAL_FISH_IN_BIN / landings_corr)) -> fishery_lengths_binned_totals_corrected
+
+fishery_lengths_binned_totals_corrected
+```
+
+# Ladder biocharacteristics and binning
+
+```{r}
+# Get the age data from GR for 2025
+# These data are weighted proportional to the run
+
+# STEPS
+# 1. We want to bin these data according to the bins for the fishery
+ladder_bins <- levels(fishery_lengths_binned_totals$LENGTH_BIN)
+
+length_breaks <- sort(unique(as.numeric(unlist(regmatches(ladder_bins, gregexpr("[0-9]+", ladder_bins)))))) # Thank you LLM-bot
+
+# 2. We want to multiply by the ladder correction value to see what each bin of fish represents in total fish
+ladd.corr <- 858041 / 500
+
+get.age.data(2025, siteID = 3, sppID = 3501, AgeStructure = TRUE, PrimaryAger = "Y", channel) |> 
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) |> 
+  select(FISH_ID, FORK_LENGTH, WEIGHT) |> 
+  mutate(
+    LENGTH_BIN = cut(
+      FORK_LENGTH,
+      breaks = length_breaks,
+      right = FALSE
+    )
+  ) |>
+  group_by(LENGTH_BIN) |>
+  summarise(N = n(), .groups = "drop") |>
+  mutate(LADDER_CORRECTED = round(N * ladd.corr)) -> ladder_length_bins_totals_corrected
+
+ladder_length_bins_totals_corrected
+```
+
+# Merge the fishery and ladder data
+```{r}
+# This is a sanity check to see the number of fish harvested versus the number
+# escaped using the correction factors
+fishery_lengths_binned_totals_corrected |> 
+  full_join(ladder_length_bins_totals_corrected, by = "LENGTH_BIN") |> 
+  ungroup() |> 
+  rename(N_FISHERY = N.x, N_LADDER = N.y) -> ladder_fishery_combined
+
+# This is a dirty way to do this, but I do not care very much
+ladder_fishery_combined |> 
+  mutate(ID = factor(1:nrow(ladder_fishery_combined)), .before = N_FISHERY) |> 
+  mutate(
+    LENGTH_BIN_2 = case_when(
+      ID == "1" ~ ladder_bins[2],
+      ID %in% c("9", "10", "11") ~ ladder_bins[8],
+      TRUE ~ LENGTH_BIN
+      ),
+    .before = ID
+  ) |> 
+  group_by(LENGTH_BIN_2) |> 
+  summarise(
+    N_FISHERY = sum(N_FISHERY, na.rm = TRUE),
+    TOTAL_FISH_IN_BIN = sum(TOTAL_FISH_IN_BIN, na.rm = TRUE),
+    FISHERY_CORRECTED = sum(FISHERY_CORRECTED, na.rm = TRUE),
+    N_LADDER = sum(N_LADDER, na.rm = TRUE),
+    LADDER_CORRECTED = sum(LADDER_CORRECTED, na.rm = TRUE)
+  ) |> 
+  mutate(
+    LENGTH_BIN_2 = case_when(
+      LENGTH_BIN_2 == "[225,233)" ~ "< 233",
+      LENGTH_BIN_2 == "[273,281)" ~ ">= 273",
+      TRUE ~ LENGTH_BIN_2
+    )
+  ) -> final_df
+
+# This setup has all the data from both the fishery and the ladder
+final_df |>
+  mutate(
+    TOTAL = FISHERY_CORRECTED + LADDER_CORRECTED,
+    ER = round(FISHERY_CORRECTED / TOTAL, 2),
+    F_MORT = round(-log(1 - ER), 2),
+    SEL = round(F_MORT / max(F_MORT, na.rm = TRUE), 2)
+    ) -> sel_df
+
+sel_df
+
+```

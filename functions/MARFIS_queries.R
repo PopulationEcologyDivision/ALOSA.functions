@@ -36,6 +36,10 @@ MARFIS_queries=function(local.csv=F,catch,didnotfish,licencerenewals){
   #areainfo=read.csv(choose.files(caption="Select AREA CSV"),header=T,stringsAsFactors = F)
   #licenceinfo=read.csv(choose.files(caption="Select LICENCE CSV"),header=T,stringsAsFactors = F)
   
+  # Change the date times to just dates
+  #catch$FV_DATE_FISHED <- date(catch$FV_DATE_FISHED)
+  catch$FV_DATE_FISHED <- as.Date(catch$FV_DATE_FISHED)
+  
   #Remove instances when weight is NA. This happened at some point 
   # during the MARFIS data query
   catch=catch[!is.na(catch$FV_WEIGHT),]
@@ -54,9 +58,12 @@ MARFIS_queries=function(local.csv=F,catch,didnotfish,licencerenewals){
   # 2_find_new_rivernames.r
   # find and add new rivername variants entered into MARFISSCI catch data
   # This should be redone after each new MARFIS pull.
-  
   rivernames = read.csv("MASTER_RIVERNAME_DATABASE.csv") 
   
+  # Make a back up of the old MASTER_RIVERNAME_DATABASE.csv file as we had a bug
+  # where a good portion of it was overwritten and we had to replace many of
+  # the names over a few hours.
+  file.copy("MASTER_RIVERNAME_DATABASE.csv", "MASTER_RIVERNAME_DATABASE_BACKUP.csv", overwrite = TRUE)
   
   x=unique(catch[,c("RIVERNAME_LOGBOOK","YEAR","LICENCE_ID")])
   y=unique(rivernames[,c("RIVERNAME_LOGBOOK","YEAR","LICENCE_ID")])

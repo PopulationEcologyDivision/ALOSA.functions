@@ -1,0 +1,312 @@
+---
+title: Summary of gaspereau escapement estimates for the Tusket River from 2022 to
+  2024
+author: "Logan Gray"
+date: "`r format(Sys.Date(), '%B %Y')`"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+fig_caption: yes
+always_allow_html: yes
+---
+
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+library(kableExtra)
+library(tidyverse)
+```
+
+```{r data, echo = FALSE, include=FALSE}
+source("~/git/ALOSA.functions/functions/sourcery.R")
+
+sourcery()
+
+setwd("R:/Science/Population Ecology Division/DFD/Alosa/Locations/Tusket River/Tusket 2024/FFHPP-report")
+escape_vd_2022 <- onespecies.river.escapement("vd_2022.csv", fixtime = T, downstream.migration = F, database = F, 2022, 2, channel)
+escape_vd_2023 <- onespecies.river.escapement("vd_2023.csv", fixtime = T, downstream.migration = T, database = F, 2023, 2, channel)
+escape_vd_2024 <- onespecies.river.escapement("vd_2024.csv", fixtime = T, downstream.migration = F, database = F, 2024, 2, channel)
+escape_ph_2022 <- onespecies.partial.river.escapement("ph_2022.csv", fixtime = F, database = F, 2022, 14, channel)
+escape_ph_2023 <- onespecies.river.escapement("ph_2023.csv", fixtime = F, downstream.migration = T, database = F, 2023, 14, channel)
+escape_ph_2024 <- onespecies.river.escapement("ph_2024.csv", fixtime = T, downstream.migration = F, database = F, 2024, 14, channel)
+
+escape_vd_2022$year <- 2022
+escape_vd_2023$year <- 2023
+escape_vd_2024$year <- 2024
+escape_ph_2022$year <- 2022
+escape_ph_2023$year <- 2023
+escape_ph_2024$year <- 2024
+
+escape_vd_2022$location <- "Lake Vaughan"
+escape_vd_2023$location <- "Lake Vaughan"
+escape_vd_2024$location <- "Lake Vaughan"
+escape_ph_2022$location <- "Powerhouse"
+escape_ph_2023$location <- "Powerhouse"
+escape_ph_2024$location <- "Powerhouse"
+
+# merge the dataframes into a single frame
+escapement <- rbind(
+  escape_vd_2022,
+  escape_vd_2023,
+  escape_vd_2024,
+  escape_ph_2022,
+  escape_ph_2023,
+  escape_ph_2024
+)
+
+# make all dates have 2024 in them so they plot nicely
+escapement$date <- ymd(paste("2024", escapement$mon, escapement$day, sep = "-"))
+
+escapement$year <- as.character(escapement$year)
+
+escapement$chigh[is.na(escapement$chigh)]<-0
+escapement$clow[is.na(escapement$clow)]<-0
+
+
+# Ratios of escapements
+
+filtered_df<-escapement %>%
+  #filter(year == 2024) %>% 
+  group_by(date, year) %>%
+  filter(all(c("Lake Vaughan", "Powerhouse") %in% location)) %>%
+  mutate(ratio = total[location == "Powerhouse"] / total[location == "Lake Vaughan"])
+
+
+result <- filtered_df %>% 
+  group_by(year) %>% 
+  summarise(
+    total_PH = sum(total[location == "Powerhouse"]),
+    total_VD = sum(total[location == "Lake Vaughan"])
+  )
+
+result <- result %>% mutate(percentage = (total_PH / total_VD) * 100)
+result <- result %>% mutate(
+  percentage = signif(percentage, 1),
+  total_PH = signif(total_PH, 3),
+  total_VD = signif(total_VD, 3)
+  )
+
+result <- result %>% rename("Year" = year, "Powerhouse" = total_PH, "Lake Vaughan" = total_VD, "%" = percentage)
+
+library(scales)
+result$Powerhouse <- comma_format()(result$Powerhouse)
+result$`Lake Vaughan` <- comma_format()(result$`Lake Vaughan`)
+
+# summary stats
+summary <- 
+escapement %>% 
+  group_by(location, year) %>% 
+  summarise(max = max(total), median = median(total)) %>% 
+  rename("Year" = year, "Location" = location, "Maximum" = max, "Median" = median)
+
+summary <- summary %>% mutate(
+  Maximum = signif(Maximum, 2),
+  Median = signif(Median, 2))
+
+summary$Maximum <- comma_format()(summary$Maximum)
+summary$Median <- comma_format()(summary$Median)
+
+#fill in missing count days with NAs
+# escapement$year<-as.integer(escapement$year)
+l<-length(min(escapement$dayofyear):max(escapement$dayofyear))
+df<-data.frame(dayofyear=rep(min(escapement$dayofyear):max(escapement$dayofyear),6),
+               year=rep(rep(c("2022","2023","2024"),each=l),2),
+               location=rep(c("Lake Vaughan","Powerhouse")))
+escapement<-merge(df,escapement,all.x=T)
+escapement<-escapement[order(escapement$year,escapement$location,escapement$dayofyear),]
+# escapement$date<-as.Date(escapement$dayofyear-1,origin=paste0(escapement$year,"-01-01"))
+escapement$date<-as.Date(escapement$dayofyear-1,origin="2024-01-01")
+```
+
+## Video coverage
+
+Video footage began to be recorded at each site near the beginning of spring except for the first year of collection at the Powerhouse (Table 1). This was the first year that video was collected from that ladder and it got started later than usual. Video footage stopped being recorded in late June for both sites. In 2024, instead of watching all the video footage for the earliest days of the run, only select strata (5 and 6) were observed until April 1st as the first gaspereau usually appear in mid-April. Gaps in the footage exist at the Powerhouse across all years sampled due to technical problems with the camera. At the Powerhouse in 2022 the first large gap in footage (April 29 until May 25) does not indicate a complete lack of footage. Rather, there were multiple small gaps in the footage throughout this period.
+
+```{r, echo = FALSE}
+raw_table <- 
+"Site | Year | Start | End | First ID | Gaps
+Powerhouse | 2022 | Apr 29 | Jun 20 | May 02 | Apr 29 - May 01; Jun 06 - Jun 10
+Powerhouse | 2023 | Mar 16 | Jun 19 | Apr 19 | Apr 07 - Apr 18; Apr 22 - Apr 24
+Powerhouse | 2024 | Apr 01 | Jun 20 | Apr 16 | Apr 19 - Apr 29
+Lake Vaughan | 2022 | Apr 01 | Jun 20 | Apr 08 | NA
+Lake Vaughan | 2023 | Mar 23 | Jun 26 | Apr 15 | NA
+Lake Vaughan | 2024 | Apr 01 | Jun 20 | Apr 14 | NA"
+
+footage <- read.table(text = raw_table, header = TRUE, sep = "|", strip.white = FALSE)
+kable(
+  footage,
+  caption = "Table 1. Footage coverage for the cameras at exit chutes at the Powerhouse and Lake Vaughan fish ladders") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+  )
+```
+
+```{r map, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+# library(leaflet)
+# library(leafem)
+# 
+# tusket_falls <- c(-65.9732, 43.8825)
+# 
+# tusket_points <- data.frame(
+#   lng = c(-65.9782, -65.9695),
+#   lat = c(43.8824, 43.8867),
+#   site = c("Powerhouse", "Lake Vaughan")
+#   )
+# 
+# tusket_map <- leaflet(tusket_points) %>% 
+#   setView(lng = tusket_falls[1], lat = tusket_falls[2], zoom = 15) %>% 
+#   addTiles() %>% 
+#   addProviderTiles("Esri.WorldGrayCanvas") %>% 
+#   addCircleMarkers(lng = ~lng, lat = ~lat) %>% 
+#   addLabelOnlyMarkers(
+#     lng = ~lng,
+#     lat = ~lat,
+#     label = ~site,
+#     labelOptions = labelOptions(noHide = TRUE, direction = 'top', textOnly = TRUE)
+#   )
+# 
+# tusket_map             
+```
+
+---
+
+## Summary statistics
+
+The total estimated escapement at the Powerhouse ladder ranged from approximately 1 to 9 percent of the that observed at Lake Vaughan (Table 2). The maximum escapement rates per day at the Powerhouse ladder were one to two orders of magnitude lower than those at Lake Vaughan (Table 3).
+
+```{r ratios, echo = FALSE}
+kable(
+  result,
+  caption = "Table 2. Total escapement at Powerhouse ladder as a percentage of
+  total escapement at Lake Vaughan ladder. Percentages were calculated each year
+  for time periods where counts from both fish ladders were available.") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+    )
+```
+
+
+
+```{r, echo = FALSE}
+kable(
+  summary,
+  caption = "Table 3. Maximum and average escapement rate (fish per day) for each ladder") %>% 
+  kable_styling(
+    full_width = FALSE,
+    position = "left",
+    bootstrap_options = "striped"
+    )
+```
+
+---
+
+## Plots
+
+```{r daily, fig.height=8, echo=FALSE, fig.cap="Figure 1. Estimates of daily escapement at Powerhouse and Lake Vaughan fish ladders from 2022 to 2024. Shading represents 95% confidence intervals where available"}
+a <-
+escapement %>%
+  group_by(year) %>%
+  #mutate(total = if_else(is.na(total), 0, total)) %>% 
+  ggplot(aes(date, total/1000))+
+  facet_wrap(~year, scales = "fixed", ncol = 1)+
+  geom_path(
+    data = . %>% filter(location == "Lake Vaughan"),
+    aes(colour = location),
+    alpha = 0.9,
+    linewidth = 1.25
+    )+
+  geom_ribbon(
+    data = . %>% filter(location == "Lake Vaughan"),
+    aes(ymin = clow/1000, ymax = chigh/1000, fill = location),
+    alpha = 0.2
+    )+
+  geom_path(
+    data = . %>% filter(location == "Powerhouse"),
+    aes(colour = location),
+    alpha = 0.9,
+    linewidth = 1.25
+  )+
+  geom_ribbon(
+    data = . %>% filter(location == "Powerhouse"),
+    aes(ymin = clow/1000, ymax = chigh/1000, fill = location),
+    alpha = 0.5
+  )+
+  theme_bw() +
+  labs(
+    #title = "Daily escapement estimates for gaspereau on the Tusket River",
+    x = "Date",
+    y = "Thousands of Fish",
+    colour = "Location",
+    fill = "Location"
+  )+
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
+  scale_y_continuous(
+    limits = c(0, max(escapement$chigh,na.rm=T))/1000,
+    breaks = seq(0, max(escapement$chigh,na.rm=T)/1000, by = 20)
+  )+
+  theme(
+    legend.position = c(0.75, 0.925),
+    legend.background = element_blank(),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    axis.title.x = element_blank()
+    )
+a # the escapement estimates
+```
+
+$~$
+$~$
+$~$
+
+```{r ratio, fig.height = 8, echo=FALSE, fig.cap="Figure 2. Daily escapement rates at Powerhouse as a percentage of those at Lake Vaughan"}
+b <-
+escapement %>%
+  #filter(year == 2024) %>% 
+  group_by(date, year) %>%
+  filter(all(c("Lake Vaughan", "Powerhouse") %in% location)) %>%
+  mutate(ratio = total[location == "Powerhouse"] / total[location == "Lake Vaughan"]) %>%
+  ggplot(aes(date, ratio * 100)) +
+  facet_wrap(~year, scales = "fixed", ncol = 1)+
+  geom_line(alpha = 0.75, linewidth = 1)+
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 10))+
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    axis.title.x = element_blank()
+  )+
+  labs(
+    #title = "Daily escapement rates at Powerhouse as a percentage of those at Lake Vaughan",
+    y = "Percent (%)"
+  )
+
+b # the ratio between the two sites
+```
+```{r}
+bp<-
+  escapement%>%
+  #filter(year == 2024) %>% 
+  group_by(year) %>%
+  ggplot(aes(location, total)) +
+  facet_wrap(~year, scales = "fixed", ncol = 3)+
+  geom_boxplot()+
+  # scale_x_date(date_labels = "%b %d", date_breaks = "1 week")+
+  # scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 10))+
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    axis.title.x = element_blank()
+  )+
+  labs(
+    #title = "Daily escapement rates at Powerhouse as a percentage of those at Lake Vaughan",
+    y = "Daily Escapement"
+  )
+
+bp # boxplot of distribution of daily counts
+```
+
