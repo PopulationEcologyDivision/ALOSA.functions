@@ -14,13 +14,8 @@ library(DBI)
 library(ROracle)
 
 # Set up the connection to the database
-channel <- dbConnect(
-  DBI::dbDriver("Oracle"),
-  username = "GASPEREA",
-  password = "gps983",
-  dbname = "PTRAN",
-  believeNRows = FALSE
-)
+channel <- dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE) 
 
 # Source all the functions so we can use them
 source("~/git/ALOSA.functions/functions/sourcery.R")

@@ -125,10 +125,6 @@ if (file.exists(file_path)) {
     
     message("Updating the MARFIS pull")
     
-    # Connect to MARFIS db and pull
-    oracle.password <- "zpdUG7!W"
-    oracle.username <- "BILLARDM"
-    
     channel <- dbConnect(
       DBI::dbDriver("Oracle"),
       username = oracle.username,
@@ -147,10 +143,6 @@ if (file.exists(file_path)) {
 } else {
   message("MARFIS pull not found")
   message("Pulling data from MARFIS ...")
-  
-  # Connect to MARFIS db and pull
-  oracle.password <- "zpdUG7!W"
-  oracle.username <- "BILLARDM"
   
   channel <- dbConnect(
     DBI::dbDriver("Oracle"),
@@ -569,10 +561,6 @@ write_csv(landings_by_area_csv, paste0(output_folder, "/landings_by_area.csv"))
 
 # ESCAPEMENT (YS & GR ONLY)
 ```{r lake_vaughan_escapement}
-# Connect to GASPEREA db for this part
-oracle.password.GASP <- "gps983"
-oracle.username.GASP <- "GASPEREA"
-
 # Set up the connection to the database
 channel <- dbConnect(
   DBI::dbDriver("Oracle"),

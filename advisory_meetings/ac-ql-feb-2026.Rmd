@@ -11,13 +11,8 @@ source("~/git/ALOSA.functions/functions/sourcery.R")
 sourcery()
 
 # Here is the channel connection for when we haul things from the ALOSA db
-channel <- dbConnect(
-  DBI::dbDriver("Oracle"),
-  username = "GASPEREA",
-  password = "gps983",
-  "PTRAN",
-  believeNRows = FALSE
-  )
+channel <- dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
+                  believeNRows=FALSE) 
 
 ```
 
