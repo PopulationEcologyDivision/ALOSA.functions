@@ -34,12 +34,14 @@ DOC_SERIAL  <- NULL
 GEAR_CODE <- NULL
 
 if (F){
+
   YEARS  <- c(2021:2025)
   LICENCE <- 120310
   SUM_DOC_ID <- 530691
   SD_LOG_ID  <- c(3153745, 3152877:3152886)
   DOC_SERIAL  <- 10489
   GEAR_CODE <- 41
+
 }
 
 if (!exists("bkup")){
@@ -70,3 +72,4 @@ filter_marfis_fw(years = YEARS, spp = 350, sum_doc_defn_id = 11,
                  doc_serial_num = DOC_SERIAL, 
                  sd_log_id = SD_LOG_ID, 
                  gear_code= GEAR_CODE)
+
