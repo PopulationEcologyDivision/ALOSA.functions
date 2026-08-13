@@ -2,78 +2,91 @@
 
 status.plot<-function(USR,
                       LRP,
-                      LRR,
+                      RR,
                       TRR,
-                      year,
-                      removals,
-                      ssb,
-                      RR.label,
-                      file.name)
+                      u,
+                      ssb)
 {  
  #inputs:
-  yy<-year
-  u<-removals
+  u<-u
   ssb<-ssb
+  nyears<-length(ssb)
   
   river<-"Gaspereau River"
   species<-"Alewife"
   
-  ##########################
-  
   #calcs:
   SSB.prop<-ssb/USR
-  # TRR.prop<-TRR/RRL
-  TRR.prop<-u/LRR
-  png(file.path('figures',paste0(file.name,'.png',sep="")),width=8.5,height=11,units='in',res=200)
-  # windows(width=8.5,height=11)
-  par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,2),las=1)
+  #standardize errors too
+  SSB.LO<-ssb.plot.lower/USR
+  SSB.HI<-ssb.plot.upper/USR
   
-  plot(SSB.prop,TRR.prop,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,2))
+  RR.prop<-u/RR
+  RR.LO<-u.plot.lower/RR
+  RR.HI<-u.plot.upper/RR
   
-  points(SSB.prop,TRR.prop)
-  points(SSB.prop[1],TRR.prop[1],pch=19,col="green")
-  points(SSB.prop[length(SSB.prop)],TRR.prop[length(SSB.prop)],pch=19,col="red")
-  lines(SSB.prop,TRR.prop)
+  #cols
+  base.cols<-c("red","blue")
+  var.pal<-colorRampPalette(base.cols)
+  cols.plot<-var.pal(length(SSB.prop))
+  
+  #plot
+  png("status.plot.GRA.png",width=8.5,height=8.5,units='in',res=200)
+  
+  par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,1),las=1)
+  layout(matrix(c(1, 2), nrow = 1), widths = c(8, 1))
+  plot(SSB.prop,RR.prop,type="n",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,2))
+  
+  points(SSB.prop,RR.prop,col=cols.plot,pch=16)
+  lines(SSB.prop,RR.prop,lty=3)
+  points(SSB.prop[nyears],RR.prop[nyears],pch=19)
+  #error bars on final 10 point
+  for(i in 25:nyears)
+  {
+    arrows(SSB.prop[i],
+           RR.LO[i],
+           SSB.prop[i],
+           RR.HI[i],
+           length = 0.05, angle = 90, code = 3)
+    arrows(SSB.LO[i],
+           RR.prop[i],
+           SSB.HI[i],
+           RR.prop[i],
+           length = 0.05, angle = 90, code = 3)
+  }
   
   axis(1)
   axis(2)
   box(lwd=2)
-  abline(v=c(1,LRP/USR),lty=5)
-  abline(h=c(1,TRR/LRR),lty=5)
+  abline(v=c(1,LRP/USR))
+  abline(h=1)
+  abline(h=TRR/RR,lty=2)
   
   mtext(expression(paste("SSB/SSB"["USR"])),1,line=2.25,cex=1.25)
-  mtext(expression(paste("RR/LRR")),2,line=2.25,cex=1.25,las=0)
+  mtext(expression(paste("µ/µ"["RR"])),2,line=2.25,cex=1.25,las=0)
   
-  mtext("Spawner Biomass",3,line=2.5,cex=1.5)
-  mtext("critical",3,line=.5,cex=1,adj=0.2)
-  mtext("cautious",3,line=.5,cex=1,adj=0.4)
-  mtext("healthy",3,line=.5,cex=1,adj=0.7)
+  mtext("Critical",3,line=1.5,cex=1,adj=0.05)
+  mtext("  Zone  ",3,line=0.5,cex=1,adj=0.05) #spaces added so the adj will center the word to the above word
+  mtext("Cautious",3,line=1.5,cex=1,adj=0.31)
+  mtext("  Zone  ",3,line=0.5,cex=1,adj=0.31)
+  mtext("Healthy",3,line=1.5,cex=1,adj=0.77)
+  mtext(" Zone  ",3,line=0.5,cex=1,adj=0.77)
   
-  
-  mtext(RR.label,4,line=4,cex=1.5,las=0)
-  mtext("too high",4,line=.5,cex=1,adj=.75,las=0)
-  mtext("",4,line=1.5,cex=1,adj=.8,las=0)
-  mtext("acceptable",4,line=.5,cex=1,adj=.42,las=0)
-  mtext("range",4,line=1.5,cex=1,adj=.42,las=0)
-  mtext("below",4,line=.5,cex=1,adj=.10,las=0)
-  mtext("range",4,line=1.5,cex=1,adj=.1,las=0)
-  
+  text(-0.16,0.9,"TRR",xpd=T)
   
   mtext(river,1,line=5,cex=1.25,las=0,adj=0)
   mtext(species,1,line=6.5,cex=1.25,las=0,adj=0)
   
-  
-  mtext(paste("LRR = ",LRR),1,line=4,cex=1.1,adj=1,las=0)
+  mtext(paste("RR = ",RR),1,line=4,cex=1.1,adj=1,las=0)
   mtext(paste("TRR = ",TRR),1,line=5,cex=1.1,adj=1,las=0)
-  mtext(paste("SSB USR = ",round(USR/1000,1)," MT"),1,line=6,cex=1.1,adj=1,las=0)
-  mtext(paste("SSB LRP = ",round(LRP/1000,1)," MT"),1,line=7,cex=1.1,adj=1,las=0)
+  mtext(paste("USR = ",round(USR/1000,1)," t"),1,line=6,cex=1.1,adj=1,las=0)
+  mtext(paste("LRP = ",round(LRP/1000,1)," t"),1,line=7,cex=1.1,adj=1,las=0)
+
+  #legend
+  plot.new()
+  plot.window(xlim = c(0, 1), ylim = c(0, 35), xaxs = "i", yaxs = "i")
+  rect(xleft = 0, ybottom = 2:nyears, xright = 1, ytop = 1:(nyears-1), col = cols.plot, border = NA)
+  axis(side = 4, at=1:length(ssb), labels=1991:2025, las = 1)
   
-  #text(0.07,1.2,"1982-\n84",col="red",cex=0.85)
-  #text(0.23,1.63,"1997",pos=4,col="red",cex=0.85)
-  #text(0.6,0.62,"2001",pos=1,col="red",cex=0.85)
-  #text(1.1,1.23,"2015-16",pos=4,col="red",cex=0.85)
-  #text(2.65,0.88,"2018",pos=3,col="red",cex=0.85)
-  #text(0.8,1.47,"2013",col="red",cex=0.85)
-  #arrows(0.65,1.45,0.43,1.37,length=0.1,col="red",cex=0.85)
   dev.off()
   }

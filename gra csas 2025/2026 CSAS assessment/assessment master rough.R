@@ -113,3 +113,10 @@ for(i in 1:length(u.BS))
 }
 
 
+status.plot(USR=USR,
+            LRP=LRP,
+            RR=RR,
+            TRR=TRR,
+            u=u.plot,
+            ssb=ssb.plot)
+
