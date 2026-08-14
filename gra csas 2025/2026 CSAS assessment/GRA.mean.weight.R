@@ -8,12 +8,14 @@ require(ROracle)
 channel=dbConnect(DBI::dbDriver("Oracle"), oracle.username.GASP, oracle.password.GASP, "PTRAN" , 
                   believeNRows=FALSE) 
 
-####data from 2007 assessment####
-#data from 2003-2006 not used due to unreconcilable difference in methodology
+####data from old assessments####
+mw.old.old<-data.frame(year=1982:1984,
+                       weight=c(293.5,257.6,271.9))
+
 #numbers pulled from McIntyre et al. 2007
 mw.old<-data.frame(year=1997:2002,
                    weight=c(236.6,226.5,208.5,245.4,216.3,238.9))
-
+#data from 2003-2006 not used due to unreconcilable difference in methodology
 mw.new<-data.frame(year=c(2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026),
                    weight=NA)
 ####2016####
@@ -311,3 +313,5 @@ biodata.with.weights <- merge(biodata.with.weights, mergedcountdata[, c("weekofy
 
 biodata.with.weights$weighting<- biodata.with.weights$merged.total/biodata.with.weights$n.sampled
 mw.new$weight[mw.new$year==2026]<-weighted.mean(biodata.with.weights$WEIGHT,biodata.with.weights$weighting,na.rm=T)
+####cleanup####
+rm(bio.data,biodata.with.weights,count.data,mergedcountdata,n.sampled,summary_data_check)
