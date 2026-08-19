@@ -33,22 +33,23 @@ status.plot<-function(USR,
   RR.HI<-u.plot.upper/RR
   
   #cols
-  base.cols<-c("white","darkblue")
+  base.cols<-c("black","cyan")
   var.pal<-colorRampPalette(base.cols)
-  cols.plot<-var.pal(nyears)
+  cols.vec<-rep(var.pal(nyears/5),each=5) #repeat each of the 7 colours 5 times
+  cex.vec<-rep(seq(0.2,1.2,length.out=7),each=5)
   
   #plot
   png("status.plot.GRA.png",width=8.5,height=8.5,units='in',res=200)
   
   par(omi=c(2,1,1,1),mfrow=c(1,1),mar=c(1,2,0,1),las=1)
   layout(matrix(c(1, 2), nrow = 1), widths = c(8, 1))
-  plot(SSB.prop,RR.prop,type="p",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,2))
+  plot(SSB.prop,RR.prop,type="p",axes=0,xlab="",ylab="",ylim=c(0,2),xlim=c(0,2),cex=cex.vec)
   
-  points(SSB.prop,RR.prop,col=cols.plot,pch=16)
-  lines(SSB.prop,RR.prop,lty=3)
-  points(SSB.prop[nyears],RR.prop[nyears],pch=19)
+  points(SSB.prop,RR.prop,col=cols.vec,pch=16,cex=cex.vec)
+  lines(SSB.prop,RR.prop,lty=2)
+  points(SSB.prop[nyears],RR.prop[nyears],pch=19,col="red",cex=max(cex.vec))
   #error bars on final 10 point
-  for(i in tail(1:nyears,10))
+  for(i in tail(1:nyears,1))
   {
     arrows(SSB.prop[i],
            RR.LO[i],
@@ -66,8 +67,9 @@ status.plot<-function(USR,
   axis(2)
   box(lwd=2)
   abline(v=c(1,LRP/USR))
-  abline(h=1)
-  abline(h=TRR/RR,lty=2)
+  abline(h=c(1,TRR/RR))
+  # abline(h=TRR/RR,lty=2)
+  text(SSB.prop[nyears],RR.prop[nyears],"2026",adj=c(-0.2,1.2))
   
   mtext(expression(paste("SSB/SSB"["USR"])),1,line=2.25,cex=1.25)
   mtext(expression(paste("µ/µ"["RR"])),2,line=2.25,cex=1.25,las=0)
@@ -92,7 +94,7 @@ status.plot<-function(USR,
   #legend
   plot.new()
   plot.window(xlim = c(0, 1), ylim = c(0, nyears), xaxs = "i", yaxs = "i")
-  rect(xleft = 0, ybottom = 2:(nyears+1), xright = 1, ytop = 1:nyears, col = cols.plot, border = NA)
+  rect(xleft = 0, ybottom = 2:(nyears+1), xright = 1, ytop = 1:nyears, col = cols.vec, border = NA)
   axis(side = 4, at=seq(1,nyears,by=5), labels=seq(years[1],max(years),by=5), las = 1)
   
   dev.off()

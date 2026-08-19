@@ -122,3 +122,8 @@ status.plot(USR=USR,
             ssb.plot.upper=ssb.plot.upper[10:45],
             years=1991:2026)
 
+data.out<-data.frame(years=1964:2026,
+                     catch=catch.plot,
+                     ssb=c(rep(NA,length(1964:1981)),ssb.plot),
+                     u=c(rep(NA,length(1964:1981)),u.plot)
+)
