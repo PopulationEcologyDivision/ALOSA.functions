@@ -138,7 +138,24 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
   tr.df.low <- tr.df[which(tr.df$ts.name == "SSB Low"), ]
   tr.df.high <- tr.df[which(tr.df$ts.name == "SSB High"), ]
   ## use grey shading polygons instead of lines
-  polygon(c(tr.df.low$year, rev(tr.df.high$year)), c(tr.df.low$ts.value, rev(tr.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
+  if(anyNA(tr.df.low$ts.value)==T) #checks if there are gaps in the CI's
+  {
+    NA.key<-which(is.na(tr.df.low$ts.value))
+    year.NA<-tr.df.low$year
+    year.NA[NA.key]<-NA #put NAs in the year vector for plotting with the CIs
+    #the below three lines breaks the vectors up into a list of vectors without NAs
+    tr.df.low.ls<-split(na.omit(tr.df.low$ts.value), cumsum(is.na(tr.df.low$ts.value))[!is.na(tr.df.low$ts.value)])
+    tr.df.high.ls<-split(na.omit(tr.df.high$ts.value), cumsum(is.na(tr.df.high$ts.value))[!is.na(tr.df.high$ts.value)])
+    year.ls<-split(na.omit(year.NA), cumsum(is.na(year.NA))[!is.na(year.NA)])
+    #plot each continuous chunk of data to prevent the CIs getting weird from polygon
+    for(i in 1:length(tr.df.low.ls))
+    {
+      polygon(c(year.ls[[i]], rev(year.ls[[i]])), c(tr.df.low.ls[[i]], rev(tr.df.high.ls[[i]])), col=grey(0.8), border=grey(0.8))
+    }
+  } else if(anyNA(tr.df.low$ts.value)==T)
+  {
+    polygon(c(tr.df.low$year, rev(tr.df.high$year)), c(tr.df.low$ts.value, rev(tr.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
+  }
 
   lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSB"), ], type = "l", lwd = 2)
   #lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSBlow-MT"), ], type = "l", lty = 2)
@@ -185,7 +202,24 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
   bl.df.low <- bl.df[which(bl.df$ts.name == "µ Low"), ]
   bl.df.high <- bl.df[which(bl.df$ts.name == "µ High"), ]
   ## use grey shading polygons instead of lines
-  polygon(c(bl.df.low$year, rev(bl.df.high$year)), c(bl.df.low$ts.value, rev(bl.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
+  if(anyNA(bl.df.low$ts.value)==T) #checks if there are gaps in the CI's
+  {
+    NA.key<-which(is.na(bl.df.low$ts.value))
+    year.NA<-bl.df.low$year
+    year.NA[NA.key]<-NA #put NAs in the year vector for plotting with the CIs
+    #the below three lines breaks the vectors up into a list of vectors without NAs
+    bl.df.low.ls<-split(na.omit(bl.df.low$ts.value), cumsum(is.na(bl.df.low$ts.value))[!is.na(bl.df.low$ts.value)])
+    bl.df.high.ls<-split(na.omit(bl.df.high$ts.value), cumsum(is.na(bl.df.high$ts.value))[!is.na(bl.df.high$ts.value)])
+    year.ls<-split(na.omit(year.NA), cumsum(is.na(year.NA))[!is.na(year.NA)])
+    #plot each continuous chunk of data to prevent the CIs getting weird from polygon
+    for(i in 1:length(bl.df.low.ls))
+    {
+      polygon(c(year.ls[[i]], rev(year.ls[[i]])), c(bl.df.low.ls[[i]], rev(bl.df.high.ls[[i]])), col=grey(0.8), border=grey(0.8))
+    }
+  } else if(anyNA(bl.df.low$ts.value)==T)
+  {
+    polygon(c(bl.df.low$year, rev(bl.df.high$year)), c(bl.df.low$ts.value, rev(bl.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
+  }  
   lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "µ"), ], lwd = 2)
   # lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Flow-1/yr"), ], type = "l", lty = 2)
   # lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Fhigh-1/yr"), ], type = "l", lty = 2)
