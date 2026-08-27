@@ -1,0 +1,80 @@
+# Setup
+```{r library_etc, warning=FALSE}
+# Library
+library(tidyverse)
+library(readxl)
+library(ROracle)
+
+# Source alosa functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+# Here is the channel connection for when we haul things from the ALOSA db
+channel <-
+  dbConnect(
+    DBI::dbDriver("Oracle"),
+    oracle.username.GASP,
+    oracle.password.GASP,
+    "PTRAN" ,
+    believeNRows = FALSE
+  ) 
+
+```
+
+# Escapement
+```{r}
+
+onespecies.river.escapement(
+  count.data = "DUMMY",
+  fixtime = TRUE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = 2026,
+  site = 2,
+  channel = channel
+  ) |> 
+  mutate(across(everything(), ~ ifelse(is.nan(.), 0, .))) |> 
+  mutate(across(everything(), ~ ifelse(is.na(.), 0, .))) |> 
+  mutate(date = make_date(year = 2026, mon, day)) -> escapement_vd
+
+escapement_vd |> 
+  ggplot(aes(date, total)) +
+  geom_ribbon(
+    aes(ymin = clow, ymax = chigh),
+    fill = "#41B7C4",
+    colour = "#4BBAC3",
+    alpha = 0.2
+  ) +
+  geom_path(
+    colour = "#41B7C4",
+    alpha = 0.9,
+    linewidth = 1
+    ) +
+  theme_bw() +
+  labs(
+    title = paste("Gaspereau escapement at the Lake Vaughan fish ladder in", 2026),
+    x = "Date",
+    y = "Fish / day"
+  ) +
+  scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+  scale_y_continuous(
+    limits = c(0, max(escapement_vd$chigh, na.rm = TRUE)),
+    breaks = seq(0, max(escapement_vd$chigh, na.rm = TRUE), by = 1e4),
+    labels = scales::comma
+  ) +
+  theme(
+    axis.text.x = element_text(
+      angle = 45,
+      vjust = 1,
+      hjust = 1
+      ),
+    axis.title.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "grey95")
+    )
+
+# Save as a png for sharing
+ggsave("~/git/ALOSA.functions/advisory_meetings/tusket_escapement_2026.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+
+```
+
