@@ -1,0 +1,1536 @@
+# SETUP
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,     # Suppress warnings
+  message = FALSE     # Suppress messages
+)
+```
+
+```{r library_and_connection}
+
+# Library
+library(tidyverse)
+library(ROracle)
+library(here)
+
+# Source functions
+source("~/git/ALOSA.functions/functions/sourcery.R")
+sourcery()
+
+# Channel connection to database
+channel <- dbConnect(
+  DBI::dbDriver("Oracle"),
+  oracle.username.GASP,
+  oracle.password.GASP,
+  "PTRAN",
+  believeNRows = FALSE
+  )
+
+# Load in the data
+load("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Old pulls/marfis_pull.Rdata")
+
+# Clean the data
+source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/marfis_error_cleaner.R")
+catch <- marfis_error_cleaner(catch = catch, years = "all", convert_to_kgs = TRUE, tidy_data = TRUE, correct_eel_pot = TRUE, unknown_rivers_are_na = TRUE, unknown_gear_are_na = TRUE)
+
+# Get the biodata
+bio <- dbReadTable(channel, "ALOSA_FISH_BIO_DATA") |> filter(SITE_ID == 3)
+#age <- dbReadTable(channel, "ALOSA_FISH_AGE_DATA") |> filter(SITE_ID == 3)
+
+years <- 1997:2024
+
+age_df <- map_dfr(
+  years,
+  ~ safely(get.age.data)(
+      year = .x,
+      siteID = 3,
+      sppID = 3501,
+      AgeStructure = TRUE,
+      channel = channel
+    )$result %>%
+    mutate(YEAR = .x)
+)
+
+```
+
+# 2.1.1 - LANDINGS 
+
+```{r}
+
+# These values are landings (in count) from the buyers
+landings <- data.frame(
+  YEAR = 1979:2024,
+  COUNT = c(
+    1066800,
+    622300,
+    243840,
+    254068,
+    150408,
+    212966,
+    217170,
+    1171956,
+    1461770,
+    1154049,
+    1572260,
+    975233,
+    357632,
+    421640,
+    747522,
+    1018794,
+    954960,
+    761873,
+    611520,
+    372400,
+    698600,
+    754585,
+    119348,
+    391278,
+    416335,
+    268820,
+    219173,
+    292589,
+    468212,
+    495731,
+    456987,
+    775702,
+    575083,
+    384803,
+    387333,
+    439000,
+    705500,
+    769133,
+    605900,
+    903655,
+    784152,
+    1202604,
+    1231005,
+    1562900,
+    1431500,
+    1265348
+  )
+)
+
+# Do linear models on each case of the data (i.e. fishing days) so we can
+# plot them later
+landings |> filter(YEAR <= 2001)  -> landings_five
+landings |> filter(YEAR >  2001)  -> landings_four
+l4_mod <- lm(COUNT ~ YEAR, data = landings_four)
+l5_mod <- lm(COUNT ~ YEAR, data = landings_five)
+l4_inter <- coef(l4_mod)[1]
+l4_slope <- coef(l4_mod)[2]
+l5_inter <- coef(l5_mod)[1]
+l5_slope <- coef(l5_mod)[2]
+
+# We divide the slopes by 1000 because we use 1000s of fish as the y-axis in this plot
+# so we want the units to be the same
+l4_label <- paste("Slope:", round(l4_slope / 1000, 2))
+l5_label <- paste("Slope:", round(l5_slope / 1000, 2))
+l4_summary <- summary(l4_mod)
+l4_pvalue <- l4_summary$coefficients
+l5_summary <- summary(l5_mod)
+l5_pvalue <- l5_summary$coefficients
+
+# Get the R-squared values for each model
+l5_R2 <- summary(l5_mod)
+l5_R2 <- l5_R2$adj.r.squared
+l5_R2_label <- paste("Adj. R²:", round(l5_R2, 2))
+l4_R2 <- summary(l4_mod)
+l4_R2 <- l4_R2$adj.r.squared
+l4_R2_label <- paste("Adj. R²:", round(l4_R2, 2))
+
+landings |> 
+  mutate(SEASON = case_when(
+    YEAR <= 2001 ~ "5 days / week",
+    YEAR > 2001 ~ "4 days / week",
+    TRUE ~ NA
+  )) |> 
+  mutate(SEASON = fct_relevel(SEASON, "5 days / week", "4 days / week")) |> 
+  mutate(COUNT = COUNT / 1000) |> 
+  ggplot(aes(YEAR, COUNT, fill = SEASON)) +
+  geom_smooth(method = "lm", alpha = 0.4, linewidth = 0.5, colour = "grey10") +
+  geom_point(
+    pch = 21,
+    size = 3,
+    colour = "grey20",
+    alpha = 0.7
+    ) +
+  labs(y = "Landings (thousands of fish)", x = "Year", fill = "Fishing period") +
+  scale_fill_viridis_d() +
+  scale_y_continuous(
+    labels = scales::label_comma(),
+    limits = c(0, 1600),
+    breaks = seq(0, 1600, 200)
+  ) +
+  scale_x_continuous(
+    limits = c(1979, 2025),
+    breaks = seq(1980, 2025, 5)
+  ) +
+  annotate("text", x = 1980, y = 1600, label = l5_label, hjust = 0, vjust = 1, size = 5, color = "black") +
+  annotate("text", x = 1980, y = 1500, label = l5_R2_label, hjust = 0, vjust = 1, size = 5, color = "black") +
+  annotate("text", x = 2004, y = 1600, label = l4_label, hjust = 0, vjust = 1, size = 5, color = "black") +
+  annotate("text", x = 2004, y = 1500, label = l4_R2_label, hjust = 0, vjust = 1, size = 5, color = "black") +
+  theme_bw() +
+  theme(
+    axis.title.x = element_text(margin = margin(t = 15)),
+    legend.position = "top",
+    legend.justification = "left",
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+#ggsave("gr_seasons_lm.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+```
+
+# 2.2.1 - ESCAPEMENT
+
+```{r historical}
+esc_hist <- read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/gr_esc_hist.csv")
+
+# Get these from running the onespecies.river.escapement function
+esc_modern <- tibble(
+  YEAR = c(2023, 2024),
+  ESCAPEMENT = c(1311586, 585350.4),
+  # Subtract the lower CI from the higher CI bound
+  CI = c(1363833 - 1259339, 616346.1 - 554354.7)
+)
+
+esc <- rbind(esc_hist, esc_modern)
+
+esc |> 
+  mutate(
+    ESCAPEMENT = ESCAPEMENT / 1000,
+    CI = CI / 1000
+  ) -> esc
+
+esc |> 
+  ggplot(aes(YEAR, ESCAPEMENT)) +
+  geom_errorbar(aes(ymin = ESCAPEMENT - CI, ymax = ESCAPEMENT + CI), width = 0.5) +
+  geom_point(pch = 21, size = 3, fill = "grey50", colour = "grey20") +
+  labs(y = "Escapement (thousands of fish)", x = "Year") +
+  scale_y_continuous(
+    limits = c(0, 1500),
+    breaks = seq(0, 1500, 100),
+    labels = scales::label_comma()
+  ) +
+  scale_x_continuous(
+    limits = c(1982, 2025),
+    breaks = seq(1982, 2025, 2)
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.x = element_text(margin = margin(t = 15)),
+    axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+  ) +
+  geom_vline(xintercept = 2001.5, linetype = "dashed")
+
+#ggsave("gr_esc.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+```
+
+# BIO DATA WEIGHING
+
+```{r}
+# Get the escapement
+get_escapement <- function(year){
+  df <- onespecies.river.escapement(
+  "dummy",
+  fixtime = FALSE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = year,
+  site = 3,
+  channel = channel
+  )
+  
+  df$year <- year
+  df$date <- make_date(year = df$year, month = df$mon, day = df$day)
+  return(df)
+}
+
+escapement_df <- data.frame()
+
+for (year in c(2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024)){
+  df <- get_escapement(year)
+  escapement_df <- rbind(escapement_df, df)
+}
+
+escapement_df |> 
+  select(mon, day, year, total, sd, clow, chigh) -> escapement_df
+
+# Here we give weights to each of the measured fish based on how many fish
+# escaped on the day the measurement was taken i.e. the measurements for each 
+# fish actually represents much more than one fish
+escapement_df |> 
+  mutate(DATE = make_date(year = year, month = mon, day = day)) |> 
+  mutate(total = round(total)) |> 
+  select(DATE, YEAR = year, TOTAL = total) -> esc_for_weights
+
+
+bio |> 
+  select(-SITE_ID) |> 
+  #full_join(age, by = c("FISH_ID", "YEAR")) |> 
+  mutate(DATE = make_date(year = YEAR, month = MON, day = DAY)) |> 
+  select(DATE, YEAR, SEX_ID, FORK_LENGTH, WEIGHT) |> 
+  filter(SEX_ID == 1 | SEX_ID == 2) |> 
+  mutate(SEX_ID = str_replace(SEX_ID, "1", "M")) |> 
+  mutate(SEX_ID = str_replace(SEX_ID, "2", "F")) -> bio
+
+num_sampled <- bio |>
+  arrange(YEAR) |> 
+  group_by(YEAR, DATE) |>
+  count()
+
+num_sampled |> 
+  full_join(esc_for_weights, by = c("YEAR", "DATE")) |> 
+  mutate(SAMPLE_WEIGHT = case_when(
+    is.na(TOTAL) ~ NA,
+    TRUE ~ round(TOTAL / n)
+    )
+  ) |> 
+  select(YEAR, DATE, SAMPLE_WEIGHT) -> sample_weights
+
+# Join with the sample weights and remove data from 2003-2006 because they suck
+bio |> 
+  left_join(sample_weights, by = c("DATE", "YEAR")) |> 
+  filter(!(YEAR %in% c(2003, 2004, 2005, 2006))) |> 
+  arrange(YEAR) -> bio 
+  # The data before 2002 were already measured proportionally to the population
+  # so they are "pre-weighted" and do not need to be weighted again
+
+```
+
+# 2.3.3 - AGE PROP.
+
+```{r age_proportions}
+# Get 80s age data
+read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/80sData.csv") |> 
+  select(YEAR = Year, CURRENT_AGE = Age, n) |>
+  group_by(YEAR, CURRENT_AGE) |> 
+  summarise(n = sum(n)) |> 
+  mutate(CURRENT_AGE = factor(CURRENT_AGE)) -> age_80s
+
+# Prep contemporary data
+# bio |> 
+#   drop_na(CURRENT_AGE) |> 
+#   group_by(YEAR, CURRENT_AGE) |> 
+#   count(CURRENT_AGE) |> 
+#   ungroup() |> 
+#   mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) -> age_props
+
+# Use the age data got with get.age.data, I used to do this differently and
+# it was wrong
+age_df |> 
+  group_by(YEAR, CURRENT_AGE) |> 
+  count(CURRENT_AGE) |> 
+  ungroup() |> 
+  mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) -> age_props
+
+# combine the data
+rbind(age_80s, age_props) -> age_props
+
+age_props |> 
+  mutate(CURRENT_AGE = fct_relevel(CURRENT_AGE, "3", "4", "5", "6", "7")) |> 
+  mutate(CURRENT_AGE = fct_rev(CURRENT_AGE)) |> 
+  group_by(YEAR, CURRENT_AGE) |> 
+  #mutate(proportion = n / sum(n)) |> 
+  ggplot(aes(YEAR, n, fill = factor(CURRENT_AGE))) +
+  geom_col(position = "fill", colour = "black", alpha = 0.9) +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.1),
+    labels = scales::percent_format()
+    ) +
+  scale_x_continuous(breaks = seq(1982, 2024, 2)) +
+  labs(
+    x = "Year",
+    y = "Fish",
+    fill = "Age \n(years)"
+  ) +
+  scale_fill_viridis_d(direction = -1) +
+  theme_bw()+
+  theme(
+    axis.title.x = element_text(margin = margin(t = 15)),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+    )
+
+ggsave("gr_age_prop.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+```
+
+# 2.3.1 - MASS - SEASONAL
+```{r within_season_stats, fig.height=6, fig.width=9}
+# Get the models into their own df
+model_df <- bio |>
+  filter(YEAR != 2025) |>
+  mutate(DOY = yday(DATE)) |>
+  group_by(YEAR) |>
+  summarise(
+    mod = list(
+      if (first(YEAR) <= 2002) { lm(WEIGHT ~ DOY, data = pick(WEIGHT, DOY)) }
+      else { lm(WEIGHT ~ DOY, weights = SAMPLE_WEIGHT, data = pick(WEIGHT, DOY, SAMPLE_WEIGHT)) }
+    ),
+    .groups = "drop"
+  )
+
+library(broom)
+
+stats_df <- model_df |> 
+  mutate(
+    tidy = map(mod, tidy),
+    glance = map(mod, glance)
+  ) |> 
+  unnest(glance, names_sep = "_glance") |> 
+  unnest(tidy, names_sep = "_tidy") |> 
+  filter(tidy_tidyterm == "DOY") |> 
+  select(
+    YEAR,
+    TERM = tidy_tidyterm,
+    SLOPE = tidy_tidyestimate,
+    SLOPE_SE = tidy_tidystd.error,
+    P_VALUE = tidy_tidyp.value,
+    ADJ_R2 = glance_glanceadj.r.squared
+  )
+
+bio |> 
+  filter(YEAR != 2025) |>
+  filter(!is.na(WEIGHT)) |> 
+  mutate(DOY = yday(DATE)) |>
+  ggplot(aes(DOY, WEIGHT)) +
+  facet_wrap(~YEAR) +
+  geom_point(pch = 21, size = 0.75, fill = "grey90", colour = "grey10", alpha = 0.5) +
+  geom_smooth(method = "lm", aes(x = DOY), se = FALSE, linewidth = 0.5) +
+  labs(x = "Date", y = "Mass (g)") +
+  scale_y_continuous(
+    # breaks = seq(0, 600, 100),
+    # limits = c(0, 600)
+  ) +
+  scale_x_continuous(
+    breaks = seq(1, 365, by = 7),
+    labels = format(as.Date(seq(1, 365, by = 7), origin = paste0(min(year(bio$DATE)), "-01-01")), "%b %d")
+    ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+  ) +
+  # Labels for regressions
+  geom_text(
+    data = stats_df,
+    aes(x = 120, y = 500, label = paste0("Slope: ", round(SLOPE, 2), ", R²: ", round(ADJ_R2, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono"
+    ) +
+  # geom_text(
+  #   data = stats_df,
+  #   aes(x = 120, y = 450, label = paste0("Adj. R²: ", round(ADJ_R2, 2))),
+  #   inherit.aes = FALSE,
+  #   hjust = 0,
+  #   family = "mono"
+  #   ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 120, y = 450, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono"
+    )
+
+ggsave("seasonal_mass.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+```
+
+# 2.3.2 - LENGTH - SEASONAL
+```{r seasonal_weight}
+# Get the models into their own df
+model_df <- bio |>
+  filter(YEAR != 2025) |>
+  mutate(DOY = yday(DATE)) |>
+  # Change fork length from cm to mm
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) |> 
+  group_by(YEAR) |>
+  summarise(
+    mod = list(
+      if (first(YEAR) <= 2002) { lm(FORK_LENGTH ~ DOY, data = pick(FORK_LENGTH, DOY)) }
+      else { lm(FORK_LENGTH ~ DOY, weights = SAMPLE_WEIGHT, data = pick(FORK_LENGTH, DOY, SAMPLE_WEIGHT)) }
+    ),
+    .groups = "drop"
+  )
+
+library(broom)
+
+stats_df <- model_df |> 
+  mutate(
+    tidy = map(mod, tidy),
+    glance = map(mod, glance)
+  ) |> 
+  unnest(glance, names_sep = "_glance") |> 
+  unnest(tidy, names_sep = "_tidy") |> 
+  filter(tidy_tidyterm == "DOY") |> 
+  select(
+    YEAR,
+    TERM = tidy_tidyterm,
+    SLOPE = tidy_tidyestimate,
+    SLOPE_SE = tidy_tidystd.error,
+    P_VALUE = tidy_tidyp.value,
+    ADJ_R2 = glance_glanceadj.r.squared
+  )
+
+bio |> 
+  filter(YEAR != 2025) |>
+  filter(!is.na(FORK_LENGTH)) |> 
+  mutate(DOY = yday(DATE)) |>
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) |> 
+  ggplot(aes(DOY, FORK_LENGTH)) +
+  facet_wrap(~YEAR) +
+  geom_point(pch = 21, size = 0.75, fill = "grey90", colour = "grey10", alpha = 0.5) +
+  geom_smooth(method = "lm", aes(x = DOY), se = FALSE, linewidth = 0.5) +
+  labs(x = "Date", y = "Fork Length (mm)") +
+  # scale_y_continuous(
+  #   breaks = seq(20, 32, 1),
+  #   limits = c(20, 32)
+  # ) +
+  scale_x_continuous(
+    breaks = seq(1, 365, by = 7),
+    labels = format(as.Date(seq(1, 365, by = 7), origin = paste0(min(year(bio$DATE)), "-01-01")), "%b %d")
+    ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+  ) +
+  # Labels for regressions
+  geom_text(
+    data = stats_df,
+    aes(x = 120, y = 320, label = paste0("Slope: ", round(SLOPE, 2), ", R²: ", round(ADJ_R2, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono"
+    ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 120, y = 310, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono"
+    )
+
+ggsave("seasonal_length.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+```
+
+# 2.3.4 - MASS - AGE
+
+```{r}
+# We want to grab the averages for these for the plot but we want the total
+# dataset for when we make the model
+
+# This is the total dataset
+# bio |>
+#   filter(!is.na(CURRENT_AGE)) |>
+#   # These data had poor QA/QC, so we purge them
+#   filter(!(YEAR %in% c(2003, 2004, 2005, 2006))) |>
+#   select(YEAR, CURRENT_AGE, SEX_ID, FORK_LENGTH, WEIGHT) |>
+#   arrange(YEAR) |>
+#   mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) |>
+#   # These values are in cm and we want them in mm
+#   mutate(FORK_LENGTH = FORK_LENGTH * 10) |>
+#   select(YEAR, CURRENT_AGE, FORK_LENGTH, WEIGHT) |> 
+#   # Calculate the means of the biocharacteristics data that has an associated age
+#   group_by(YEAR, CURRENT_AGE) |> 
+#   summarise(
+#     LENGTH_SD = sd(FORK_LENGTH, na.rm = TRUE),
+#     FORK_LENGTH = mean(FORK_LENGTH, na.rm = TRUE),
+#     WEIGHT_SD = sd(WEIGHT, na.rm = TRUE),
+#     WEIGHT = mean(WEIGHT, na.rm = TRUE)
+#   ) -> bio_age_summary
+
+age_df |>
+  # These data had poor QA/QC, so we purge them
+  filter(!(YEAR %in% c(2003, 2004, 2005, 2006))) |>
+  select(YEAR, CURRENT_AGE, SEX_ID, FORK_LENGTH, WEIGHT) |>
+  arrange(YEAR) |>
+  mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) |>
+  # These values are in cm and we want them in mm
+  mutate(FORK_LENGTH = FORK_LENGTH * 10) |>
+  select(YEAR, CURRENT_AGE, FORK_LENGTH, WEIGHT) |> 
+  # Calculate the means of the biocharacteristics data that has an associated age
+  group_by(YEAR, CURRENT_AGE) |> 
+  summarise(
+    LENGTH_SD = sd(FORK_LENGTH, na.rm = TRUE),
+    FORK_LENGTH = mean(FORK_LENGTH, na.rm = TRUE),
+    WEIGHT_SD = sd(WEIGHT, na.rm = TRUE),
+    WEIGHT = mean(WEIGHT, na.rm = TRUE)
+  ) -> bio_age_summary
+
+# Need to decide how to deal with the vintage data
+# YEAR, CURRENT_AGE, LENGTH_SD, FORK_LENGTH, WEIGHT_SD, WEIGHT
+old_bio_data <- read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/80sData.csv")
+
+sd_from_ci <- function(lwr, upr, n, z = 1.96) { (upr - lwr) / (2 * z) * sqrt(n) }
+
+old_bio_data |> 
+  rowwise() |> 
+  mutate(
+     sd_length = sd_from_ci(lwr = mlen - (cilen / 2), upr = mlen + (cilen / 2), n = n),
+     sd_weight = sd_from_ci(lwr = mweight - (ciweight / 2), upr = mweight + (ciweight / 2), n = n)
+     ) |> 
+  mutate(Age = as.factor(Age)) |> 
+  select(YEAR = Year, CURRENT_AGE = Age, FORK_LENGTH = mlen, WEIGHT = mweight, LENGTH_SD = sd_length, WEIGHT_SD = sd_weight) -> old_bio_data_summary
+
+# Bind old with new
+rbind(bio_age_summary, old_bio_data_summary) -> biodata_age_length_weight_summary
+
+```
+
+```{r}
+# Model mass ~ year for each age category and get the labels
+model_df <- biodata_age_length_weight_summary |>
+  filter(YEAR != 2025) |>
+  group_by(CURRENT_AGE) |>
+  summarise(
+    mod = list(lm(WEIGHT ~ YEAR, data = pick(WEIGHT, YEAR))),
+    .groups = "drop"
+  )
+
+# Extract the infromation from the model which is in a list
+library(broom)
+
+stats_df <- model_df |> 
+  mutate(
+    tidy = map(mod, tidy),
+    glance = map(mod, glance)
+  ) |> 
+  unnest(glance, names_sep = "_glance") |> 
+  unnest(tidy, names_sep = "_tidy") |> 
+  filter(tidy_tidyterm == "YEAR") |> 
+  select(
+    CURRENT_AGE,
+    TERM = tidy_tidyterm,
+    SLOPE = tidy_tidyestimate,
+    SLOPE_SE = tidy_tidystd.error,
+    P_VALUE = tidy_tidyp.value,
+    ADJ_R2 = glance_glanceadj.r.squared
+  )
+
+# Plot it up
+biodata_age_length_weight_summary |> 
+  filter(YEAR != 2025) |>
+  filter(!is.na(WEIGHT)) |> 
+  ggplot(aes(YEAR, WEIGHT)) +
+  facet_wrap(~ CURRENT_AGE) +
+  geom_errorbar(aes(ymin = WEIGHT - WEIGHT_SD, ymax = WEIGHT + WEIGHT_SD)) +
+  geom_point(pch = 21, size = 2, fill = "#41B7C4", colour = "grey10") +
+  geom_smooth(method = "lm", aes(x = YEAR), se = FALSE, linewidth = 0.5) +
+  labs(x = "Year", y = "Mass (g)") +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+  ) +
+  # Labels for regressions
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 400, label = paste0("Slope: ", round(SLOPE, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 375, label = paste0("Adj. R²: ", round(ADJ_R2, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 350, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    )
+
+ggsave("gr_mass_vs_age.svg", plot = last_plot(), width = 12, height = 6, units = "in", dpi = 300)
+
+```
+
+# 2.3.5 - LENGTH - AGE
+```{r length_plot, fig.height=9, fig.width=12}
+
+# Model mass ~ year for each age category and get the labels
+model_df <- biodata_age_length_weight_summary |>
+  filter(YEAR != 2025) |>
+  group_by(CURRENT_AGE) |>
+  summarise(
+    mod = list(lm(FORK_LENGTH ~ YEAR, data = pick(FORK_LENGTH, YEAR))),
+    .groups = "drop"
+  )
+
+# Extract the infromation from the model which is in a list
+library(broom)
+
+stats_df <- model_df |> 
+  mutate(
+    tidy = map(mod, tidy),
+    glance = map(mod, glance)
+  ) |> 
+  unnest(glance, names_sep = "_glance") |> 
+  unnest(tidy, names_sep = "_tidy") |> 
+  filter(tidy_tidyterm == "YEAR") |> 
+  select(
+    CURRENT_AGE,
+    TERM = tidy_tidyterm,
+    SLOPE = tidy_tidyestimate,
+    SLOPE_SE = tidy_tidystd.error,
+    P_VALUE = tidy_tidyp.value,
+    ADJ_R2 = glance_glanceadj.r.squared
+  )
+
+# Plot it up
+# Plot it up
+biodata_age_length_weight_summary |> 
+  filter(YEAR != 2025) |>
+  filter(!is.na(FORK_LENGTH)) |> 
+  ggplot(aes(YEAR, FORK_LENGTH)) +
+  facet_wrap(~ CURRENT_AGE) +
+  geom_errorbar(aes(ymin = FORK_LENGTH - LENGTH_SD, ymax = FORK_LENGTH + LENGTH_SD)) +
+  geom_point(pch = 21, size = 2, fill = "#41B7C4", colour = "grey10") +
+  geom_smooth(method = "lm", aes(x = YEAR), se = FALSE, linewidth = 0.5) +
+  labs(x = "Year", y = "Fork Length (mm)") +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 12),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+  ) +
+  # Labels for regressions
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 300, label = paste0("Slope: ", round(SLOPE, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 295, label = paste0("Adj. R²: ", round(ADJ_R2, 2))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    ) +
+  geom_text(
+    data = stats_df,
+    aes(x = 1980, y = 290, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+    inherit.aes = FALSE,
+    hjust = 0,
+    family = "mono",
+    size = 4
+    )
+
+ggsave("gr_length_vs_age.svg", plot = last_plot(), width = 12, height = 6, units = "in", dpi = 300)
+```
+
+# 2.3.6 - SPAWNING
+
+```{r first_time_spawners}
+# Old spawning data from the 80s
+read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/GRagecomp.csv") |> 
+  filter(Year <= 1984) |> 
+  mutate(n = nmales + nfem) |> 
+  select(YEAR = Year, SPAWNS = ps, n = n) |> 
+  group_by(YEAR, SPAWNS) |> 
+  summarise(n = sum(n)) |> 
+  mutate(SPAWNS = as.factor(SPAWNS)) -> old_spawns
+
+age_df |>
+  filter(!(YEAR %in% c(2003, 2004, 2005, 2006, 2025))) |> 
+  drop_na(CURRENT_AGE) |> 
+  mutate(DATE = make_date(year = YEAR, month = MON, day = DAY)) |> 
+  select(YEAR, DATE, CURRENT_AGE, AGE_AT_FIRST_SPAWN) |> 
+  mutate(SPAWNS = CURRENT_AGE - AGE_AT_FIRST_SPAWN) |> 
+  mutate(SPAWNS = as.factor(SPAWNS)) |> 
+  group_by(YEAR, SPAWNS) |> 
+  count() |> 
+  mutate(SPAWNS = as.factor(SPAWNS)) |> 
+  # Bind with the old spawns
+  rbind(old_spawns) |> 
+  mutate(SPAWNS = fct_rev(SPAWNS)) |> 
+  ggplot(aes(YEAR, n, fill = SPAWNS)) +
+  geom_col(position = "fill", colour = "black", alpha = 0.8) +
+  scale_y_continuous(breaks = seq(0, 1, 0.1), labels = scales::percent_format()) +
+  scale_x_continuous(breaks = seq(1982, 2025, 2)) +
+  labs(x = "Year", y = "Fish", fill = "Previous \nSpawns") +
+  scale_fill_viridis_d(direction = -1) +
+  theme_bw()+
+  theme(
+    axis.title.x = element_text(margin = margin(t = 15)),
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1, size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+    )
+
+ggsave("previous_spawns_barplot.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+```
+
+# 2.3.7 - SEX RATIO
+
+```{r}
+# Bring in the historical sex data
+read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/80sData.csv") |> 
+  group_by(Year, sex) |> 
+  summarise(n = sum(n)) |> 
+  select(YEAR = Year, SEX_ID = sex, n) |> 
+  pivot_wider(names_from = SEX_ID, values_from = n) |> 
+  mutate(M_to_F = round(M / F, 2)) -> sex_80s
+
+# Add it to the other sex data from fish that were aged
+age_df |> 
+  drop_na(CURRENT_AGE) |> 
+  filter(!(YEAR %in% c(2003, 2004, 2005, 2006, 2025))) |> 
+  filter(YEAR <= 2024) |> 
+  filter(SEX_ID == 1 | SEX_ID == 2) |> 
+  mutate(SEX_ID = str_replace(SEX_ID, "1", "M")) |> 
+  mutate(SEX_ID = str_replace(SEX_ID, "2", "F")) |> 
+  group_by(YEAR, SEX_ID) |> 
+  count() |> 
+  pivot_wider(names_from = SEX_ID, values_from = n) |> 
+  mutate(M_to_F = round(M / F, 2)) -> temp
+
+sex_ratios <- rbind(sex_80s, temp)
+  
+sex_ratios |> 
+  ggplot(aes(YEAR, M_to_F)) +
+  geom_point(pch = 21, size = 3, fill = "grey50", colour = "grey10") +
+  geom_hline(yintercept = 1) +
+  labs(y = "Male to Female Ratio", x = "Year") +
+  scale_y_continuous(limits = c(0.5, 1.5), breaks = seq(0.5, 1.5, 0.1)) +
+  scale_x_continuous(breaks = seq(1980, 2025, 5)) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+  )
+
+ggsave("m_to_f.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+```
+
+# 2.X.X - DATA COVERAGE
+```{r}
+data_years <- 1979:2024
+data_vars <- c("Landings", "Escapement", "Biological characteristics")
+
+data_grid <- expand_grid(year = data_years, vars = data_vars) 
+
+# These are the vectors storing the years for which we have data ~~~~~~~~~~~~~~~
+
+# Age
+bio_years <- age_df |> filter(!is.na(CURRENT_AGE)) |> distinct(YEAR) |> arrange(YEAR) |> pull(YEAR)
+
+# Catch
+catch_years <- landings |> pull(YEAR)
+
+# Count
+count_years <- esc |> distinct(YEAR) |> arrange(YEAR) |> pull(YEAR)
+
+# Mass/Length
+#mass_years <- bio |> filter(!is.na(WEIGHT)) |> distinct(YEAR) |> arrange(YEAR) |> pull(YEAR)
+
+# Create a data frame that contains all the data years ~~~~~~~~~~~~~~~~~~~~~~~~~
+data_coverage <- data_grid |> 
+  mutate(has_data = case_when(
+    vars == "Landings" & year %in% catch_years ~ TRUE,
+    vars == "Escapement" & year %in% count_years ~ TRUE,
+    vars == "Biological characteristics" & year %in% bio_years ~ TRUE,
+    vars == "Biological characteristics" & year %in% c(1982:1984) ~ TRUE
+  )) |> 
+  mutate(has_data = if_else(is.na(has_data), FALSE, has_data)) |> 
+  # Add a column to flag some of the data that have different types by year
+  mutate(
+    fill_colour = case_when(
+      # Catch - darker data are "better"
+      vars == "Landings" & year %in% 1979:2006 ~ "#2A5783",
+      vars == "Landings" & year %in% 2012:2024 ~ "#6495BF",
+      vars == "Landings" & year %in% 2008:2011 ~ "#B9DDF1",
+      vars == "Landings" & year == 2007 ~ "#E7CA46",
+      # Counts - darker data are "better"
+      vars == "Escapement" & year %in% c(1982:1984,1995,1997:2003) ~ "#2A5783",# Full count
+      vars == "Escapement" & year %in% c(2015:2019, 2021:2024) ~ "#6495BF", # Estimate, two way stratified
+      vars == "Escapement" & year == 2013 ~ "#9FCAE6", # Estiamte, two-way stratified, days only
+      vars == "Escapement" & year %in% c(2004:2007, 2009, 2012) ~ "#B9DDF1", # Estimate, one-way stratified
+      # Biocharacteristics
+      vars == "Biological characteristics" & year %in% c(1997:2002) ~ "#2A5783", # proportional sampling
+      vars == "Biological characteristics" & year %in% c(2016, 2018, 2019, 2021:2024) ~ "#6495BF", # approximate proportional sampling
+      vars == "Biological characteristics" & year %in% c(1982:1984) ~ "#B9DDF1", # twice-per-week sampling
+      TRUE ~ "grey90"
+      )
+  )
+
+data_coverage |> 
+  mutate(vars = factor(vars, levels = c("Landings", "Escapement", "Biological characteristics"))) |> 
+  ggplot(aes(x = as.factor(year), y = vars)) +
+  geom_point(
+    aes(fill = fill_colour),        # interior color
+    #alpha = 0.9,
+    shape = 22,                  # filled square
+    color = "black",             # outline color
+    size = 7,                    # size of the square
+    stroke = 0.5 # thickness of the outline
+  ) +
+  scale_fill_identity() +
+  #scale_fill_manual(values = c("TRUE" = "#41B7C4", "FALSE" = "grey90")) +
+  scale_x_discrete(breaks = as.character(seq(1980, 2024, by = 5))) +
+  labs(x = "", y = "", fill = "Data available: ") +
+  theme_minimal() +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1, size = 8),
+    legend.position = "top",
+    legend.justification = "left",
+    axis.ticks.x = element_line()  ) +
+  coord_fixed(ratio = 1.8)
+
+#ggsave("data_coverage.png", plot = last_plot(), width = 9, height = 6, units = "in", dpi = 300, bg = "white")
+
+```
+
+# EARLY CLOSURE LANDINGS
+
+```{r migration_proportions}
+
+# Get the escapement
+get_escapement <- function(year){
+  df <- onespecies.river.escapement(
+  "dummy",
+  fixtime = FALSE,
+  downstream.migration = FALSE,
+  database = TRUE,
+  year = year,
+  site = 3,
+  channel = channel
+  )
+  
+  df$year <- year
+  df$date <- make_date(year = df$year, month = df$mon, day = df$day)
+  return(df)
+}
+
+escapement_df <- data.frame()
+
+for (year in c(2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024)){
+  df <- get_escapement(year)
+  escapement_df <- rbind(escapement_df, df)
+}
+
+escapement_df |> 
+  select(mon, day, year, total, sd, clow, chigh) -> escapement_df
+
+season_start <- date("2024-03-15")
+season_end <- date("2024-05-31")
+early_end <- date("2024-05-21")
+
+escapement_df |> 
+  mutate(across(c(clow, chigh), ~ na_if(., NaN))) |> # Replace NaNs with NAs
+  mutate(date = make_date(year = 2024, month = mon, day = day)) |> # Make all dates 2024 so they plot over one another
+  select(year, date, total, sd, clow, chigh) |> 
+  mutate(season = case_when(
+    year < 2023 & date < season_start ~ "Pre-season",
+    year < 2023 & date >= season_start & date <= season_end ~ "In-season",
+    year < 2023 & date > season_end ~ "Post-season",
+    (year == 2023 | year == 2024) & date < season_start ~ "Pre-season",
+    (year == 2023 | year == 2024) & date >= season_start & date <= early_end ~ "In-season",
+    (year == 2023 | year == 2024) & date > early_end & date <= season_end ~ "Early-closure",
+    (year == 2023 | year == 2024) & date > season_end ~ "Post-season",
+    TRUE ~ NA
+    )
+  ) -> escapement_season
+
+escapement_season |> 
+  #mutate(season = fct_relevel(season, "In-season", "Early-closure", "Post-season")) |>
+  mutate(season = fct_relevel(season, "Post-season", "Early-closure", "In-season")) |>
+  group_by(year, season) |> 
+  summarise(total = sum(total)) |> 
+  mutate(prop = total / sum(total)) |> 
+  ggplot(aes(year, prop, fill = season)) +
+  geom_col(alpha = 0.8, colour = "grey30") +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.1)
+    ) +
+  scale_x_continuous(breaks = seq(2015, 2024, 1)) +
+  coord_flip() +
+  #scale_fill_viridis_d(direction = -1) +
+  labs(
+    x = "",
+    y = "Proportion of escapment",
+    fill = "Time period"
+  ) +
+  theme_bw()+
+  theme(
+    legend.position = "top",
+    legend.justification = "left",
+    legend.text = element_text(size = 14),
+    legend.title = element_text(size = 16),
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 14),
+    axis.title = element_text(size = 16),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  guides(fill = guide_legend(reverse = TRUE))
+
+
+#ggsave("~/GitHub/gaspereau-river/migration.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+
+# escapement_season |> 
+#   group_by(year, season) |> 
+#   summarise(total = sum(total)) |> 
+#   pivot_wider(names_from = season, values_from = total) |>
+#   rename(season_esc = `In-season`, post_esc = `Post-season`, early_esc = `Early-closure`) |> 
+#   mutate(across(c(early_esc), ~ replace_na(., 0))) |> # Replace NaNs with NAs  
+#   mutate(season_esc = round(season_esc), post_esc = round(post_esc), early_esc = round(early_esc)) |> 
+#   mutate(escapement = season_esc + post_esc + early_esc) |> 
+#   mutate(season_esc_portion = round(season_esc / escapement, 2)) |> 
+#   mutate(post_esc_portion = round(post_esc / escapement, 2)) |> 
+#   mutate(early_esc_portion = round(early_esc / escapement, 2)) -> migration_ratios 
+# 
+# migration_ratios
+```
+
+# OLD CODE
+```{r}
+# Old code for plotting raw data for mass and length by age --------------------
+#
+# Model mass ~ year for each age category and get the labels
+# model_df <- gr_bio_age |>
+#   filter(YEAR != 2025) |>
+#   group_by(CURRENT_AGE) |>
+#   summarise(
+#     mod = list(lm(WEIGHT ~ YEAR, data = pick(WEIGHT, YEAR))),
+#     .groups = "drop"
+#   )
+# 
+# # Extract the infromation from the model which is in a list
+# library(broom)
+# 
+# stats_df <- model_df |> 
+#   mutate(
+#     tidy = map(mod, tidy),
+#     glance = map(mod, glance)
+#   ) |> 
+#   unnest(glance, names_sep = "_glance") |> 
+#   unnest(tidy, names_sep = "_tidy") |> 
+#   filter(tidy_tidyterm == "YEAR") |> 
+#   select(
+#     CURRENT_AGE,
+#     TERM = tidy_tidyterm,
+#     SLOPE = tidy_tidyestimate,
+#     SLOPE_SE = tidy_tidystd.error,
+#     P_VALUE = tidy_tidyp.value,
+#     ADJ_R2 = glance_glanceadj.r.squared
+#   )
+# 
+# # Plot it up
+# gr_bio_age |> 
+#   filter(YEAR != 2025) |>
+#   filter(!is.na(WEIGHT)) |> 
+#   ggplot(aes(YEAR, WEIGHT)) +
+#   facet_wrap(~ CURRENT_AGE) +
+#   geom_point(pch = 21, size = 0.75, fill = "grey90", colour = "grey10", alpha = 0.5) +
+#   geom_smooth(method = "lm", aes(x = YEAR), se = TRUE, linewidth = 0.5) +
+#   labs(x = "Year", y = "Mass (g)") +
+#   # scale_y_continuous(
+#   #   breaks = seq(20, 32, 1),
+#   #   limits = c(20, 32)
+#   # ) +
+#   theme_bw() +
+#   theme(
+#     strip.text = element_text(size = 14),
+#     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+#     axis.text.y = element_text(size = 12),
+#     axis.title = element_text(size = 16),
+#     panel.grid.minor = element_blank(),
+#     panel.grid.major = element_blank(),
+#     strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+#   ) +
+#   # Labels for regressions
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 400, label = paste0("Slope: ", round(SLOPE, 2))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     ) +
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 375, label = paste0("R²: ", round(ADJ_R2, 2))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     ) +
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 350, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     )
+# 
+# ggsave("gr_mass_vs_age.png", plot = last_plot(), width = 12, height = 6, units = "in", dpi = 300)
+# 
+# 
+# # Model mass ~ year for each age category and get the labels
+# model_df <- gr_bio_age |>
+#   filter(YEAR != 2025) |>
+#   group_by(CURRENT_AGE) |>
+#   summarise(
+#     mod = list(lm(FORK_LENGTH ~ YEAR, data = pick(FORK_LENGTH, YEAR))),
+#     .groups = "drop"
+#   )
+# 
+# # Extract the infromation from the model which is in a list
+# library(broom)
+# 
+# stats_df <- model_df |> 
+#   mutate(
+#     tidy = map(mod, tidy),
+#     glance = map(mod, glance)
+#   ) |> 
+#   unnest(glance, names_sep = "_glance") |> 
+#   unnest(tidy, names_sep = "_tidy") |> 
+#   filter(tidy_tidyterm == "YEAR") |> 
+#   select(
+#     CURRENT_AGE,
+#     TERM = tidy_tidyterm,
+#     SLOPE = tidy_tidyestimate,
+#     SLOPE_SE = tidy_tidystd.error,
+#     P_VALUE = tidy_tidyp.value,
+#     ADJ_R2 = glance_glanceadj.r.squared
+#   )
+# 
+# # Plot it up
+# gr_bio_age |> 
+#   filter(YEAR != 2025) |>
+#   filter(!is.na(FORK_LENGTH)) |> 
+#   ggplot(aes(YEAR, FORK_LENGTH)) +
+#   facet_wrap(~ CURRENT_AGE) +
+#   geom_point(pch = 21, size = 0.75, fill = "grey90", colour = "grey10", alpha = 0.5) +
+#   geom_smooth(method = "lm", aes(x = YEAR), se = TRUE, linewidth = 0.5) +
+#   labs(x = "Year", y = "Fork Length (mm)") +
+#   # scale_y_continuous(
+#   #   breaks = seq(20, 32, 1),
+#   #   limits = c(20, 32)
+#   # ) +
+#   theme_bw() +
+#   theme(
+#     strip.text = element_text(size = 14),
+#     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, size = 10),
+#     axis.text.y = element_text(size = 12),
+#     axis.title = element_text(size = 16),
+#     panel.grid.minor = element_blank(),
+#     panel.grid.major = element_blank(),
+#     strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+#   ) +
+#   # Labels for regressions
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 300, label = paste0("Slope: ", round(SLOPE, 2))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     ) +
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 295, label = paste0("R²: ", round(ADJ_R2, 2))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     ) +
+#   geom_text(
+#     data = stats_df,
+#     aes(x = 1980, y = 290, label = paste0("P-value: ", format(signif(P_VALUE, 2), scientific = TRUE))),
+#     inherit.aes = FALSE,
+#     hjust = 0,
+#     family = "mono"
+#     )
+# 
+# ggsave("gr_length_vs_age.png", plot = last_plot(), width = 12, height = 6, units = "in", dpi = 300)
+
+# Raw data generation ----------------------------------------------------------
+# 
+# sd_from_ci <- function(lwr, upr, n, z = 1.96) {
+#   (upr - lwr) / (2 * z) * sqrt(n)
+# }
+# 
+# set.seed(123)
+# 
+# # Here we generate lenght and weight data using the hard coded values we were
+# # given assuming that the data come from a normal distribution
+# old_bio_data |> 
+#   rowwise() |> 
+#   mutate(
+#     sd_length = sd_from_ci(lwr = mlen - (cilen / 2), upr = mlen + (cilen / 2), n = n),
+#     sd_weight = sd_from_ci(lwr = mweight - (ciweight / 2), upr = mweight + (ciweight / 2), n = n),
+#     length = list(rnorm(n = n, mlen, sd_length)),
+#     weight = list(rnorm(n = n, mweight, sd_weight))
+#   ) |> 
+#   ungroup() |> 
+#   select(Year, Age, length, weight) |> 
+#   unnest(cols = c(length, weight)) |> 
+#   mutate(length = round(length), weight = round(weight)) |> 
+#   select(YEAR = Year, CURRENT_AGE = Age, FORK_LENGTH = length, WEIGHT = weight) -> old_bio_data_simulated
+# 
+# rbind(gr_bio_age, old_bio_data_simulated) -> gr_bio_age
+#
+# ------------------------------------------------------------------------------
+# Calculate means for <= 2002 data
+# bio |> 
+#   select(YEAR, DATE, SEX_ID, FORK_LENGTH, WEIGHT) |> 
+#   arrange(YEAR) |> 
+#   filter(YEAR <= 2002) |> 
+#   group_by(YEAR, DATE) |> 
+#   summarise(
+#     # Get the number of samples for each measurement
+#     n_length = sum(!is.na(FORK_LENGTH)),
+#     n_weight = sum(!is.na(WEIGHT)),
+#     LENGTH_SD = sd(FORK_LENGTH, na.rm = TRUE), # need to do this one first
+#     FORK_LENGTH = mean(FORK_LENGTH, na.rm = TRUE),
+#     LENGTH_SE = LENGTH_SD / sqrt(n_length),
+#     t_length = if_else(n_length > n_obs, qt(0.975, df = n_length - 1), NA),
+#     LENGTH_95_CI = t_length * LENGTH_SE,
+#     WEIGHT_SD = sd(WEIGHT, na.rm = TRUE), # need to do this one first
+#     WEIGHT = mean(WEIGHT, na.rm = TRUE),
+#     WEIGHT_SE = WEIGHT_SD / sqrt(n_weight),
+#     t_weight = if_else(n_weight > n_obs, qt(0.975, df = n_weight - 1), NA),
+#     WEIGHT_95_CI = t_weight * WEIGHT_SE
+#   ) -> temp1
+# 
+# bio |> 
+#   select(YEAR, DATE, SEX_ID, FORK_LENGTH, WEIGHT, SAMPLE_WEIGHT) |> 
+#   arrange(YEAR) |> 
+#   filter(YEAR > 2002) |> 
+#   group_by(YEAR, DATE) |> 
+#   summarise(
+#     # Get the number of samples for each measurement
+#     n_length = sum(!is.na(FORK_LENGTH)),
+#     n_weight = sum(!is.na(WEIGHT)),
+#     LENGTH_SD = sd(FORK_LENGTH, na.rm = TRUE), # need to do this one first
+#     FORK_LENGTH = weighted.mean(FORK_LENGTH, SAMPLE_WEIGHT, na.rm = TRUE),
+#     LENGTH_SE = LENGTH_SD / sqrt(n_length),
+#     t_length = if_else(n_length > n_obs, qt(0.975, df = n_length - 1), NA),
+#     LENGTH_95_CI = t_length * LENGTH_SE,
+#     WEIGHT_SD = sd(WEIGHT, na.rm = TRUE), # need to do this one first
+#     WEIGHT = weighted.mean(WEIGHT, SAMPLE_WEIGHT, na.rm = TRUE),
+#     WEIGHT_SE = WEIGHT_SD / sqrt(n_weight),
+#     t_weight = if_else(n_weight > n_obs, qt(0.975, df = n_weight - 1), NA),
+#     WEIGHT_95_CI = t_weight * WEIGHT_SE
+#   ) -> temp2
+# 
+# bio_se <- rbind(temp1, temp2)
+# 
+# bio_se |> 
+#   mutate(DATE = make_date(year = 2024, month = month(DATE), day = day(DATE))) |>
+#   mutate(FORK_LENGTH = FORK_LENGTH * 10, LENGTH_95_CI = LENGTH_95_CI * 10) |> 
+#   select(YEAR, DATE, FORK_LENGTH, LENGTH_95_CI) |> 
+#   ggplot(aes(DATE, FORK_LENGTH)) +
+#   facet_wrap(~YEAR, ncol = 3) +
+#   geom_point(pch = 21, size = 3, fill = if_else(is.na(bio_se$LENGTH_95_CI), "#FDE333" ,"grey70"), colour = "grey10") +
+#   geom_errorbar(aes(ymin = FORK_LENGTH - LENGTH_95_CI, ymax = FORK_LENGTH + LENGTH_95_CI)) +
+#   scale_x_date(date_labels = "%b %d", date_breaks = "2 week") +
+#   geom_smooth(method = "lm", se = FALSE) +
+#   #scale_y_continuous(labels = scales::percent_format()) +
+#   labs(
+#     #title = "Mass of sampled gaspereau",
+#     x = "Date",
+#     y = "Fork length (mm)"
+#   ) +
+#   theme_bw()+
+#   theme(
+#     axis.title.x = element_text(margin = margin(t = 10)),
+#     strip.text = element_text(size = 14),
+#     axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 1, size = 14),
+#     axis.text.y = element_text(size = 14),
+#     axis.title = element_text(size = 16),
+#     panel.grid.minor = element_blank(),
+#     panel.grid.major = element_blank(),
+#     # This changes the width of the facet panel with the text
+#     strip.text.x = element_text(margin = margin(0,0,0,0, "cm"))
+#     )
+
+#ggsave("seasonal_length.png", plot = last_plot(), width = 12, height = 7, units = "in", dpi = 300)
+#
+# # Join bio and age data so we can plot things for each age
+# # Use n to get the t-distribution so we can get better CIs for smaller n
+# bio |>
+#   filter(!is.na(CURRENT_AGE)) |>
+#   select(YEAR, CURRENT_AGE, SEX_ID, FORK_LENGTH, WEIGHT) |>
+#   arrange(YEAR) |>
+#   mutate(CURRENT_AGE = as.factor(CURRENT_AGE)) |>
+#   group_by(YEAR, CURRENT_AGE) |>
+#   summarise(
+#     # Get the number of samples for each measurement
+#     n_length = sum(!is.na(FORK_LENGTH)),
+#     n_weight = sum(!is.na(WEIGHT)),
+# 
+#     # Get the SD and SE for length
+#     LENGTH_SD = sd(FORK_LENGTH, na.rm = TRUE), # need to do this one first
+#     LENGTH_SE = LENGTH_SD / sqrt(n_length),
+#     t_length = qt(0.975, df = n_length - 1),
+#     # Put an if_else here that checks i n_length is > 3
+#     LENGTH_95_CI = if_else(n_length > n_obs, t_length * LENGTH_SE, NA),
+#     #LENGTH_95_CI = t_length * LENGTH_SE,
+#     FORK_LENGTH = mean(FORK_LENGTH, na.rm = TRUE),
+# 
+#     # Get the SD and SE for weight
+#     WEIGHT_SD = sd(WEIGHT, na.rm = TRUE), # need to do this one first
+#     WEIGHT_SE = WEIGHT_SD / sqrt(n_weight),
+#     t_weight = qt(0.975, df = n_weight - 1),
+#     # Put an if_else here that checks i n_weight is > n_obs
+#     WEIGHT_95_CI = if_else(n_weight > n_obs, t_weight * WEIGHT_SE, NA),
+#     #WEIGHT_95_CI = t_weight * WEIGHT_SE,
+#     WEIGHT = mean(WEIGHT, na.rm = TRUE),
+# 
+#     .groups = "drop"
+#     ) |>
+#   # These values are in cm and we want them in mm
+#   mutate(FORK_LENGTH = FORK_LENGTH * 10, LENGTH_95_CI = LENGTH_95_CI * 10) |>
+#   select(YEAR, CURRENT_AGE, FORK_LENGTH, LENGTH_95_CI, WEIGHT, WEIGHT_95_CI, LENGTH_SD, WEIGHT_SD) -> gr_bio_age
+# 
+# # These data are given to us with summary statistics already calculated. This
+# # looks like it has CIs instead of SD
+# old_bio_data <- read_csv("C:/Users/graylo/OneDrive - DFO-MPO/R_files/gaspereau-river/80sData.csv")
+# 
+# # To get SD from CI we need to divide the hard-coded CI by 2, then rearrange the
+# # equation for calculating a 95% CI from: CI = 1.96 * SD / sqrt(n) to get the SD
+# # which ends up being: CI * sqrt(n) / 1.96 = SD
+# old_bio_data |>
+#   select(
+#     YEAR = Year,
+#     N = n,
+#     CURRENT_AGE = Age,
+#     FORK_LENGTH = mlen,
+#     LENGTH_95_CI = cilen,
+#     WEIGHT = mweight,
+#     WEIGHT_95_CI = ciweight
+#     ) |>
+#   # CI * sqrt(n) / 1.96 = SD
+#   mutate(
+#     LENGTH_SD = LENGTH_95_CI / 2 * sqrt(N) / 1.96,
+#     WEIGHT_SD = WEIGHT_95_CI / 2 * sqrt(N) / 1.96
+#   ) |>
+#   select(-N) -> gr_80s
+# 
+# gr_bio_age <- rbind(gr_bio_age, gr_80s)
+# 
+# # We are going to filter out records from 2003 to 2006 because they are garbage
+# gr_bio_age |>
+#   filter(!(YEAR %in% c(2003, 2004, 2005, 2006))) |>
+#   arrange(YEAR) -> gr_bio_age
+# 
+# # Change NaNs created by the CI calculations above into NAs so that we can
+# # simplify our code in the plot
+# gr_bio_age |> mutate(across(everything(), ~ if_else(is.nan(.), NA, .))) -> gr_bio_age
+
+
+# Make df for labels
+# labels_df <- data.frame(
+#   CURRENT_AGE = character(),
+#   slope = character(),
+#   adjR2 = character(),
+#   pvalue = character()
+# )
+# 
+# # Get the model info for plotting
+# ages <- unique(gr_bio_age$CURRENT_AGE)
+# 
+# for (age in ages) {
+#   
+#   mass_mod <- lm(WEIGHT ~ YEAR, data = gr_bio_age |> filter(CURRENT_AGE == age))
+#   slope_label <- paste("Slope:", round(coef(mass_mod)[2], 2))
+#   mod_summary <- summary(mass_mod)
+#   adjR2_label <- paste("Adj. R²:", round(mod_summary$adj.r.squared, 2))
+#   pvalue_label <- paste("p-value:", round(mod_summary$coefficients[8], 3))
+#   temp <- data.frame(CURRENT_AGE = age,slope = slope_label, adjR2 = adjR2_label, pvalue = pvalue_label)
+#   labels_df <- rbind(labels_df, temp)
+#   
+# }
+# 
+# labels_df
+# 
+# # Notes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Have different colour palettes for different variables
+# but then change the hue within the colour
+# 
+# Combine Mass/Length with Age into biocharacteristics (or something)
+# 
+# Arrange: Catch, Count, biocharacteristics
+# 
+# Do more saturated colour for catch for better data sources e.g.:
+# 1. Pail counts
+# 2. Buyers
+# 3. Regression
+# 
+# Do more saturated colour for counts for better data source:
+# 1. Complete counts
+# 2. Estimate, two-way stratified
+# 3. Estimate, two-stratified, day counts only
+# 4. Estimate, one-way stratified
+# 5. No data
+# 
+# Do more saturated colour for counts for better data source:
+# 1. Proportional sampling
+# 2. Approximate proportional sampling
+# 3. Twice-per-week
+#  
+#  
+# Catch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# 1979 - 2006 = pail counts
+# 2007        = average (remove?)
+# 2008 - 2011 = regression
+# 2012 - 2024 = buyers
+# 
+# 
+# Count ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# 1982 - 1984 = full counts
+# 1985 - 1994 = no data
+# 1995        = full counts
+# 1996        = no data
+# 1997 - 2001 = full counts
+# 2002 - 2003 = full counts
+# 2004 - 2007 = estimate, one-way stratified
+# 2008        = no data
+# 2009        = estimate, one-way stratified
+# 2010 - 2011 = no data
+# 2012        = estimate, one-way stratified
+# 2013        = estimate, two-way stratified, day counts only
+# 2014        = no data
+# 2015 - 2019 = estimate, two-way stratified, full day
+# 2020        = no data
+# 2021 - 2024 = estimate, two-way stratified, full day
+# 
+# 
+# Biocharacterstics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+# 1982 - 1984 = twice-per-weak
+# 1984 - 1997 = no data
+# 1997 - 2002 = proportional sampling
+# 2016        = approximate proportional sampling
+# 2017        = no data
+# 2018 - 2019 = approximate proportional sampling
+# 2020        = no data
+# 2021 - 2024 = approximate proportional sampling
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+
+# LICENCES REPORTING
+# 
+# Get the licence data provided by RM
+# licences <- readxl::read_excel("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/Gaspereau Licences Area Project.xlsx")
+
+# Look at data from Gaspereau River to get licences assocaited with GR
+# This produces 16 licences
+# catch |> 
+#   filter(RIVERNAME_CLEANED == "GASPEREAU") |> 
+#   select(LICENCE_ID, RIVERNAME_CLEANED, YEAR, FV_DATE_FISHED, GEAR_DESCRIPTION, FV_WEIGHT) |>
+#   distinct(LICENCE_ID, RIVERNAME_CLEANED) -> gr_lic
+# 
+# gr_lic
+
+# Last catch entries for each licence are 2024 unless stated otherwise below
+# 120049 - 2009		
+# 120236 - 2023	
+# 120315 - 2023
+# 
+# So, 120049 looks inactive and should probably be removed from the list. The
+# last entry for 120049 in the DNF dataframe is also for 2009, so they are not
+# submitting DNFs while keeping the licence open, so we can probably remove it.
+
+# gr_lic |> filter(LICENCE_ID != 120049) -> gr_lic
+
+# This is a list of the licences that reported catch in 2024
+# Looks like 13 licences at time of writing
+
+# lic_year <- 2024
+# 
+# catch |> 
+#   filter(YEAR == lic_year) |> 
+#   select(LICENCE_ID, YEAR, RIVERNAME = RIVERNAME_CLEANED, COUNTY, PROVINCE, FV_WEIGHT) |> 
+#   filter(LICENCE_ID %in% gr_lic$LICENCE_ID) |> 
+#   distinct(LICENCE_ID) -> gr_lic_catch
+# 
+# gr_lic_catch$status <- "Catch"
+
+# These are the licences that submitted DNF in 2024 for GR, looks like 0 at
+# the time of writing
+# didnotfish |> 
+#   filter(YEAR == lic_year & NIL_REPORT_FLAG == "Y") |> 
+#   arrange(LICENCE_ID) |> 
+#   select(LICENCE_ID) -> dnf
+# 
+# gr_lic |> filter(LICENCE_ID %in% dnf$LICENCE_ID)
+
+# Assume the remainder are DNR
+# gr_lic |> 
+#   anti_join(gr_lic_catch, by = "LICENCE_ID") |> 
+#   distinct() |> 
+#   mutate(status = "DNR") -> gr_dnr
+
+# Join the DNR with the catch licences
+# gr_lic_catch |> 
+#   full_join(gr_dnr) -> gr_lic_df
+
+# Calculate the reporting rate
+# gr_lic_df |> 
+#   count(status) |> 
+#   mutate(proportion = n / sum(n)) |> 
+#   arrange(desc(proportion))
+```
+```

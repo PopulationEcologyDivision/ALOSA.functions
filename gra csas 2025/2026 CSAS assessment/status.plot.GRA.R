@@ -1,16 +1,16 @@
 ##status plots as a function
 
-status.plot<-function(USR,
-                      LRP,
-                      RR,
-                      TRR,
-                      u,
-                      u.plot.lower,
-                      u.plot.upper,
-                      ssb,
-                      ssb.plot.lower,
-                      ssb.plot.upper,
-                      years)
+status.plot.GRA<-function(USR,
+                          LRP,
+                          RR,
+                          TRR,
+                          u,
+                          u.plot.lower,
+                          u.plot.upper,
+                          ssb,
+                          ssb.plot.lower,
+                          ssb.plot.upper,
+                          years)
 {  
   if(length(years)!=length(ssb))
   {stop("ssb length doesn't match years")}
@@ -36,7 +36,7 @@ status.plot<-function(USR,
   base.cols<-c("black","cyan")
   var.pal<-colorRampPalette(base.cols)
   cols.vec<-rep(var.pal(nyears/5),each=5) #repeat each of the 7 colours 5 times
-  cex.vec<-rep(seq(0.2,1.2,length.out=7),each=5)
+  cex.vec<-rep(seq(0.2,1.4,length.out=7),each=5)
   
   #plot
   png("status.plot.GRA.png",width=8.5,height=8.5,units='in',res=200)
@@ -86,15 +86,18 @@ status.plot<-function(USR,
   mtext(river,1,line=5,cex=1.25,las=0,adj=0)
   mtext(species,1,line=6.5,cex=1.25,las=0,adj=0)
   
-  mtext(paste("RR = ",RR),1,line=4,cex=1.1,adj=1,las=0)
-  mtext(paste("TRR = ",TRR),1,line=5,cex=1.1,adj=1,las=0)
-  mtext(paste("USR = ",round(USR/1000,1)," t"),1,line=6,cex=1.1,adj=1,las=0)
-  mtext(paste("LRP = ",round(LRP/1000,1)," t"),1,line=7,cex=1.1,adj=1,las=0)
+  mtext(paste("RR =",RR),1,line=4,cex=1.1,adj=1,las=0)
+  mtext(paste("TRR =",TRR),1,line=5,cex=1.1,adj=1,las=0)
+  mtext(paste("USR =",round(USR/1000,1),"t"),1,line=6,cex=1.1,adj=1,las=0)
+  mtext(paste("LRP =",round(LRP/1000,1),"t"),1,line=7,cex=1.1,adj=1,las=0)
 
   #legend
   plot.new()
-  plot.window(xlim = c(0, 1), ylim = c(0, nyears), xaxs = "i", yaxs = "i")
-  rect(xleft = 0, ybottom = 2:(nyears+1), xright = 1, ytop = 1:nyears, col = cols.vec, border = NA)
+  plot.window(xlim = c(0, 1), ylim = c(0, nyears+1), xaxs = "i", yaxs = "i")
+  # rect(xleft = 0, ybottom = 2:(nyears+1), xright = 1, ytop = 1:nyears, col = cols.vec, border = NA)
+  lines(rep(0.5,(nyears/5)+1),seq(1,nyears,length.out=nyears/5),lty=2)
+  points(rep(0.5,(nyears/5)+1),seq(1,nyears,length.out=nyears/5),cex=unique(cex.vec),pch=19,col=unique(cols.vec))
+  points(0.5,nyears,pch=19,col="red",cex=max(cex.vec))
   axis(side = 4, at=seq(1,nyears,by=5), labels=seq(years[1],max(years),by=5), las = 1)
   
   dev.off()

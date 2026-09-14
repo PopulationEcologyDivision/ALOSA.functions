@@ -15,13 +15,13 @@ catch.plot<-c(catch.old*1000,catch.new)
 
 ####SSB####
 #get count data where available
-gra.count.old<-data.frame(year=1982:1990,
-                          esc=c(50400,114800,111100,NA,NA,NA,NA,NA,NA)) #from Jessop and Parker 1988
+gra.count.old<-data.frame(year=c(1970:1990),
+                          esc=c(60527,rep(NA,11),50400,114800,111100,NA,NA,NA,NA,NA,NA)) #from Jessop and Parker 1988
 gra.count<-assessment.out$dat$abun.df[,c(1,4)] #year and count cols
 gra.count<-rbind(gra.count.old,gra.count)
 gra.count<-rbind(gra.count,c(2025,858917)) #add in 2025
 gra.count<-rbind(gra.count,c(2026,716720)) #add in 2025
-gra.count$SE<-c(rep(1,3),rep(NA,6), #1982-1984, total counts, and 1985-1990 no counts
+gra.count$SE<-c(1,rep(NA,11),rep(1,3),rep(NA,6), #1970, 1982-1984, total counts, and 1985-1990 no counts
                 rep(NA,4),1,NA,rep(1,7), #no count or total count 1991-2003
                 22226/1.96,59982/1.96,36312/1.96, #2004-2006 divide half the CI by 1.96,
                 47000/1.96,NA,39900/1.96, NA, NA,#assume CI +/- 10% 2007, 2009
@@ -42,8 +42,8 @@ gra.count$weight<-ifelse(is.na(gra.count$weight),
 obs.ssb<-gra.count$esc*gra.count$weight/1000
 obs.ssb.SE<-gra.count$SE*gra.count$weight/1000
 
-pred.ssb<-c(rep(NA,9),assessment.out$int_calc_ests$pred_ssb) #NA's added because model predicted 1991-2024, data is 1982-present 
-pred.ssb.SE<-c(rep(NA,9),assessment.out$int_calc_stds$pred_ssb)
+pred.ssb<-c(rep(NA,21),assessment.out$int_calc_ests$pred_ssb) #NA's added because model predicted 1991-2024, data is 1970-present 
+pred.ssb.SE<-c(rep(NA,21),assessment.out$int_calc_stds$pred_ssb)
 
 ssb.plot<-obs.ssb
 ssb.plot[is.na(ssb.plot)]<-pred.ssb[which(is.na(ssb.plot))] #fill in missing obs with predictions
@@ -65,12 +65,12 @@ FPE.norm.SE<-0.257/abs(1/(1.144*(1.144-1)))
 t1<-ssb.plot/0.758 #esc (as SSB)/FPE
 t1.SE<-sqrt((ssb.plot.SE/ssb.plot)^2+(FPE.norm.SE/0.758)^2)*t1
 
-u.plot<-catch.plot[19:length(catch.plot)]/(catch.plot[19:length(catch.plot)]+t1) #19:length catch plot gives 1982:2026
+u.plot<-catch.plot[7:length(catch.plot)]/(catch.plot[7:length(catch.plot)]+t1) #19:length catch plot gives 1982:2026
 #boot strap to get uncertainty in u
 u.BS<-list()
 for(i in 1:length(t1))
 {
-  u.BS[[i]]<-catch.plot[i+18]/(catch.plot[i+18]+rnorm(10000,t1[i],t1.SE[i]))
+  u.BS[[i]]<-catch.plot[i+6]/(catch.plot[i+6]+rnorm(10000,t1[i],t1.SE[i]))
 }
 u.plot.lower<-sapply(u.BS,quantile,probs=0.025,na.rm=T)
 u.plot.upper<-sapply(u.BS,quantile,probs=0.975,na.rm=T)
@@ -85,45 +85,48 @@ rec.plot.lower<-exp(log.rec.plot-1.96*log.rec.plot.std)
 rec.plot.upper<-exp(log.rec.plot+1.96*log.rec.plot.std)
 
 ####probability of stock status####
-USR<-assessment.out$brps$USR
-LRP<-assessment.out$brps$SSBF40*0.5
-#2020
-pnorm(USR,ssb.plot[30],ssb.plot.SE[30],lower.tail = F)
-#2022
-pnorm(USR,ssb.plot[32],ssb.plot.SE[32],lower.tail = F)
+# USR<-assessment.out$brps$USR
+# LRP<-assessment.out$brps$SSBF40*0.5
+# #2020
+# pnorm(USR,ssb.plot[30],ssb.plot.SE[30],lower.tail = F)
+# #2022
+# pnorm(USR,ssb.plot[32],ssb.plot.SE[32],lower.tail = F)
 #all other probs>0.99
 
 #U
-TRR<-1-exp(-assessment.out$brps$F40)
-RR<-assessment.out$brps$Umsy
-prob.df<-data.frame(year=1982:2026,
-                    prob.RR=NA,
-                    prob.TRR=NA,
-                    prob.USR=NA,
-                    prob.LRP=NA)
-for(i in 1:length(u.BS))
-{
-  prob.df$prob.RR[i]<-mean(u.BS[[i]]>RR)
-  prob.df$prob.TRR[i]<-mean(u.BS[[i]]>TRR)
-  prob.df$prob.USR[i]<-pnorm(USR,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
-  prob.df$prob.LRP[i]<-pnorm(LRP,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
-}
+# TRR<-1-exp(-assessment.out$brps$F40)
+# RR<-assessment.out$brps$Umsy
+# prob.df<-data.frame(year=1982:2026,
+#                     prob.RR=NA,
+#                     prob.TRR=NA,
+#                     prob.USR=NA,
+#                     prob.LRP=NA)
+# for(i in 1:length(u.BS))
+# {
+#   prob.df$prob.RR[i]<-mean(u.BS[[i]]>RR)
+#   prob.df$prob.TRR[i]<-mean(u.BS[[i]]>TRR)
+#   prob.df$prob.USR[i]<-pnorm(USR,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
+#   prob.df$prob.LRP[i]<-pnorm(LRP,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
+# }
 
-source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/status.plot.R")
-status.plot(USR=USR,
-            LRP=LRP,
-            RR=RR,
-            TRR=TRR,
-            u=u.plot[10:45],
-            u.plot.lower=u.plot.lower[10:45],
-            u.plot.upper=u.plot.upper[10:45],
-            ssb=ssb.plot[10:45],
-            ssb.plot.lower=ssb.plot.lower[10:45],
-            ssb.plot.upper=ssb.plot.upper[10:45],
-            years=1991:2026)
-
-data.out<-data.frame(years=1964:2026,
-                     catch=catch.plot,
-                     ssb=c(rep(NA,length(1964:1981)),ssb.plot),
-                     u=c(rep(NA,length(1964:1981)),u.plot)
-)
+# source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/status.plot.GRA.R")
+# status.plot.GRA(USR=USR,
+#                 LRP=LRP,
+#                 RR=RR,
+#                 TRR=TRR,
+#                 u=u.plot[10:45],
+#                 u.plot.lower=u.plot.lower[10:45],
+#                 u.plot.upper=u.plot.upper[10:45],
+#                 ssb=ssb.plot[10:45],
+#                 ssb.plot.lower=ssb.plot.lower[10:45],
+#                 ssb.plot.upper=ssb.plot.upper[10:45],
+#                 years=1991:2026)
+# 
+# data.out<-data.frame(years=1964:2026,
+#                      catch=signif(catch.plot/1000,3),
+#                      ssb=c(rep("-",length(1964:1981)),signif(ssb.plot/1000,3)),
+#                      u=c(rep("-",length(1964:1981)),signif(u.plot,3)),
+#                      recs=c(rep("-",length(1964:1989)),signif(rec.plot,3),"-","-","-")
+# )
+# 
+# write.csv(data.out,file="~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/GRA.data.csv",row.names=F)

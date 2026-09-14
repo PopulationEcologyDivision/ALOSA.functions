@@ -152,15 +152,25 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
     {
       polygon(c(year.ls[[i]], rev(year.ls[[i]])), c(tr.df.low.ls[[i]], rev(tr.df.high.ls[[i]])), col=grey(0.8), border=grey(0.8))
     }
-  } else if(anyNA(tr.df.low$ts.value)==T)
+    
+    #if any of the data is just one year, lines wont print it but this if statement will add a point
+    x<-split(na.omit(tr.df$ts.value[which(tr.df$ts.name == "SSB")]), cumsum(is.na(tr.df$ts.value[which(tr.df$ts.name == "SSB")]))[!is.na(tr.df$ts.value[which(tr.df$ts.name == "SSB")])])
+    if(any(lengths(x)==1))
+    {
+      x1<-x[lengths(x)==1]
+      tr.df.pointy<-tr.df$ts.value[which(tr.df$ts.name == "SSB")][which(tr.df$ts.value[which(tr.df$ts.name == "SSB")]==x1)]
+      tr.df.pointx<-tr.df$year[which(tr.df$ts.name == "SSB")][which(tr.df$ts.value[which(tr.df$ts.name == "SSB")]==x1)]
+      points(tr.df.pointx,tr.df.pointy,pch=16)
+    }
+  } else if(anyNA(tr.df.low$ts.value)==F)
   {
     polygon(c(tr.df.low$year, rev(tr.df.high$year)), c(tr.df.low$ts.value, rev(tr.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
   }
 
   lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSB"), ], type = "l", lwd = 2)
-  #lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSBlow-MT"), ], type = "l", lty = 2)
-  #lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSBhigh-MT"), ], type = "l", lty = 2)
 
+
+  
   ## LRP and USR
   lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "LRP"), ], type = "l", lty = 3, lwd = 2, col = "red")
   lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "USR"), ], type = "l", lty = 3, lwd = 2, col = "forestgreen")
@@ -216,7 +226,17 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
     {
       polygon(c(year.ls[[i]], rev(year.ls[[i]])), c(bl.df.low.ls[[i]], rev(bl.df.high.ls[[i]])), col=grey(0.8), border=grey(0.8))
     }
-  } else if(anyNA(bl.df.low$ts.value)==T)
+    
+    #if any of the data is just one year, lines wont print it but this if statement will add a point
+    x<-split(na.omit(bl.df$ts.value[which(bl.df$ts.name == "µ")]), cumsum(is.na(bl.df$ts.value[which(bl.df$ts.name == "µ")]))[!is.na(bl.df$ts.value[which(bl.df$ts.name == "µ")])])
+    if(any(lengths(x)==1))
+    {
+      x1<-x[lengths(x)==1]
+      bl.df.pointy<-bl.df$ts.value[which(bl.df$ts.name == "µ")][which(bl.df$ts.value[which(bl.df$ts.name == "µ")]==x1)]
+      bl.df.pointx<-bl.df$year[which(bl.df$ts.name == "µ")][which(bl.df$ts.value[which(bl.df$ts.name == "µ")]==x1)]
+      points(bl.df.pointx,bl.df.pointy,pch=16)
+    }
+  } else if(anyNA(bl.df.low$ts.value)==F)
   {
     polygon(c(bl.df.low$year, rev(bl.df.high$year)), c(bl.df.low$ts.value, rev(bl.df.high$ts.value)), col=grey(0.8), border=grey(0.8))
   }  

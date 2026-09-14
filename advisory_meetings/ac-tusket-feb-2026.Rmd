@@ -240,7 +240,6 @@ df |>
 
 # Run escapement script
 escapement_vd <- onespecies.river.escapement(
-  filename = NULL,
   fixtime = TRUE,
   downstream.migration = FALSE,
   database = TRUE,
@@ -431,9 +430,9 @@ escapement_both |>
 ```{r}
 # Get the total landings for the fisher for use later
 df |>
-  filter(RIVERNAME_CLEANED == "TUSKET" & YEAR == 2025) |> 
-  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |> 
-  mutate(FV_WEIGHT = FV_WEIGHT / .240) |> 
+  filter(RIVERNAME_CLEANED == "TUSKET" & YEAR == 2025) |>
+  summarise(FV_WEIGHT = sum(FV_WEIGHT)) |>
+  mutate(FV_WEIGHT = FV_WEIGHT / .240) |>
   pull(FV_WEIGHT) -> tusket_landings
 
 # Get the ages for 2025 for Tunken and see how many were collected each week as

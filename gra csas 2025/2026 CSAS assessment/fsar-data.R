@@ -10,7 +10,7 @@
 org_fsar_data <- function(format = c("wide", "long")) {
   format <- match.arg(format)
   categories <- c("Catch", "SSB", "Fishing", "Recruitment")
-  years <- 1981:2026
+  years <- 1969:2026
   years.catch <- 1964:2026
   years.rec <- 1990:2026
   ## observed catch
