@@ -25,9 +25,13 @@ for(yr in 1:length(years))
 
 names(age.data.ls)<-c("age2019","age2021","age2022","age2024","age2025")
 esc<-c(397709,1956804,1670471,2262181,1372982)
+catch<-c(361754,1265893,1863153,1747021,1240938)
+tot<-esc+catch
 
-#plot
-par(mfrow=c(1,5))
+
+#plot numbers at age
+par(mfrow=c(1,7))
+age.matrix.ls<-list()
 for(yr in 1:length(years))
 {
   agedata<-age.data.ls[[yr]]
@@ -43,15 +47,68 @@ for(yr in 1:length(years))
     }
   }
   
-  age.matrix<-age.prop.matrix*esc[yr]
-  
-  barplot(age.matrix[1:4,],
-          # ylim=c(0,max(sum(age.prop.matrix[,2],na.rm=T)*1.2,sum(age.prop.matrix[,3],na.rm=T)*1.2)),
-          # ylim=c(0,0.8),
-          ylim=c(0,1500000),
-          xlab="",ylab="Thousands of Fish",cex.lab=1.5,
-          col=c("#E69F00","#56B4E9","#009E73","#0072B2")) 
+  age.matrix<-age.prop.matrix*tot[yr]
+  age.matrix.ls[[yr]]<-age.matrix
+  #numbers at age by year
+  barplot(age.matrix[1:4,]/1000,
+          ylim=c(0,2500),
+          xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,
+          col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
+  mtext(years[yr],3)
+  if(yr==1 | yr==3){plot.new()} #puts gaps in for 2020 and 2023 when no age data available
+  if(yr==5)
+  {
+    legend("topright",legend=c("First","Second","Third","Fourth"),
+           fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+           title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+  }
 }
+
+temp.df<-data.frame(Age=rep(3:7,each=5),Spawns=seq(1,5,1))
+temp.df<-temp.df[temp.df$Spawns<5,]
+# temp.df$diff<-temp.df$Age-temp.df$Spawns
+# temp.df<-temp.df[temp.df$diff>1,]
+# temp.df$diff<-NULL
+temp.df$Year<-NA
+temp.df$Cohort<-NA
+temp.df$Total<-NA
+
+age.df.ls<-list()
+for(yr in 1:length(years))
+{
+  temp.df$Year<-years[yr]
+  temp.df$Cohort<-temp.df$Year-temp.df$Age
+  temp.df$Total<-c(age.matrix.ls[[yr]])
+  age.df.ls[[yr]]<-temp.df
+}
+age.df<-do.call(rbind,age.df.ls)
+
+cohorts<-sort(unique(age.df$Cohort))
+par(mfrow=c(2,length(cohorts)/2))
+for(coh in 1:length(cohorts))
+{
+  if(coh==1){next()}#skip 2012 only 1 year old no visual info
+  plot.df<-age.df[age.df$Cohort==cohorts[coh],]
+  #convert to a matrix for carplot
+  plot.matrix.trunc<-tapply(plot.df$Total,plot.df[1:2],FUN=mean)
+  plot.matrix.trunc<-t(plot.matrix.trunc) #transpose
+  plot.matrix<-matrix(rep(0,20),nrow=4, ncol=5, dimnames=list(c(1:4),c(3:7)))
+  ind<-cbind(rownames(plot.matrix.trunc)[row(plot.matrix.trunc)],colnames(plot.matrix.trunc)[col(plot.matrix.trunc)])
+  plot.matrix[ind]<-plot.matrix[ind]+plot.matrix.trunc[ind]
+  barplot(plot.matrix[1:4,]/1000,
+          ylim=c(0,2500),
+          xlab="Age",ylab="Thousands of Fish",cex.lab=1.5,
+          col=c("#E69F00","#56B4E9","#009E73","#0072B2"))
+  mtext(paste("Cohort Year ",cohorts[coh]),3)
+  if(cohorts[coh]==2015){mtext("Tusket Numbers-at-age by Cohort Year",side=3,line=3)}
+  if(cohorts[coh]==2022)
+    {
+      legend("topright",legend=c("First","Second","Third","Fourth"),
+             fill=c("#E69F00","#56B4E9","#009E73","#0072B2"),bty='n',
+             title="Number of\nSpawnings",title.adj=0,xpd=TRUE,inset = c(0.05,0.1))
+    }
+}
+
 
 ####habitat based reference point plot####
 #92swkm habitat from 2016 assessment

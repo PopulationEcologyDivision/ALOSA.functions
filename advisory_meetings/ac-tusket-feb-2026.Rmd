@@ -61,15 +61,19 @@ df <- marfis_error_cleaner(
 # Get number of observations
 df |> 
   filter(RIVERNAME_CLEANED == "TUSKET") |> 
-  filter(YEAR %in% c(2020:2025)) |> 
+  filter(YEAR %in% c(2019:2025)) |> 
   mutate(YEAR = as.factor(YEAR)) |>
   group_by(YEAR, LICENCE_ID) |> 
   summarise(TOTAL = sum(FV_WEIGHT)) |> 
   count() -> counts
 
+tusket.catch<-df[df$RIVERNAME_CLEANED=="TUSKET",c(2,9)]
+
+year.totals<-aggregate(tusket.catch,by=list(tusket.catch$YEAR),FUN="sum")
+
 df |> 
   filter(RIVERNAME_CLEANED == "TUSKET") |> 
-  filter(YEAR %in% c(2020:2025)) |> 
+  filter(YEAR %in% c(2019:2025)) |> 
   mutate(YEAR = as.factor(YEAR)) |>
   group_by(YEAR, LICENCE_ID) |> 
   summarise(TOTAL = sum(FV_WEIGHT)) |> 

@@ -308,3 +308,18 @@ mtext("Estimated Discharge (cfs)",2,line=3,cex=1.2)
 legend("topright",col=c("orange","red"),legend=c("2026","2025"),lty=c(1,1))
 ```
 
+```{r post season counts}
+counts26<-onespecies.river.escapement(counts,fixtime=T,database=T,downstream.migration = F,2026,3,channel)
+counts26$date<-as.Date(paste(counts26$day,counts26$mon,2026,sep="-"),format="%d-%m-%Y")
+plot(counts26$date,counts26$total,type="l")
+dow<-weekdays(counts26$date)
+for(i in 1:length(dow))
+{
+  if(dow[i]=="Monday")
+  {
+    rect(counts26$date[i],0,counts26$date[i+5],90000,col="gray",density=30,border="transparent")
+  }
+}
+
+```
+
