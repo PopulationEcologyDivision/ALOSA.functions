@@ -168,20 +168,19 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
   }
 
   lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "SSB"), ], type = "l", lwd = 2)
-
-
   
   ## LRP and USR
-  lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "LRP"), ], type = "l", lty = 3, lwd = 2, col = "red")
-  lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "USR"), ], type = "l", lty = 3, lwd = 2, col = "forestgreen")
+  lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "USR"), ], type = "l", lty = 3, lwd = 2)
+  lines(ts.value ~ year, data = tr.df[which(tr.df$ts.name == "LRP"), ], type = "l", lty = 2, lwd = 2)
+  
 
   legend("topright","(B)", bty = "n", cex=1.25)
   legend("topleft",
          legend.text,
-         lty = c(1, -1, 3, 3),
+         lty = c(1, -1, 3, 2),
          lwd = c(2, 0, 2, 2),
          pch = c(-1,15,-1,-1),
-         col = c("black", grey(0.8), "forestgreen", "red"),
+         col = c("black", grey(0.8), "black", "black"),
          box.lwd = 0.5
   )
 
@@ -243,20 +242,20 @@ fsar_plot_base <- function(in.df, language = c("English","French")) {
   lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "µ"), ], lwd = 2)
   # lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Flow-1/yr"), ], type = "l", lty = 2)
   # lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Fhigh-1/yr"), ], type = "l", lty = 2)
-  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "RR"), ], lty = 3, lwd = 2, col = "red")
-  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "TRR"), ], lty = 3, lwd = 2, col = "orange")
+  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "RR"), ], lty = 2, lwd = 2)
+  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "TRR"), ], lty = 3, lwd = 2)
 
   ## natural mortality
-  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Adult M"), ], lty = 1, lwd = 2, col = grey(0.5))
+  lines(ts.value ~ year, data = bl.df[which(bl.df$ts.name == "Adult M"), ], lty = 5, lwd = 2)
 
 
   legend("topright","(C)", bty = "n", cex=1)
   legend("bottomleft",
          legend.text,
-         lty = c(1, -1, 3,3, 1),
+         lty = c(1, -1, 2, 3, 5),
          lwd = c(2, 0, 2, 2, 2),
          pch = c(-1,15,-1,-1,-1),
-         col = c("black", grey(0.8), "red","orange", grey(0.5)),
+         col = c("black", grey(0.8), "black","black", "black"),
          box.lwd = 0.5
   )
 

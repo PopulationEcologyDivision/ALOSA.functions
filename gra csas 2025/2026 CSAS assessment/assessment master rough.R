@@ -75,7 +75,48 @@ for(i in 1:length(t1))
 u.plot.lower<-sapply(u.BS,quantile,probs=0.025,na.rm=T)
 u.plot.upper<-sapply(u.BS,quantile,probs=0.975,na.rm=T)
 
+#plot of multiple us
+calc.u<-function(fpe)
+{
+  u.out<-catch.plot[7:length(catch.plot)]/(catch.plot[7:length(catch.plot)]+ssb.plot/fpe)
+  return(u.out)
+}
+u.all<-list()
+for(i in 1:100)
+{
+  u.all[[i]]<-calc.u(i/100)
+}
+u.1970<-sapply(u.all,'[',1)
+library(viridis)
+cols.vec<-viridis(100)
 
+
+yrs<-1970:2026
+
+# png("FPE.uncertainty.GRA.png",width=11,height=8.5,units='in',res=200)
+# par(omi=c(1,1,0.5,1),mfrow=c(1,1),mar=c(1,2,0,1),las=1)
+# layout(matrix(c(1, 2), nrow = 1), widths = c(8, 1))
+# plot(yrs,u.plot,type="l",ylim=c(0,1))
+# for(i in 1:100){lines(yrs,u.all[[i]],col=cols.vec[i])}
+# abline(h=0.496,lty=2)
+# lines(yrs,u.plot,lwd=2)
+# points(rep(1970,100),u.1970,pch=1,col=cols.vec)
+# points(1970,u.plot[1],pch=16)
+# mtext("Year",1,line=3,cex=1.5)
+# mtext("µ",2,line=3,las=2,cex=1.5)
+# 
+# plot.new()
+# plot.window(xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i")
+# rect(xleft = 0, ybottom = (2:101)/100, xright = 1, ytop = (1:100)/100, col = cols.vec, border = NA)
+# axis(side = 4, at=seq(0.1,1,by=0.1), labels=seq(0.1,1,by=0.1), las = 1)
+# mtext("δ",4,line=3,las=2,cex=1.5)
+# dev.off()
+
+
+# act.fpe<-ssb.plot/(catch.plot[7:length(catch.plot)]/0.496-catch.plot[7:length(catch.plot)])
+# act.fpe<-ifelse(act.fpe>1,1,act.fpe)
+# plot(yrs,act.fpe,type="l")
+# abline(h=0.758)
 ####Recruits####
 #extract data and trim final estimate
 log.rec.plot<-assessment.out$log_recs[1:(length(assessment.out$log_recs)-1)]
@@ -85,8 +126,8 @@ rec.plot.lower<-exp(log.rec.plot-1.96*log.rec.plot.std)
 rec.plot.upper<-exp(log.rec.plot+1.96*log.rec.plot.std)
 
 ####probability of stock status####
-# USR<-assessment.out$brps$USR
-# LRP<-assessment.out$brps$SSBF40*0.5
+USR<-assessment.out$brps$USR
+LRP<-assessment.out$brps$SSBF40*0.5
 # #2020
 # pnorm(USR,ssb.plot[30],ssb.plot.SE[30],lower.tail = F)
 # #2022
@@ -94,8 +135,8 @@ rec.plot.upper<-exp(log.rec.plot+1.96*log.rec.plot.std)
 #all other probs>0.99
 
 #U
-# TRR<-1-exp(-assessment.out$brps$F40)
-# RR<-assessment.out$brps$Umsy
+TRR<-1-exp(-assessment.out$brps$F40)
+RR<-assessment.out$brps$Umsy
 # prob.df<-data.frame(year=1982:2026,
 #                     prob.RR=NA,
 #                     prob.TRR=NA,
@@ -110,16 +151,17 @@ rec.plot.upper<-exp(log.rec.plot+1.96*log.rec.plot.std)
 # }
 
 # source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/status.plot.GRA.R")
+# setwd("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment")
 # status.plot.GRA(USR=USR,
 #                 LRP=LRP,
 #                 RR=RR,
 #                 TRR=TRR,
-#                 u=u.plot[10:45],
-#                 u.plot.lower=u.plot.lower[10:45],
-#                 u.plot.upper=u.plot.upper[10:45],
-#                 ssb=ssb.plot[10:45],
-#                 ssb.plot.lower=ssb.plot.lower[10:45],
-#                 ssb.plot.upper=ssb.plot.upper[10:45],
+#                 u=u.plot[22:57], #22:57 gives 1991:2026 when years are 1970:2026
+#                 u.plot.lower=u.plot.lower[22:57],
+#                 u.plot.upper=u.plot.upper[22:57],
+#                 ssb=ssb.plot[22:57],
+#                 ssb.plot.lower=ssb.plot.lower[22:57],
+#                 ssb.plot.upper=ssb.plot.upper[22:57],
 #                 years=1991:2026)
 # 
 # data.out<-data.frame(years=1964:2026,
