@@ -20,7 +20,7 @@
 #
 # This functions uses: 
 
-ageing.selection.test <- function(
+ageing.selection <- function(
     countdata, 
     biodata,
     weekly = FALSE,
@@ -104,8 +104,8 @@ ageing.selection.test <- function(
   out$current.age = NA
   out$age.at.first.spawn = NA
   out$age.structure.sample = "T"
-  out <- out[ , c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample")]
-  names(out) <- c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample")
+  out <- out[ , c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample", "ager.id", "structure.id", "ager.notes", "primary.age.record")]
+  names(out) <- c("year", "sample", "species", "current.age", "age.at.first.spawn", "notes", "age.structure.sample", "ager.id", "structure.id", "ager.notes", "primary.age.record")
   out$replacementfor.which.sample = NA
   print("Writing scales to be aged to csv file in working directory")
   write.csv(
@@ -134,5 +134,4 @@ ageing.selection.test <- function(
     )
   
   assign("scales_sampled_per_time_unit", scales_sampled_per_time_unit, envir = .GlobalEnv)
-  # return(scales_sampled_per_time_unit)
 }
