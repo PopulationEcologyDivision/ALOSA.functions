@@ -40,7 +40,7 @@ colnames(age.table)<-c("spawns","age.mat","n.fish")
 
 #combine data with template dataframe
 ages.table.expanded<-merge(df,age.table,by=c("spawns","age.mat"),all.x=T) 
-ages.table.expanded$n.fish[is.na(j$n.fish)]<-0 #add 0s for unobserved age categories in sample
+ages.table.expanded$n.fish[is.na(ages.table.expanded$n.fish)]<-0 #add 0s for unobserved age categories in sample
 
 #fit model
 fit<-glm(n.fish~as.factor(age.mat)+spawns,family="poisson",data=ages.table.expanded)

@@ -1,16 +1,19 @@
+#This script produces all required values for the 2026 Gaspereau River Assessment
+
+#bring in required values and objects from gra repo, from the framework
+#predicted SSB, reference points, estiamted paramteres form SCA model, etc.
 assessment.out<-readRDS("C:/~/git/gra/assessment.out.gra.RData")
 
-
 ####Catch####
-#catch is in numbers, but would be better in tons
-#catch is provided to us in lbs, just convert back using 0.227kg/fish
+#hardcode old catch from last assessment. values are in tonnes.
 catch.old<-c(181,127,109,45,109,100,91,154,127,217,308,387,453,
              426,470,190,89,45,50,31,55,39,209,261,206,280,174
              ) #from Mcintyre et al. 2007, table 1, fishery officer pail count estimates (mt), 1964:1990
+#catch is provided to us in lbs, just convert back using 0.227kg/fish
 catch.new<-assessment.out$dat$abun.df$catch #gives 1991-2024
 catch.new<-c(catch.new,660148,432137) #add in 2025, 2026
 catch.new<-catch.new*0.227 #convert to kgs
-catch.plot<-c(catch.old*1000,catch.new)
+catch.plot<-c(catch.old*1000,catch.new) #convert all to kgs
 #no error term for catch
 
 ####SSB####
@@ -28,8 +31,10 @@ gra.count$SE<-c(1,rep(NA,11),rep(1,3),rep(NA,6), #1970, 1982-1984, total counts,
                 31677/1.96,15000/1.96,NA,#2012 2013
                 24070/1.96,25221/1.96,40127/1.96,43546/1.96,41881/1.96, NA,#2015-2019
                 36504/1.96,36935/1.96,52546/1.96,31210/1.96,39173/1.96,36910/1.96 #2021-2026
-                ) 
+                )
 
+#script to produce mean weight
+#not written as a function, it just assigns values to environment and removes temp objects
 source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/GRA.mean.weight.R")
 mean.weight.new<-mean(mw.new$weight,na.rm=T)
 mean.weight.old<-mean(mw.old$weight)
@@ -39,6 +44,7 @@ gra.count<-merge(gra.count,all.fish.weight[,c(1,2)],all.x=T)
 gra.count$weight<-ifelse(is.na(gra.count$weight),
                          ifelse(gra.count$year<=2008,mean.weight.old,mean.weight.new),gra.count$weight)
 
+#get ssb from count*mean weight
 obs.ssb<-gra.count$esc*gra.count$weight/1000
 obs.ssb.SE<-gra.count$SE*gra.count$weight/1000
 
@@ -54,9 +60,9 @@ ssb.plot.SE[is.na(ssb.plot.SE)]<-pred.ssb.SE[which(is.na(ssb.plot.SE))] #fill in
 ssb.plot.lower<-ssb.plot-1.96*ssb.plot.SE
 ssb.plot.upper<-ssb.plot+1.96*ssb.plot.SE
 
-####exploitation rate####
-#done as biomass not count
-#include FPE
+####Exploitation rate####
+#calculated with biomass values, not count as was previously done
+#include FPE in calculation too
 
 #error propagation
 #step1, use delta method to approximate a normal SE for FPE
@@ -64,7 +70,7 @@ FPE.norm.SE<-0.257/abs(1/(1.144*(1.144-1)))
 
 t1<-ssb.plot/0.758 #esc (as SSB)/FPE
 t1.SE<-sqrt((ssb.plot.SE/ssb.plot)^2+(FPE.norm.SE/0.758)^2)*t1
-
+#catch extends back to 1964, so 7:length() gives us 1970 to 2026. there will be NAs in between
 u.plot<-catch.plot[7:length(catch.plot)]/(catch.plot[7:length(catch.plot)]+t1) #19:length catch plot gives 1982:2026
 #boot strap to get uncertainty in u
 u.BS<-list()
@@ -75,48 +81,6 @@ for(i in 1:length(t1))
 u.plot.lower<-sapply(u.BS,quantile,probs=0.025,na.rm=T)
 u.plot.upper<-sapply(u.BS,quantile,probs=0.975,na.rm=T)
 
-#plot of multiple us
-calc.u<-function(fpe)
-{
-  u.out<-catch.plot[7:length(catch.plot)]/(catch.plot[7:length(catch.plot)]+ssb.plot/fpe)
-  return(u.out)
-}
-u.all<-list()
-for(i in 1:100)
-{
-  u.all[[i]]<-calc.u(i/100)
-}
-u.1970<-sapply(u.all,'[',1)
-library(viridis)
-cols.vec<-viridis(100)
-
-
-yrs<-1970:2026
-
-# png("FPE.uncertainty.GRA.png",width=11,height=8.5,units='in',res=200)
-# par(omi=c(1,1,0.5,1),mfrow=c(1,1),mar=c(1,2,0,1),las=1)
-# layout(matrix(c(1, 2), nrow = 1), widths = c(8, 1))
-# plot(yrs,u.plot,type="l",ylim=c(0,1))
-# for(i in 1:100){lines(yrs,u.all[[i]],col=cols.vec[i])}
-# abline(h=0.496,lty=2)
-# lines(yrs,u.plot,lwd=2)
-# points(rep(1970,100),u.1970,pch=1,col=cols.vec)
-# points(1970,u.plot[1],pch=16)
-# mtext("Year",1,line=3,cex=1.5)
-# mtext("µ",2,line=3,las=2,cex=1.5)
-# 
-# plot.new()
-# plot.window(xlim = c(0, 1), ylim = c(0, 1), xaxs = "i", yaxs = "i")
-# rect(xleft = 0, ybottom = (2:101)/100, xright = 1, ytop = (1:100)/100, col = cols.vec, border = NA)
-# axis(side = 4, at=seq(0.1,1,by=0.1), labels=seq(0.1,1,by=0.1), las = 1)
-# mtext("δ",4,line=3,las=2,cex=1.5)
-# dev.off()
-
-
-# act.fpe<-ssb.plot/(catch.plot[7:length(catch.plot)]/0.496-catch.plot[7:length(catch.plot)])
-# act.fpe<-ifelse(act.fpe>1,1,act.fpe)
-# plot(yrs,act.fpe,type="l")
-# abline(h=0.758)
 ####Recruits####
 #extract data and trim final estimate
 log.rec.plot<-assessment.out$log_recs[1:(length(assessment.out$log_recs)-1)]
@@ -126,6 +90,8 @@ rec.plot.lower<-exp(log.rec.plot-1.96*log.rec.plot.std)
 rec.plot.upper<-exp(log.rec.plot+1.96*log.rec.plot.std)
 
 ####probability of stock status####
+#done to inform in text statments regarding probability of status
+#note that only uncertainty in annual estimates incorporated, RPs treated as certain
 USR<-assessment.out$brps$USR
 LRP<-assessment.out$brps$SSBF40*0.5
 # #2020
@@ -137,19 +103,22 @@ LRP<-assessment.out$brps$SSBF40*0.5
 #U
 TRR<-1-exp(-assessment.out$brps$F40)
 RR<-assessment.out$brps$Umsy
-# prob.df<-data.frame(year=1982:2026,
-#                     prob.RR=NA,
-#                     prob.TRR=NA,
-#                     prob.USR=NA,
-#                     prob.LRP=NA)
-# for(i in 1:length(u.BS))
-# {
-#   prob.df$prob.RR[i]<-mean(u.BS[[i]]>RR)
-#   prob.df$prob.TRR[i]<-mean(u.BS[[i]]>TRR)
-#   prob.df$prob.USR[i]<-pnorm(USR,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
-#   prob.df$prob.LRP[i]<-pnorm(LRP,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
-# }
 
+#used to inform on the probability that status is above the reference points
+prob.df<-data.frame(year=1982:2026,
+                    prob.RR=NA,
+                    prob.TRR=NA,
+                    prob.USR=NA,
+                    prob.LRP=NA)
+for(i in 1:length(u.BS))
+{
+  prob.df$prob.RR[i]<-mean(u.BS[[i]]>RR)
+  prob.df$prob.TRR[i]<-mean(u.BS[[i]]>TRR)
+  prob.df$prob.USR[i]<-pnorm(USR,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
+  prob.df$prob.LRP[i]<-pnorm(LRP,ssb.plot[i],ssb.plot.SE[i],lower.tail = F)
+}
+
+#uncomment below to generate plots and output a csv for tables
 # source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/status.plot.GRA.R")
 # setwd("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment")
 # status.plot.GRA(USR=USR,
@@ -172,3 +141,4 @@ RR<-assessment.out$brps$Umsy
 # )
 # 
 # write.csv(data.out,file="~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/GRA.data.csv",row.names=F)
+# source("~/git/ALOSA.functions/gra csas 2025/2026 CSAS assessment/δ uncertainty plot.R")

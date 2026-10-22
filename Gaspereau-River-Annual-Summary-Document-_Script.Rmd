@@ -20,6 +20,7 @@ library(tinytex)
 
 \newpage
 ```{r hardcode_escapement, include=FALSE}
+GR2026<-"716,720"; GRCI2026<-"36,910"
 GR2025<-"858,917"; GRCI2025<-"39,173"
 GR2024<-"588,540"; GRCI2024<-"31,210"
 GR2023<-"1,312,700"; GRCI2023<-"52,246"
@@ -37,6 +38,7 @@ GR2015<-"438,874"; GRCI2015<-"24,070"
 
 Year | Catch estimate| Escapement estimate| Estimated run size| Exploitation rate (%)
 ------- | -------------| ------------------| -------------| --------
+2026| 432,137| `r GR2026`+/-`r GRCI2026` |1,148,857 |37.6
 2025| 660,148| `r GR2025`+/-`r GRCI2025` |1,519,065 |43.5
 2024| 1,265,348| `r GR2024`+/-`r GRCI2024` |1,853,888 |68.2
 2023| 1,431,500| `r GR2023`+/-`r GRCI2023` |2,744,200 |52.2
@@ -401,14 +403,7 @@ rect(43, -5, 73, (ymax*1.2)+5, border = NA,col="gray90")
 text(63,ymax*1.05,plotyear,cex=2)
 if(plotyear==2024){text(-2,ymax*1.05,paste("Total = ",paste(GR2024,GRCI2024,sep=" ± "), sep=""),cex=1.5,pos=4)}
 if(plotyear==2025){text(-2,ymax*1.05,paste("Total = ",paste(GR2025,GRCI2025,sep=" ± "), sep=""),cex=1.5,pos=4)}
-if(plotyear==2026){text(-2,ymax*1.05,"",cex=1.5,pos=4)}
-}else{
- plot(1,1, pch=" ",xlab="", ylab="",ylim=c(0,50),xlim=c(0,68),
-       xaxt="n",yaxt='n',cex.axis=2)
-  rect(-5, -5, 12, 55, border = NA,col="gray90")
-  rect(43, -5, 73, 55, border = NA,col="gray90")
-  text(63,41.5,plotyear,cex=2)
-  text(-2,41.5,"Total = NA ",cex=1.5,pos=4)
+if(plotyear==2026){text(-2,ymax*1.05,paste("Total = ",paste(GR2026,GRCI2026,sep=" ± "), sep=""),cex=1.5,pos=4)}
 }
 
 box()
