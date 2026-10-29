@@ -61,10 +61,10 @@ loaddata<-function(datasource){
     
  
   #If you want to save the tables from a new pull
-#save(catch,didnotfish,licencerenewals,file="DATE_SQL PULL.Rdata")
+# save(catch,didnotfish,licencerenewals,file="DATE MARFIS PULL.Rdata")
   }
 }
-loaddata(datasource = 1)
+# loaddata(datasource = 1)
 #---===---===---===---===---===---===---===---===---===---===---===---===---===
 
 #---===---===---===---===---===---===---===---===---===---===---===---===---===
@@ -177,30 +177,4 @@ loaddata(datasource = 1)
 # }
 # 
 # 
-# myfunction<-function(ilovecats){
-#   temp<-ilovecats*2
-#   temp1<-rep(temp,5)
-#   return(temp1)
-# }
 
-
-
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 

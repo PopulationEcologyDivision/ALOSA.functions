@@ -18,7 +18,10 @@ present.MARFIS.data<-function(licence,year,catch,write=F)
 {
   catch.sub<-catch[catch$LICENCE_ID %in% licence,]
   catch.sub<-catch.sub[catch.sub$YEAR %in% year,]
-  catch.reorder<-catch.sub[,c(1,3,10,11,2,15,16,17,5,6,4,8,9)]
+  col.order<-c("LICENCE_ID","YEAR","MONTH","DAY","FV_DATE_FISHED","RIVERNAME_LOGBOOK",
+               "RIVERNAME_CLEANED","COUNTY","PROVINCE","FV_GEAR_CODE","GEAR_DESCRIPTION",
+               "FV_HOURS_FISHED","FV_WEIGHT","MEASUREMENT_UNIT")
+  catch.reorder<-catch.sub[,col.order]
   if(write==T)
   {write.csv(catch.reorder,file="MARFIS freshwater logs.csv",row.names=F)}
   return(catch.reorder)
