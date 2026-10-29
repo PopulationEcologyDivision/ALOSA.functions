@@ -15,7 +15,7 @@ source("R:/Science/Population Ecology Division/DFD/Alosa/MARFISSCI/MARFIS_error_
 df <- marfis_error_cleaner(
   catch = catch,
   years = "all",
-  convert_to_kgs = TRUE,
+  convert_to_kgs = FALSE,
   tidy_data = FALSE,
   correct_eel_pot = TRUE,
   unknown_rivers_are_na = TRUE,
