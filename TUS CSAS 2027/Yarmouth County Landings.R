@@ -27,4 +27,41 @@ df<-df[df$COUNTY=="YARMOUTH COUNTY",]
 #at this point we should be ready to check the data or make corrections
 #You can use the function present.MARFIS.data to organize it so it matches the logs for easy checking
 #eg
-catch.sub<-present.MARFIS.data(licence = 120029,year = 2014,catch = df,write=F)
+catch.sub<-present.MARFIS.data(licence = 120608,year = 2016,catch = df,write=F)
+catch.sub$numbah <- catch.sub[catch.sub$MEASUREMENT_UNIT == "KILOGRAMS", "FV_WEIGHT"]/.24
+catch.sub <- catch.sub |> arrange(FV_DATE_FISHED)
+# library(devtools)
+# install_github('Maritimes/Mar.utils')
+
+unique(df$LICENCE_ID[df$YEAR==2017])
+
+
+
+
+#licence report card
+licences |> 
+  select(
+    LICENCE_ID = `Licence Id`,
+    LICENCE_TYPE = `Licence Type Description (English)`,
+    COUNTY = `County Name 1`,
+    PROVINCE = `Province Abbrev (English)`,
+    GEAR_DESCRIPTION = `Gear Description (English)`,
+    RIVERNAME = `RIVER CONFIRMED`
+  ) |> 
+  filter(COUNTY %in% c("YARMOUTH")) |> 
+  distinct(LICENCE_ID, COUNTY) |> 
+  arrange(LICENCE_ID) -> yar_licences
+
+rep.card.YAR<-rep.card[rep.card$LICENCE_ID %in% cb_licences$LICENCE_ID,]
+
+years<-2008:2026
+rep.sum<-data.frame(years=years,
+                    Catch=NA,
+                    DNF=NA,
+                    No.Report=NA)
+for(yr in 1:length(years))
+{
+  rep.sum[yr,2]<-table(rep.card.YAR[,yr+1])[1]
+  rep.sum[yr,3]<-table(rep.card.YAR[,yr+1])[2]
+  rep.sum[yr,4]<-table(rep.card.YAR[,yr+1])[3]
+}

@@ -57,6 +57,7 @@ df <- marfis_error_cleaner(
 ```
 
 ```{r}
+dodge <- position_dodge(width = 0.9)
 
 df |> 
   filter(PROVINCE == "NS") |> 
@@ -103,14 +104,23 @@ df |>
     COUNTY == "LUNENBURG COUNTY" ~ "LUNENBURG",
     TRUE ~ COUNTY
   )) |> 
-  # Re-assign the LaHave catch to Lunenburg on years where Lunenburg < 5
+  # Re-assign the Medway catch to Lunenburg on years where Lunenburg < 5
   mutate(
     AREA = if_else(
-      YEAR %in% c(2021, 2025) & AREA == "LAHAVE",
+      YEAR %in% c(2021) & AREA == "LAHAVE",
       "LUNENBURG",
       AREA
     )
-  ) |> 
+  ) |>
+  
+    mutate(
+    AREA = if_else(
+      YEAR %in% c(2026) & AREA == "MEDWAY",
+      "QUEENS",
+      AREA
+    )
+  ) |>
+  
   mutate(YEAR = as.factor(YEAR)) |> 
   group_by(YEAR, AREA) |> 
   summarise(
@@ -147,7 +157,7 @@ df |>
   size = 2
 )
 
-ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/queens_lunenburg/landings_plot.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
+ggsave("R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/queens_lunenburg/landings_plot2.png", plot = last_plot(), width = 6, height = 4, dpi = 300)
 
 
 # Try assigning all Lahave catch as Lunenburg in 2021 and 2025
@@ -277,7 +287,7 @@ QL |>
 
 # SWNB lics reporting DNF
 didnotfish |> 
-  filter(YEAR %in% 2020:2025, NIL_REPORT_FLAG == "Y") |> 
+  filter(YEAR %in% 2020:2026, NIL_REPORT_FLAG == "Y") |> 
   semi_join(QL_lics, by = "LICENCE_ID") |> 
   group_by(YEAR) |> 
   count() |> 
@@ -293,7 +303,7 @@ QL_lics_landings |>
   rename(Year = YEAR) |> 
   flextable() |> 
   autofit() |> 
-  save_as_docx(path = "R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/queens_lunenburg/lics_table.docx")
+  save_as_docx(path = "R:/Science/Population Ecology Division/DFD/Alosa/Assessment Results/Advisory Meetings/2026/queens_lunenburg/lics_table2.docx")
   
 ```
 
